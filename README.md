@@ -8,7 +8,7 @@ This repository contains reusable artifacts that extend and customize AI-powered
 
 | Directory | Description |
 |-----------|-------------|
-| `claude-skills/` | Claude Code skills (`.skill` packages) |
+| `skills/` | Agent skills (`.skill` packages) |
 | `claude-commands/` | Custom slash commands for Claude Code |
 | `cursor-rules/` | `.cursorrules` configuration files |
 | `cursor-commands/` | Custom Cursor commands |
@@ -17,14 +17,14 @@ This repository contains reusable artifacts that extend and customize AI-powered
 
 ## Quick Start
 
-### Installing a Claude Skill
+### Installing a Skill
 
 ```bash
 # Install a skill from this repo
 claude skill install https://github.com/hcastro/agent-artifacts/releases/download/v1.0.0/evernote.skill
 
 # Or install locally during development
-claude skill install ./claude-skills/evernote
+claude skill install ./skills/evernote
 ```
 
 ### Using Cursor Rules
@@ -37,7 +37,7 @@ cp cursor-rules/typescript-react.cursorrules /path/to/your/project/.cursorrules
 
 ## Available Skills
 
-### Evernote (`claude-skills/evernote`)
+### Evernote (`skills/evernote`)
 
 Integrate Evernote note management into your development workflow.
 
@@ -55,7 +55,7 @@ export EVERNOTE_TOKEN="your-token-here"
 # Get a token at: https://dev.evernote.com/doc/
 ```
 
-[Full documentation](./claude-skills/evernote/README.md)
+[Full documentation](./skills/evernote/SKILL.md)
 
 ## Contributing
 
@@ -63,7 +63,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 ### Adding a New Skill
 
-1. Create a new directory under `claude-skills/`
+1. Create a new directory under `skills/`
 2. Follow the [Anthropic skill-creator template](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
 3. Include a `SKILL.md` with proper frontmatter
 4. Add scripts, references, and assets as needed

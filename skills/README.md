@@ -1,6 +1,6 @@
-# Claude Skills
+# Agent Skills
 
-Claude Code skills extend Claude's capabilities with specialized knowledge, workflows, and tools.
+Agent skills extend AI coding assistants with specialized knowledge, workflows, and tools.
 
 ## Available Skills
 

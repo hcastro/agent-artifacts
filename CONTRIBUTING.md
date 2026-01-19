@@ -8,7 +8,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 1. **Create the skill directory:**
    ```bash
-   mkdir -p claude-skills/your-skill-name/{scripts,references,assets}
+   mkdir -p skills/your-skill-name/{scripts,references,assets}
    ```
 
 2. **Create SKILL.md** with required frontmatter:
