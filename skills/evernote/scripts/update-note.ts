@@ -19,9 +19,36 @@ import {
 interface UpdateOptions {
   guid: string;
   append?: string;
+  prepend?: string;
   section?: string;
   addTags?: string[];
   removeTags?: string[];
+}
+
+/**
+ * Prepend content to the top of a specific section in ENML (right after the header)
+ */
+function prependToSection(content: string, sectionName: string, newContent: string): string {
+  const escapedContent = newContent
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br/>');
+
+  // Find the section header
+  const headerRegex = new RegExp(`(<h1[^>]*>\\s*${sectionName}\\s*</h1>)`, 'i');
+  const match = content.match(headerRegex);
+
+  if (!match || match.index === undefined) {
+    throw new Error(`Section "${sectionName}" not found in note`);
+  }
+
+  // Insert right after the header
+  const insertIndex = match.index + match[0].length;
+  const before = content.slice(0, insertIndex);
+  const after = content.slice(insertIndex);
+
+  return `${before}<div>${escapedContent}</div>${after}`;
 }
 
 /**
@@ -102,7 +129,19 @@ async function updateNote(options: UpdateOptions): Promise<void> {
     let content = note.content ?? '';
     let modified = false;
 
-    // Append content
+    // Prepend content (to top of section)
+    if (options.prepend) {
+      if (options.section) {
+        content = prependToSection(content, options.section, options.prepend);
+        console.log(`✅ Prepended to top of section: ${options.section}`);
+      } else {
+        throw new Error('--prepend requires --section to specify where to insert');
+      }
+      note.content = content;
+      modified = true;
+    }
+
+    // Append content (to bottom of section)
     if (options.append) {
       if (options.section) {
         content = appendToSection(content, options.section, options.append);
@@ -181,14 +220,15 @@ Usage:
 
 Options:
   --guid <guid>           Note GUID (required)
-  --append <text>         Append text to note
-  --section <name>        Target section for append (e.g., "Notes", "Links")
+  --prepend <text>        Prepend text to TOP of section (requires --section)
+  --append <text>         Append text to BOTTOM of section or note
+  --section <name>        Target section (e.g., "Tasks", "Notes", "Links")
   --add-tags <list>       Comma-separated tags to add
   --remove-tags <list>    Comma-separated tags to remove
   --help                  Show this help
 
 Examples:
-  npx ts-node update-note.ts --guid "abc123" --append "New item"
+  npx ts-node update-note.ts --guid "abc123" --section "Tasks" --prepend "[ ] New task"
   npx ts-node update-note.ts --guid "abc123" --section "Notes" --append "Decision: use JWT"
   npx ts-node update-note.ts --guid "abc123" --add-tags "important,reviewed"
 `);
@@ -205,6 +245,7 @@ Examples:
 
   await updateNote({
     guid: args.guid as string,
+    prepend: args.prepend as string | undefined,
     append: args.append as string | undefined,
     section: args.section as string | undefined,
     addTags,
