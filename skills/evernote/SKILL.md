@@ -26,7 +26,7 @@ Get a developer token at: https://dev.evernote.com/doc/
 
 ## Available Scripts
 
-All scripts are in `scripts/` and can be run with `npx ts-node`:
+All scripts are in `scripts/` and can be run with `npx tsx`:
 
 | Script | Purpose |
 |--------|---------|
@@ -41,13 +41,13 @@ All scripts are in `scripts/` and can be run with `npx ts-node`:
 ### 1. Search Notes by Tag
 
 ```bash
-npx ts-node scripts/search-notes.ts --tag "weekly-work-notes" --limit 5
+npx tsx scripts/search-notes.ts --tag "weekly-work-notes" --limit 5
 ```
 
 ### 2. Create a Sprint Note
 
 ```bash
-npx ts-node scripts/create-note.ts \
+npx tsx scripts/create-note.ts \
   --title "Project Auth Sprint 01202026 - 02032026" \
   --tags "weekly-work-notes,auth,project" \
   --template sprint
@@ -61,7 +61,7 @@ This creates a note with the standard structure:
 ### 3. Append to a Note Section
 
 ```bash
-npx ts-node scripts/update-note.ts \
+npx tsx scripts/update-note.ts \
   --guid "note-guid-here" \
   --section "Notes" \
   --append "Decision: Using JWT for auth because..."
@@ -70,7 +70,7 @@ npx ts-node scripts/update-note.ts \
 ### 4. Search Note Content
 
 ```bash
-npx ts-node scripts/search-notes.ts --query "JWT authentication" --limit 10
+npx tsx scripts/search-notes.ts --query "JWT authentication" --limit 10
 ```
 
 ## Sprint Note Structure

@@ -1,4 +1,4 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env npx tsx
 /**
  * Create Note - Create new notes with title, content, and tags
  *
@@ -111,7 +111,7 @@ async function createNote(options: CreateOptions): Promise<void> {
     if (options.notebook) {
       const notebooks = await noteStore.listNotebooks();
       const notebook = notebooks.find(
-        nb => nb.name?.toLowerCase() === options.notebook?.toLowerCase()
+        (nb: any) => nb.name?.toLowerCase() === options.notebook?.toLowerCase()
       );
 
       if (notebook?.guid) {

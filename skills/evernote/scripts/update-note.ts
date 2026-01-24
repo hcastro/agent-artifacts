@@ -1,4 +1,4 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env npx tsx
 /**
  * Update Note - Modify existing notes (append, modify sections)
  *
@@ -185,7 +185,7 @@ async function updateNote(options: UpdateOptions): Promise<void> {
       const tagsToRemove = await findTagsByNames(options.removeTags);
       const removeGuids = tagsToRemove.map(t => t.guid).filter(Boolean) as string[];
 
-      note.tagGuids = (note.tagGuids ?? []).filter(g => !removeGuids.includes(g));
+      note.tagGuids = (note.tagGuids ?? []).filter((g: string) => !removeGuids.includes(g));
 
       for (const tag of tagsToRemove) {
         console.log(`✅ Removed tag: ${tag.name}`);

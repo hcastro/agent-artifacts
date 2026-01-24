@@ -1,4 +1,4 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env npx tsx
 /**
  * List Tags - List all tags with note counts
  *
@@ -69,8 +69,8 @@ async function listTags(options: ListOptions): Promise<void> {
     } else {
       // Just use the tags without counts
       tagsWithCounts = tags
-        .filter(t => t.name && t.guid)
-        .map(t => ({
+        .filter((t: any) => t.name && t.guid)
+        .map((t: any) => ({
           name: t.name!,
           guid: t.guid!,
           count: 0,

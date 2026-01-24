@@ -1,12 +1,12 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env npx tsx
 /**
  * Search Notes - Find notes by tag, title, content, or date range
  *
  * Usage:
- *   npx ts-node search-notes.ts --tag "weekly-work-notes" --limit 10
- *   npx ts-node search-notes.ts --query "authentication JWT"
- *   npx ts-node search-notes.ts --title "Sprint"
- *   npx ts-node search-notes.ts --tag "ai" --days 7
+ *   npx tsx search-notes.ts --tag "weekly-work-notes" --limit 10
+ *   npx tsx search-notes.ts --query "authentication JWT"
+ *   npx tsx search-notes.ts --title "Sprint"
+ *   npx tsx search-notes.ts --tag "ai" --days 7 --sort created
  */
 
 import {
@@ -25,15 +25,21 @@ interface SearchOptions {
   days?: number;
   limit?: number;
   content?: boolean;
+  sort?: 'updated' | 'created';
 }
 
 async function searchNotes(options: SearchOptions): Promise<void> {
   const noteStore = getNoteStore();
   const limit = options.limit ?? 20;
 
+  // Determine sort order (default to UPDATED for most recent modifications)
+  const sortOrder = options.sort === 'created'
+    ? Evernote.Types.NoteSortOrder.CREATED
+    : Evernote.Types.NoteSortOrder.UPDATED;
+
   // Build the filter
   const filter = new Evernote.NoteStore.NoteFilter({
-    order: Evernote.Types.NoteSortOrder.CREATED,
+    order: sortOrder,
     ascending: false,
   });
 
@@ -79,7 +85,7 @@ async function searchNotes(options: SearchOptions): Promise<void> {
     let notes = result.notes ?? [];
     if (options.title) {
       const titleLower = options.title.toLowerCase();
-      notes = notes.filter(n => n.title?.toLowerCase().includes(titleLower));
+      notes = notes.filter((n: any) => n.title?.toLowerCase().includes(titleLower));
       console.log(`Filtered to ${notes.length} notes matching title: "${options.title}"\n`);
     }
 
@@ -117,7 +123,7 @@ async function main() {
 Search Notes - Find notes by tag, title, content, or date range
 
 Usage:
-  npx ts-node search-notes.ts [options]
+  npx tsx search-notes.ts [options]
 
 Options:
   --tag <name>      Filter by tag name
@@ -125,13 +131,14 @@ Options:
   --title <text>    Filter by title (contains)
   --days <n>        Limit to last n days
   --limit <n>       Max results (default: 20)
+  --sort <type>     Sort by: "updated" (default) or "created"
   --content         Include content preview
   --help            Show this help
 
 Examples:
-  npx ts-node search-notes.ts --tag "weekly-work-notes" --limit 5
-  npx ts-node search-notes.ts --query "authentication" --content
-  npx ts-node search-notes.ts --tag "ai" --days 7
+  npx tsx search-notes.ts --tag "weekly-work-notes" --limit 5
+  npx tsx search-notes.ts --query "authentication" --content
+  npx tsx search-notes.ts --tag "ai" --days 7 --sort created
 `);
     process.exit(0);
   }
@@ -143,6 +150,7 @@ Examples:
     days: args.days ? parseInt(args.days as string, 10) : undefined,
     limit: args.limit ? parseInt(args.limit as string, 10) : undefined,
     content: args.content === true,
+    sort: (args.sort as 'updated' | 'created') ?? 'updated',
   });
 }
 

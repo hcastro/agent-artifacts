@@ -1,22 +1,22 @@
 {
   "name": "@agent-artifacts/evernote-skill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evernote integration skill for Claude Code",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "search": "npx ts-node scripts/search-notes.ts",
-    "read": "npx ts-node scripts/read-note.ts",
-    "create": "npx ts-node scripts/create-note.ts",
-    "update": "npx ts-node scripts/update-note.ts",
-    "tags": "npx ts-node scripts/list-tags.ts"
+    "search": "npx tsx scripts/search-notes.ts",
+    "read": "npx tsx scripts/read-note.ts",
+    "create": "npx tsx scripts/create-note.ts",
+    "update": "npx tsx scripts/update-note.ts",
+    "tags": "npx tsx scripts/list-tags.ts"
   },
   "dependencies": {
     "evernote": "^2.0.5"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   },
   "engines": {

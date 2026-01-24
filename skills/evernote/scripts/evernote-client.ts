@@ -29,7 +29,7 @@ export function getToken(): string {
 /**
  * Create an authenticated Evernote client
  */
-export function createClient(): Evernote.Client {
+export function createClient(): any {
   const token = getToken();
   return new Evernote.Client({
     token,
@@ -40,7 +40,7 @@ export function createClient(): Evernote.Client {
 /**
  * Get the NoteStore for note operations
  */
-export function getNoteStore(): Evernote.NoteStoreClient {
+export function getNoteStore(): any {
   const client = createClient();
   return client.getNoteStore();
 }
@@ -48,7 +48,7 @@ export function getNoteStore(): Evernote.NoteStoreClient {
 /**
  * Get the UserStore for user operations
  */
-export function getUserStore(): Evernote.UserStoreClient {
+export function getUserStore(): any {
   const client = createClient();
   return client.getUserStore();
 }
@@ -70,20 +70,20 @@ export async function verifyToken(): Promise<{ valid: boolean; username?: string
 /**
  * Find a tag by name (case-insensitive)
  */
-export async function findTagByName(tagName: string): Promise<Evernote.Types.Tag | null> {
+export async function findTagByName(tagName: string): Promise<any> {
   const noteStore = getNoteStore();
   const tags = await noteStore.listTags();
-  return tags.find(t => t.name?.toLowerCase() === tagName.toLowerCase()) ?? null;
+  return tags.find((t: any) => t.name?.toLowerCase() === tagName.toLowerCase()) ?? null;
 }
 
 /**
  * Find tags by names (case-insensitive)
  */
-export async function findTagsByNames(tagNames: string[]): Promise<Evernote.Types.Tag[]> {
+export async function findTagsByNames(tagNames: string[]): Promise<any[]> {
   const noteStore = getNoteStore();
   const tags = await noteStore.listTags();
   const lowerNames = tagNames.map(n => n.toLowerCase());
-  return tags.filter(t => t.name && lowerNames.includes(t.name.toLowerCase()));
+  return tags.filter((t: any) => t.name && lowerNames.includes(t.name.toLowerCase()));
 }
 
 /**
