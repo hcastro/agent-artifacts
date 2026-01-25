@@ -8,10 +8,8 @@ This repository contains reusable artifacts that extend and customize AI-powered
 
 | Directory | Description |
 |-----------|-------------|
-| `skills/` | Agent skills (`.skill` packages) |
-| `claude-commands/` | Custom slash commands for Claude Code |
-| `cursor-rules/` | `.cursorrules` configuration files |
-| `cursor-commands/` | Custom Cursor commands |
+| `skills/` | Agent skills for Claude Code and other AI assistants |
+| `cursor-rules/` | Project rules for Cursor IDE (`.mdc` files for `.cursor/rules/`) |
 | `mcp-servers/` | Model Context Protocol server implementations |
 | `shared/` | Shared utilities across tools |
 
@@ -20,20 +18,22 @@ This repository contains reusable artifacts that extend and customize AI-powered
 ### Installing a Skill
 
 ```bash
-# Install a skill from this repo
-claude skill install https://github.com/hcastro/agent-artifacts/releases/download/v1.0.0/evernote.skill
-
-# Or install locally during development
-claude skill install ./skills/evernote
+# Clone and copy to Claude Code skills directory
+git clone https://github.com/hcastro/agent-artifacts.git
+cp -r agent-artifacts/skills/evernote ~/.claude/skills/
 ```
 
 ### Using Cursor Rules
 
-Copy any `.cursorrules` file to your project root:
+Cursor now uses `.cursor/rules/` with `.mdc` files instead of the deprecated `.cursorrules` file. Copy rule files to your project:
 
 ```bash
-cp cursor-rules/typescript-react.cursorrules /path/to/your/project/.cursorrules
+# Create the rules directory and copy rules
+mkdir -p /path/to/your/project/.cursor/rules
+cp cursor-rules/*.mdc /path/to/your/project/.cursor/rules/
 ```
+
+See [Cursor Rules documentation](https://docs.cursor.com/context/rules) for more details.
 
 ## Available Skills
 
@@ -49,13 +49,10 @@ Integrate Evernote note management into your development workflow.
 
 **Setup:**
 ```bash
-# Set your Evernote developer token
 export EVERNOTE_TOKEN="your-token-here"
-
-# Get a token at: https://dev.evernote.com/doc/
 ```
 
-[Full documentation](./skills/evernote/SKILL.md)
+See [full documentation](./skills/evernote/SKILL.md) for authentication options (OAuth recommended, legacy developer tokens also supported).
 
 ## Contributing
 

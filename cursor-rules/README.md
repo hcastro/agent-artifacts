@@ -1,10 +1,10 @@
 # Cursor Rules
 
-`.cursorrules` configuration files for Cursor IDE.
+Project rules for Cursor IDE using the `.cursor/rules/` directory format.
 
 ## Overview
 
-Cursor rules customize how Cursor's AI assistant behaves in your projects. Place a `.cursorrules` file in your project root to apply custom rules.
+Cursor now uses `.mdc` files in a `.cursor/rules/` directory instead of the deprecated `.cursorrules` file. Rules can be scoped to specific file patterns and are version-controlled with your project.
 
 ## Available Rules
 
@@ -12,18 +12,25 @@ Cursor rules customize how Cursor's AI assistant behaves in your projects. Place
 
 ## Usage
 
-Copy a rules file to your project:
+Copy rule files to your project's `.cursor/rules/` directory:
 
 ```bash
-cp cursor-rules/example.cursorrules /path/to/project/.cursorrules
+mkdir -p /path/to/project/.cursor/rules
+cp cursor-rules/*.mdc /path/to/project/.cursor/rules/
 ```
 
 ## Creating Rules
 
-A `.cursorrules` file contains instructions that guide Cursor's AI behavior:
+Create `.mdc` files in `.cursor/rules/` with frontmatter for configuration:
 
-```
-# Project Rules
+```markdown
+---
+description: TypeScript coding standards
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: false
+---
+
+# TypeScript Rules
 
 ## Code Style
 - Use TypeScript strict mode
@@ -33,8 +40,16 @@ A `.cursorrules` file contains instructions that guide Cursor's AI behavior:
 ## Architecture
 - Follow the repository pattern for data access
 - Keep components under 200 lines
-
-## Testing
-- Write tests for all new functions
-- Use React Testing Library for component tests
 ```
+
+### Rule Properties
+
+| Property | Description |
+|----------|-------------|
+| `description` | Brief description shown in Cursor UI |
+| `globs` | File patterns this rule applies to (e.g., `["**/*.ts"]`) |
+| `alwaysApply` | If `true`, rule is always included in context |
+
+## References
+
+- [Cursor Rules Documentation](https://docs.cursor.com/context/rules)
