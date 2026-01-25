@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "auth": "npx tsx scripts/auth-verify.ts",
     "search": "npx tsx scripts/search-notes.ts",
     "read": "npx tsx scripts/read-note.ts",
     "create": "npx tsx scripts/create-note.ts",

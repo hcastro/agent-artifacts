@@ -3,8 +3,8 @@
  * Create Note - Create new notes with title, content, and tags
  *
  * Usage:
- *   npx ts-node create-note.ts --title "My Note" --content "Content here"
- *   npx ts-node create-note.ts --title "Sprint Note" --tags "weekly-work-notes,project" --template sprint
+ *   npx tsx scripts/create-note.ts --title "My Note" --content "Content here"
+ *   npx tsx scripts/create-note.ts --title "Sprint Note" --tags "weekly-notes,project-alpha" --template sprint
  */
 
 import {
@@ -130,9 +130,8 @@ async function createNote(options: CreateOptions): Promise<void> {
     console.log(`GUID: ${created.guid}`);
     console.log(`Created: ${new Date(created.created!).toLocaleString()}`);
 
-    // Generate web link
-    const noteUrl = `https://www.evernote.com/shard/s112/nl/${created.guid}`;
-    console.log(`\nNote URL: ${noteUrl}`);
+    // Note: Use the GUID to find this note in Evernote
+    console.log('\nOpen Evernote and search by title, or use the GUID with the read-note script.');
   } catch (err) {
     console.error('Error creating note:', err instanceof Error ? err.message : err);
     process.exit(1);
@@ -163,8 +162,8 @@ Templates:
   blank     Creates empty note (default)
 
 Examples:
-  npx ts-node create-note.ts --title "Meeting Notes" --content "Discussion points..."
-  npx ts-node create-note.ts --title "Sprint 01/20-02/03" --tags "weekly-work-notes,project" --template sprint
+  npx tsx scripts/create-note.ts --title "Meeting Notes" --content "Discussion points..."
+  npx tsx scripts/create-note.ts --title "Sprint 2026-01-20" --tags "weekly-notes,project-alpha" --template sprint
 `);
     process.exit(args.help ? 0 : 1);
   }

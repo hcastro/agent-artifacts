@@ -14,15 +14,47 @@ description: |
 
 Manage your Evernote notes directly from Claude Code. Search, create, update, and organize notes without leaving your development environment.
 
-## Setup
+## Authentication
 
-Set your Evernote developer token as an environment variable:
+Set your Evernote access token as an environment variable:
 
 ```bash
-export EVERNOTE_TOKEN="your-developer-token"
+export EVERNOTE_TOKEN="your-token-here"
 ```
 
-Get a developer token at: https://dev.evernote.com/doc/
+### Getting a Token
+
+`EVERNOTE_TOKEN` can be either:
+
+1. **OAuth Access Token** (recommended) - Evernote's standard authentication method
+2. **Developer Token** (legacy) - If you already have one
+
+#### OAuth Access Token (Recommended)
+
+Evernote now requires OAuth for new API access. To get an OAuth token:
+
+1. Register your application at https://dev.evernote.com/
+2. Request API key access (you'll need a consumer key and secret)
+3. Implement the OAuth flow or use a tool to complete the authorization
+4. Use the resulting access token as `EVERNOTE_TOKEN`
+
+**Note:** OAuth API keys can be "basic" or "full access". This skill requires **full access** to read and modify existing notes. Basic keys will receive `PERMISSION_DENIED` errors.
+
+For OAuth implementation details, see: https://dev.evernote.com/doc/articles/authentication.php
+
+#### Developer Token (Legacy)
+
+Developer tokens are no longer generally available from Evernote. If you already have one, it will work with this skill. Set it as `EVERNOTE_TOKEN`.
+
+### Verify Your Token
+
+After setting your token, verify it works:
+
+```bash
+npx tsx scripts/auth-verify.ts
+```
+
+This confirms your token is valid and shows your Evernote username.
 
 ## Available Scripts
 
@@ -30,6 +62,7 @@ All scripts are in `scripts/` and can be run with `npx tsx`:
 
 | Script | Purpose |
 |--------|---------|
+| `auth-verify.ts` | Verify your token is valid and see your username |
 | `search-notes.ts` | Search notes by tag, title, content, or date range |
 | `read-note.ts` | Read full note content with section extraction |
 | `create-note.ts` | Create new notes with title, content, tags |
@@ -41,15 +74,15 @@ All scripts are in `scripts/` and can be run with `npx tsx`:
 ### 1. Search Notes by Tag
 
 ```bash
-npx tsx scripts/search-notes.ts --tag "weekly-work-notes" --limit 5
+npx tsx scripts/search-notes.ts --tag "weekly-notes" --limit 5
 ```
 
 ### 2. Create a Sprint Note
 
 ```bash
 npx tsx scripts/create-note.ts \
-  --title "Project Auth Sprint 01202026 - 02032026" \
-  --tags "weekly-work-notes,auth,project" \
+  --title "Project Alpha Sprint 2026-01-20" \
+  --tags "weekly-notes,project-alpha" \
   --template sprint
 ```
 
@@ -104,13 +137,8 @@ All scripts will exit with helpful error messages if:
 - Note/tag not found
 - Network errors occur
 
-## Authentication for Other Users
+## Security Notes
 
-If you're adopting this skill, you need your own Evernote developer token:
-
-1. Go to https://dev.evernote.com/doc/
-2. Sign in with your Evernote account
-3. Generate a developer token
-4. Set it as `EVERNOTE_TOKEN` environment variable
-
-Developer tokens provide full access to your Evernote account. Keep them secure and never commit them to version control.
+- Never commit tokens to version control
+- Evernote tokens provide full access to your account - keep them secure
+- If your token is compromised, revoke it immediately in your Evernote account settings
