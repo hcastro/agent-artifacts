@@ -10,13 +10,18 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 
 ## Installing Skills
 
-```bash
-# Install from release
-claude skill install https://github.com/hcastro/agent-artifacts/releases/download/v1.0.0/skill-name.skill
+Copy the skill folder to your Claude Code skills directory:
 
-# Install locally during development
-claude skill install ./skill-name
+```bash
+# Clone this repo and copy the skill
+git clone https://github.com/hcastro/agent-artifacts.git
+cp -r agent-artifacts/skills/evernote ~/.claude/skills/
+
+# Or copy from a local checkout
+cp -r ./skills/evernote ~/.claude/skills/
 ```
+
+After copying, the skill will be available in Claude Code. You can verify by running `/evernote` or checking `~/.claude/skills/`.
 
 ## Creating a New Skill
 
