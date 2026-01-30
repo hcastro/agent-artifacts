@@ -3,9 +3,9 @@
  * Update Note - Modify existing notes (append, modify sections)
  *
  * Usage:
- *   npx ts-node update-note.ts --guid "note-guid" --append "New content"
- *   npx ts-node update-note.ts --guid "note-guid" --section "Notes" --append "New bullet point"
- *   npx ts-node update-note.ts --guid "note-guid" --add-tags "tag1,tag2"
+ *   npx tsx scripts/update-note.ts --guid "note-guid" --append "New content"
+ *   npx tsx scripts/update-note.ts --guid "note-guid" --section "Notes" --append "New bullet point"
+ *   npx tsx scripts/update-note.ts --guid "note-guid" --add-tags "tag1,tag2"
  */
 
 import {
@@ -15,6 +15,7 @@ import {
   formatDate,
   Evernote,
 } from './evernote-client.js';
+import { toEnmlBody, type ContentFormat } from './enml-formatter.js';
 
 interface UpdateOptions {
   guid: string;
@@ -23,17 +24,14 @@ interface UpdateOptions {
   section?: string;
   addTags?: string[];
   removeTags?: string[];
+  format?: ContentFormat;
 }
 
 /**
  * Prepend content to the top of a specific section in ENML (right after the header)
  */
-function prependToSection(content: string, sectionName: string, newContent: string): string {
-  const escapedContent = newContent
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>');
+function prependToSection(content: string, sectionName: string, newContent: string, format: ContentFormat): string {
+  const formatted = toEnmlBody(newContent, format);
 
   // Find the section header
   const headerRegex = new RegExp(`(<h1[^>]*>\\s*${sectionName}\\s*</h1>)`, 'i');
@@ -48,18 +46,14 @@ function prependToSection(content: string, sectionName: string, newContent: stri
   const before = content.slice(0, insertIndex);
   const after = content.slice(insertIndex);
 
-  return `${before}<div>${escapedContent}</div>${after}`;
+  return `${before}<div>${formatted}</div>${after}`;
 }
 
 /**
  * Append content to a specific section in ENML
  */
-function appendToSection(content: string, sectionName: string, newContent: string): string {
-  const escapedContent = newContent
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>');
+function appendToSection(content: string, sectionName: string, newContent: string, format: ContentFormat): string {
+  const formatted = toEnmlBody(newContent, format);
 
   // Find the section header
   const headerRegex = new RegExp(`(<h1[^>]*>\\s*${sectionName}\\s*</h1>)`, 'i');
@@ -91,18 +85,14 @@ function appendToSection(content: string, sectionName: string, newContent: strin
   const before = content.slice(0, insertPosition);
   const after = content.slice(insertPosition);
 
-  return `${before}<div>${escapedContent}</div>${after}`;
+  return `${before}<div>${formatted}</div>${after}`;
 }
 
 /**
  * Append content to the end of a note (before </en-note>)
  */
-function appendToEnd(content: string, newContent: string): string {
-  const escapedContent = newContent
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>');
+function appendToEnd(content: string, newContent: string, format: ContentFormat): string {
+  const formatted = toEnmlBody(newContent, format);
 
   const endTagIndex = content.lastIndexOf('</en-note>');
   if (endTagIndex === -1) {
@@ -112,11 +102,12 @@ function appendToEnd(content: string, newContent: string): string {
   const before = content.slice(0, endTagIndex);
   const after = content.slice(endTagIndex);
 
-  return `${before}<div>${escapedContent}</div>${after}`;
+  return `${before}<div>${formatted}</div>${after}`;
 }
 
 async function updateNote(options: UpdateOptions): Promise<void> {
   const noteStore = getNoteStore();
+  const format = options.format ?? 'markdown';
 
   try {
     // Get the existing note
@@ -132,7 +123,7 @@ async function updateNote(options: UpdateOptions): Promise<void> {
     // Prepend content (to top of section)
     if (options.prepend) {
       if (options.section) {
-        content = prependToSection(content, options.section, options.prepend);
+        content = prependToSection(content, options.section, options.prepend, format);
         console.log(`✅ Prepended to top of section: ${options.section}`);
       } else {
         throw new Error('--prepend requires --section to specify where to insert');
@@ -144,10 +135,10 @@ async function updateNote(options: UpdateOptions): Promise<void> {
     // Append content (to bottom of section)
     if (options.append) {
       if (options.section) {
-        content = appendToSection(content, options.section, options.append);
+        content = appendToSection(content, options.section, options.append, format);
         console.log(`✅ Appended to section: ${options.section}`);
       } else {
-        content = appendToEnd(content, options.append);
+        content = appendToEnd(content, options.append, format);
         console.log('✅ Appended to end of note');
       }
       note.content = content;
@@ -216,21 +207,23 @@ async function main() {
 Update Note - Modify existing notes (append, modify sections, manage tags)
 
 Usage:
-  npx ts-node update-note.ts --guid <note-guid> [options]
+  npx tsx scripts/update-note.ts --guid <note-guid> [options]
 
 Options:
   --guid <guid>           Note GUID (required)
   --prepend <text>        Prepend text to TOP of section (requires --section)
   --append <text>         Append text to BOTTOM of section or note
   --section <name>        Target section (e.g., "Tasks", "Notes", "Links")
+  --format <type>         Content format: "markdown" (default), "plain", or "enml"
   --add-tags <list>       Comma-separated tags to add
   --remove-tags <list>    Comma-separated tags to remove
   --help                  Show this help
 
 Examples:
-  npx ts-node update-note.ts --guid "abc123" --section "Tasks" --prepend "[ ] New task"
-  npx ts-node update-note.ts --guid "abc123" --section "Notes" --append "Decision: use JWT"
-  npx ts-node update-note.ts --guid "abc123" --add-tags "important,reviewed"
+  npx tsx scripts/update-note.ts --guid "abc123" --section "Tasks" --prepend "[ ] New task"
+  npx tsx scripts/update-note.ts --guid "abc123" --section "Notes" --append "**Decision:** use JWT"
+  npx tsx scripts/update-note.ts --guid "abc123" --append "## New Section" --format markdown
+  npx tsx scripts/update-note.ts --guid "abc123" --add-tags "important,reviewed"
 `);
     process.exit(args.help ? 0 : 1);
   }
@@ -250,6 +243,7 @@ Examples:
     section: args.section as string | undefined,
     addTags,
     removeTags,
+    format: (args.format as ContentFormat) || undefined,
   });
 }
 

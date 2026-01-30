@@ -13,6 +13,7 @@ import {
   parseArgs,
   Evernote,
 } from './evernote-client.js';
+import { toEnmlDocument, wrapEnml, type ContentFormat } from './enml-formatter.js';
 
 interface CreateOptions {
   title: string;
@@ -20,46 +21,28 @@ interface CreateOptions {
   tags?: string[];
   notebook?: string;
   template?: 'sprint' | 'blank';
+  format?: ContentFormat;
 }
 
 /**
  * Generate ENML content for a sprint note template
  */
-function generateSprintTemplate(title: string): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
-<en-note>
-<h1>Tasks</h1>
+function generateSprintTemplate(): string {
+  return wrapEnml(
+`<h1>Tasks</h1>
 <div><br/></div>
 
 <h1>Links</h1>
 <div><br/></div>
 
 <h1>Notes</h1>
-<div><br/></div>
-</en-note>`;
-}
-
-/**
- * Generate ENML content from plain text
- */
-function textToEnml(text: string): string {
-  // Escape special characters
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br/>');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
-<en-note>
-${escaped}
-</en-note>`;
+<div><br/></div>`
+  );
 }
 
 async function createNote(options: CreateOptions): Promise<void> {
   const noteStore = getNoteStore();
+  const format = options.format ?? 'markdown';
 
   try {
     // Build the note
@@ -68,18 +51,20 @@ async function createNote(options: CreateOptions): Promise<void> {
 
     // Set content based on template or provided content
     if (options.template === 'sprint') {
-      note.content = generateSprintTemplate(options.title);
+      note.content = generateSprintTemplate();
       console.log('Using sprint template (Tasks/Links/Notes sections)');
     } else if (options.content) {
-      note.content = textToEnml(options.content);
+      note.content = toEnmlDocument(options.content, format);
+      if (format !== 'plain') {
+        console.log(`Format: ${format}`);
+      }
     } else {
-      note.content = textToEnml('');
+      note.content = toEnmlDocument('', 'plain');
     }
 
     // Add tags
     if (options.tags && options.tags.length > 0) {
       const existingTags = await findTagsByNames(options.tags);
-      const existingTagNames = existingTags.map(t => t.name?.toLowerCase());
 
       // Create any missing tags
       const tagGuids: string[] = [];
@@ -147,22 +132,29 @@ async function main() {
 Create Note - Create new notes with title, content, and tags
 
 Usage:
-  npx ts-node create-note.ts --title <title> [options]
+  npx tsx scripts/create-note.ts --title <title> [options]
 
 Options:
   --title <text>      Note title (required)
-  --content <text>    Note content (plain text)
+  --content <text>    Note content
+  --format <type>     Content format: "markdown" (default), "plain", or "enml"
   --tags <list>       Comma-separated tag names
   --notebook <name>   Target notebook name
   --template <type>   Use template: "sprint" or "blank"
   --help              Show this help
+
+Formats:
+  markdown    Converts markdown to rich ENML (headers, bold, italic, tables, lists, links, code)
+  plain       Treats content as plain text, escapes all HTML
+  enml        Passes raw ENML through (caller is responsible for validity)
 
 Templates:
   sprint    Creates note with Tasks/Links/Notes sections
   blank     Creates empty note (default)
 
 Examples:
-  npx tsx scripts/create-note.ts --title "Meeting Notes" --content "Discussion points..."
+  npx tsx scripts/create-note.ts --title "Meeting Notes" --content "# Decisions\\n- Use JWT for auth"
+  npx tsx scripts/create-note.ts --title "Quick Note" --content "Just plain text" --format plain
   npx tsx scripts/create-note.ts --title "Sprint 2026-01-20" --tags "weekly-notes,project-alpha" --template sprint
 `);
     process.exit(args.help ? 0 : 1);
@@ -178,6 +170,7 @@ Examples:
     tags,
     notebook: args.notebook as string | undefined,
     template: args.template as 'sprint' | 'blank' | undefined,
+    format: (args.format as ContentFormat) || undefined,
   });
 }
 
