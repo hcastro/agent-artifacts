@@ -114,9 +114,62 @@ For structured notes with sections:
 </en-note>
 ```
 
+## Rich Text Formatting
+
+ENML supports a wide range of XHTML elements for rich formatting. The skill's
+`enml-formatter.ts` module handles conversion from markdown to valid ENML
+automatically. Content passed to `create-note.ts` and `update-note.ts` is
+**markdown by default**.
+
+### Supported ENML Elements (full list)
+
+```
+a, abbr, acronym, address, area, b, bdo, big, blockquote, br, caption,
+center, cite, code, col, colgroup, dd, del, dfn, div, dl, dt, em, font,
+h1, h2, h3, h4, h5, h6, hr, i, img, ins, kbd, li, map, ol, p, pre, q,
+s, samp, small, span, strike, strong, sub, sup, table, tbody, td, tfoot,
+th, thead, title, tr, tt, u, ul, var, xmp
+```
+
+### Tables
+
+Tables require inline styles since ENML has no `<style>` blocks:
+
+```xml
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 1px solid #ccc; padding: 8px 12px; background-color: #f5f5f5;">Header</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px 12px;">Cell</td>
+  </tr>
+</table>
+```
+
+### XHTML Compliance
+
+ENML is strict XHTML. All tags must be properly closed:
+
+- `<br/>` not `<br>`
+- `<hr/>` not `<hr>`
+- `<img src="..." />` not `<img src="...">`
+
+The `enml-formatter.ts` module handles this automatically when converting
+from markdown.
+
+### Content Formats
+
+The `--format` flag controls how content is interpreted:
+
+| Format | Behavior |
+|--------|----------|
+| `markdown` | Default. Converts markdown to rich ENML via `marked` library. |
+| `plain` | Escapes all HTML. Newlines become `<br/>`. |
+| `enml` | Pass-through. Caller provides valid ENML body content. |
+
 ## Escaping Content
 
-When inserting user content into ENML:
+When inserting user content as plain text into ENML:
 
 ```typescript
 function escapeForEnml(text: string): string {
@@ -146,3 +199,4 @@ function stripEnml(content: string): string {
 
 - [Official ENML DTD](http://xml.evernote.com/pub/enml2.dtd)
 - [Evernote API Documentation](https://dev.evernote.com/doc/)
+- [ENML Developer Reference](https://dev.evernote.com/doc/articles/enml.php)

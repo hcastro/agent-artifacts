@@ -65,8 +65,8 @@ All scripts are in `scripts/` and can be run with `npx tsx`:
 | `auth-verify.ts` | Verify your token is valid and see your username |
 | `search-notes.ts` | Search notes by tag, title, content, or date range |
 | `read-note.ts` | Read full note content with section extraction |
-| `create-note.ts` | Create new notes with title, content, tags |
-| `update-note.ts` | Update existing notes (append, modify sections) |
+| `create-note.ts` | Create new notes with title, content, tags (markdown by default) |
+| `update-note.ts` | Update existing notes — append, modify sections (markdown by default) |
 | `list-tags.ts` | List all tags with note counts |
 
 ## Common Workflows
@@ -100,7 +100,31 @@ npx tsx scripts/update-note.ts \
   --append "Decision: Using JWT for auth because..."
 ```
 
-### 4. Search Note Content
+### 4. Create a Note with Rich Formatting
+
+Content is **markdown by default** — headers, bold, italic, tables, lists, links, and code blocks are all converted to rich Evernote formatting automatically.
+
+```bash
+npx tsx scripts/create-note.ts \
+  --title "Research Notes" \
+  --tags "research,personal" \
+  --content "# Main Heading
+
+## Section One
+
+**Bold text** and *italic text* with a [link](https://example.com).
+
+| Column A | Column B |
+|----------|----------|
+| Data 1   | Data 2   |
+
+- Bullet one
+- Bullet two"
+```
+
+Use `--format plain` to disable markdown conversion, or `--format enml` to pass raw ENML.
+
+### 5. Search Note Content
 
 ```bash
 npx tsx scripts/search-notes.ts --query "JWT authentication" --limit 10
