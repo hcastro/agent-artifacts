@@ -7,6 +7,7 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 | Skill | Description |
 |-------|-------------|
 | [evernote](./evernote) | Integrate Evernote note management into your development workflow |
+| [lastpass](./lastpass) | Manage LastPass password vault via the `lpass` CLI |
 
 ## Installing Skills
 
