@@ -68,6 +68,13 @@ function markdownToBody(md: string): string {
         const titleAttr = token.title ? ` title="${token.title}"` : '';
         return `<img src="${token.href}" alt="${token.text}"${titleAttr}/>`;
       },
+      // Code blocks — strip class attribute (ENML forbids it), use inline styles
+      code(token: any) {
+        return `<pre style="font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>${token.text}</code></pre>`;
+      },
+      codespan(token: any) {
+        return `<code style="font-family: monospace; background-color: #f5f5f5; padding: 2px 4px; border-radius: 2px;">${token.text}</code>`;
+      },
       // Table cells — inline styles for borders and padding
       tablecell(token: any) {
         const tag = token.header ? 'th' : 'td';
