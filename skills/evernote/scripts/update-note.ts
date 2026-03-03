@@ -33,8 +33,8 @@ interface UpdateOptions {
 function prependToSection(content: string, sectionName: string, newContent: string, format: ContentFormat): string {
   const formatted = toEnmlBody(newContent, format);
 
-  // Find the section header
-  const headerRegex = new RegExp(`(<h1[^>]*>\\s*${sectionName}\\s*</h1>)`, 'i');
+  // Find the section header (h1, h2, or h3)
+  const headerRegex = new RegExp(`(<h[123][^>]*>\\s*${sectionName}\\s*</h[123]>)`, 'i');
   const match = content.match(headerRegex);
 
   if (!match || match.index === undefined) {
@@ -55,21 +55,24 @@ function prependToSection(content: string, sectionName: string, newContent: stri
 function appendToSection(content: string, sectionName: string, newContent: string, format: ContentFormat): string {
   const formatted = toEnmlBody(newContent, format);
 
-  // Find the section header
-  const headerRegex = new RegExp(`(<h1[^>]*>\\s*${sectionName}\\s*</h1>)`, 'i');
+  // Find the section header (h1, h2, or h3)
+  const headerRegex = new RegExp(`(<h[123][^>]*>\\s*${sectionName}\\s*</h[123]>)`, 'i');
   const match = content.match(headerRegex);
 
   if (!match || match.index === undefined) {
     throw new Error(`Section "${sectionName}" not found in note`);
   }
 
+  // Determine the heading level that matched so we find the next sibling or higher
+  const matchedLevel = match[0].charAt(2); // e.g. '1', '2', or '3'
   const insertIndex = match.index + match[0].length;
 
-  // Find appropriate insertion point (after the header, before next section or end)
+  // Find appropriate insertion point (after the header, before next same-or-higher-level section or end)
   const afterHeader = content.slice(insertIndex);
 
-  // Find the next h1 or end of note
-  const nextSectionMatch = afterHeader.match(/<h1[^>]*>/i);
+  // Find the next heading at same or higher level, or end of note
+  const siblingPattern = matchedLevel === '1' ? '<h1[^>]*>' : matchedLevel === '2' ? '<h[12][^>]*>' : '<h[123][^>]*>';
+  const nextSectionMatch = afterHeader.match(new RegExp(siblingPattern, 'i'));
   const endNoteMatch = afterHeader.match(/<\/en-note>/i);
 
   let insertPosition: number;
