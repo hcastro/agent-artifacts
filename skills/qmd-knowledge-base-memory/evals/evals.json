@@ -1,0 +1,74 @@
+{
+  "skill_name": "qmd-knowledge-base-memory",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I am new to this repository. Use the knowledge base to onboard me to the billing subsystem before we edit code.",
+      "expected_output": "A compact memory context pack with retrieved docs, current state, key decisions, implementation anchors, validation gates, and unknowns.",
+      "expectations": [
+        "Checks or describes checking qmd and knowledge-base availability before broad source grep.",
+        "Retrieves current/dated project memory and weights recent notes higher only after considering evidence quality.",
+        "Produces a compact context pack instead of dumping full documents.",
+        "Names likely code/test anchors before inspecting broad source."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Continue the data-pipeline cutover from persisted memory. What remains before we can remove the legacy exporter?",
+      "expected_output": "A context-pack answer grounded in memory retrieval, with remaining work, decisions to preserve, risks, and validation gates.",
+      "expectations": [
+        "Uses semantic qmd retrieval for task shape before broad grep.",
+        "Retrieves plans or decision logs when present without assuming a specific project structure.",
+        "Identifies remaining work and validation gates relevant to the cutover.",
+        "Keeps the output concise and action-oriented."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The architecture note says cache invalidation is event-driven, but current code appears to poll. Resolve the stale-memory question before refactoring.",
+      "expected_output": "A contradiction-resolution plan that cites memory dates, verifies current code as implementation truth, updates stale memory or records uncertainty, and asks before refreshing qmd.",
+      "expectations": [
+        "Does not silently choose one memory note or blend contradictory claims.",
+        "Compares created/last_updated dates and evidence quality.",
+        "Treats current code as source of truth for implementation.",
+        "Marks stale memory with a correction or status: superseded when appropriate.",
+        "Asks before running qmd update/embed or uses dry-run helper output."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Two deploy runbooks disagree about whether rollback needs a database restore. Find the reliable answer and update durable memory if needed.",
+      "expected_output": "A retrieval and contradiction workflow that compares both runbooks, checks evidence, records the resolved or unresolved conflict, and does not mutate qmd state without approval.",
+      "expectations": [
+        "Searches for exact anchors like rollback, restore, deploy, and database terms.",
+        "Identifies the conflicting claims and their dates.",
+        "Verifies against the appropriate source of truth such as current scripts, recent incidents, or deployment docs.",
+        "Records unresolved uncertainty instead of presenting an unproven claim as fact.",
+        "Asks before applying qmd setup or refresh mutations."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "qmd is not installed on this machine, but I need to continue the project now. What should the agent do?",
+      "expected_output": "A degraded but safe retrieval path that avoids silently adding dependencies to the repo, asks before creating a missing KB, and uses narrow markdown search until qmd is installed externally.",
+      "expectations": [
+        "Does not run package installation as a project dependency unless explicitly requested.",
+        "Recommends global or external qmd installation.",
+        "Uses narrow markdown fallback search and states that retrieval quality is degraded.",
+        "Asks before creating a missing knowledge-base directory."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "We learned a staging-only vendor API quirk that changes how future agents should debug auth failures. Update memory and keep the qmd index safe.",
+      "expected_output": "A writeback plan or performed writeback with frontmatter dates, evidence, implications, and a dry-run qmd refresh command unless the user explicitly approves applying it.",
+      "expectations": [
+        "Confirms the knowledge-base path exists before writing.",
+        "Uses current date for created/last_updated frontmatter.",
+        "Writes only durable knowledge that is not obvious from code alone.",
+        "Updates a relevant plan or decision log when the discovery changes active work.",
+        "Does not run qmd update/embed without explicit approval or --apply opt-in."
+      ]
+    }
+  ]
+}

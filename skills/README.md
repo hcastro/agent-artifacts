@@ -9,6 +9,7 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 | [evernote](./evernote) | Integrate Evernote note management into your development workflow |
 | [jira](./jira) | Interact with Jira Cloud via acli and REST API v3 with auto-configuration |
 | [lastpass](./lastpass) | Manage LastPass password vault via the `lpass` CLI |
+| [qmd-knowledge-base-memory](./qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory |
 
 ## Installing Skills
 
