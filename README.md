@@ -20,7 +20,7 @@ This repository contains reusable artifacts that extend and customize AI-powered
 ```bash
 # Clone and copy to Claude Code skills directory
 git clone https://github.com/hcastro/agent-artifacts.git
-cp -r agent-artifacts/skills/evernote ~/.claude/skills/
+cp -r agent-artifacts/skills/<skill-name> ~/.claude/skills/
 ```
 
 ### Using Cursor Rules
@@ -37,22 +37,14 @@ See [Cursor Rules documentation](https://docs.cursor.com/context/rules) for more
 
 ## Available Skills
 
-### Evernote (`skills/evernote`)
+| Skill | Path | Description | Setup |
+|-------|------|-------------|-------|
+| Evernote | [`skills/evernote`](./skills/evernote) | Search, read, create, update, and tag Evernote notes from an agent workflow. | Set `EVERNOTE_TOKEN`; run scripts with `npx tsx`. |
+| Jira | [`skills/jira`](./skills/jira) | Query, create, edit, transition, assign, and comment on Jira Cloud tickets using `acli` or REST API v3. | Configure Jira credentials and run the skill's project configuration flow. |
+| LastPass | [`skills/lastpass`](./skills/lastpass) | Search, show, generate, create, update, copy, and export LastPass vault entries via `lpass`. | Install `lastpass-cli` and log in with `lpass login`. |
+| QMD Knowledge Base Memory | [`skills/qmd-knowledge-base-memory`](./skills/qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory. | Install qmd externally and set `QMD_KB_PATH` or use a repo-local `knowledge-base`. |
 
-Integrate Evernote note management into your development workflow.
-
-**Features:**
-- Search notes by tag, title, or content
-- Create new notes with proper structure and tagging
-- Update existing notes (append content, modify sections)
-- Manage sprint/project notes with Tasks/Links/Notes structure
-
-**Setup:**
-```bash
-export EVERNOTE_TOKEN="your-token-here"
-```
-
-See [full documentation](./skills/evernote/SKILL.md) for authentication options (OAuth recommended, legacy developer tokens also supported).
+See [`skills/README.md`](./skills/README.md) and each skill's `SKILL.md` for detailed usage.
 
 ## Contributing
 
@@ -74,3 +66,4 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 - [Anthropic Skills](https://github.com/anthropics/skills) - Skill template and patterns
 - [Evernote SDK](https://github.com/evernote/evernote-sdk-js) - Official Evernote JavaScript SDK
+- [qmd](https://github.com/tobi/qmd) - Markdown search and retrieval engine used by the qmd knowledge-base memory skill
