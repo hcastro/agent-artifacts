@@ -1,0 +1,57 @@
+{
+  "skill_name": "strategic-code-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this PR diff for a TypeScript service that adds a sendInvoice(invoice, dryRun, skipValidation) method and forwards the flags through three layers to the repository. Focus on correctness and maintainability, not formatting.",
+      "expected_output": "A review that identifies boolean mode combinations, pass-through layers, caller complexity, missing correctness contract, and suggests named operations or validated options plus targeted tests.",
+      "files": [],
+      "expectations": [
+        "Identifies correctness risks before style issues",
+        "Flags pass-through layers or variables",
+        "Flags boolean mode parameters and invalid combinations",
+        "Suggests a concrete safer interface",
+        "Recommends tests for meaningful behavior and edge cases"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need a quick bug fix: expired coupons are sometimes accepted in checkout. The current code validates coupon dates in the checkout endpoint, the admin preview endpoint, and a background job. Propose a patch strategy.",
+      "expected_output": "A strategy that identifies scattered invariant checks and information leakage, moves coupon validity into an owning domain/module boundary, preserves behavior, and adds regression tests.",
+      "files": [],
+      "expectations": [
+        "Names the broken invariant",
+        "Avoids merely adding a fourth local date check",
+        "Moves validity ownership into one module or domain object",
+        "Separates tactical and strategic options if needed",
+        "Includes regression and edge-case tests"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Design an API for importing user records from CSV. It should normalize emails, handle duplicate rows, report invalid rows, and be used by both a web upload flow and a nightly sync. Give me the module design and error model.",
+      "expected_output": "A design-it-twice style API proposal with deep modules, clear contracts, normalized input, error aggregation, separation of general import mechanism from UI/sync policy, and tests.",
+      "files": [],
+      "expectations": [
+        "Offers at least two design options or explains tradeoffs",
+        "Separates general-purpose import logic from special-purpose flows",
+        "Defines a clear error aggregation/reporting model",
+        "Hides normalization and duplicate handling inside the import boundary",
+        "Includes correctness contracts and tests"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Refactor this legacy Python module. It has one 700-line file with parsing, validation, persistence, and email notifications. I don't want a rewrite; I want a safe plan that reduces complexity.",
+      "expected_output": "A staged refactoring plan that starts with characterization tests, identifies hidden decisions and seams, separates policy/mechanism, avoids arbitrary class splitting, and verifies after each step.",
+      "files": [],
+      "expectations": [
+        "Prioritizes safety net and behavior preservation",
+        "Names specific design smells rather than saying messy",
+        "Avoids splitting solely by execution order",
+        "Chooses seams around ownership/invariants",
+        "Provides incremental verification steps"
+      ]
+    }
+  ]
+}

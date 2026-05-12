@@ -43,6 +43,7 @@ See [Cursor Rules documentation](https://docs.cursor.com/context/rules) for more
 | Jira | [`skills/jira`](./skills/jira) | Query, create, edit, transition, assign, and comment on Jira Cloud tickets using `acli` or REST API v3. | Configure Jira credentials and run the skill's project configuration flow. |
 | LastPass | [`skills/lastpass`](./skills/lastpass) | Search, show, generate, create, update, copy, and export LastPass vault entries via `lpass`. | Install `lastpass-cli` and log in with `lpass login`. |
 | QMD Knowledge Base Memory | [`skills/qmd-knowledge-base-memory`](./skills/qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory. | Install qmd externally and set `QMD_KB_PATH` or use a repo-local `knowledge-base`. |
+| Strategic Code Design | [`skills/strategic-code-design`](./skills/strategic-code-design) | Apply strategic design, correctness, review, refactoring, and complexity-management workflows to production code changes. | No external setup required. |
 
 See [`skills/README.md`](./skills/README.md) and each skill's `SKILL.md` for detailed usage.
 
