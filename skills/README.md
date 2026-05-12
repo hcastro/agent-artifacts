@@ -10,6 +10,7 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 | [jira](./jira) | Interact with Jira Cloud via acli and REST API v3 with auto-configuration |
 | [lastpass](./lastpass) | Manage LastPass password vault via the `lpass` CLI |
 | [qmd-knowledge-base-memory](./qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory |
+| [strategic-code-design](./strategic-code-design) | Apply strategic design, correctness, review, refactoring, and complexity-management workflows to production code changes |
 
 ## Installing Skills
 
