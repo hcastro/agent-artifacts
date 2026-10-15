@@ -11,6 +11,7 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 | [implementation-plan-html](./implementation-plan-html) | Generate a single-file, self-contained HTML implementation plan with real code excerpts, file trees, mockups, mermaid diagrams, and a step-by-step checklist |
 | [jira](./jira) | Interact with Jira Cloud via acli and REST API v3 with auto-configuration |
 | [lastpass](./lastpass) | Manage LastPass password vault via the `lpass` CLI |
+| [presenter-deck](./presenter-deck) | Present an HTML slide deck to a room: present mode, presenter view with notes, timer and pace, and a synced audience window for a second screen |
 | [qmd-knowledge-base-memory](./qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory |
 | [strategic-code-design](./strategic-code-design) | Apply strategic design, correctness, review, refactoring, and complexity-management workflows to production code changes |
 
