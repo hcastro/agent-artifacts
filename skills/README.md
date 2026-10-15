@@ -6,6 +6,7 @@ Agent skills extend AI coding assistants with specialized knowledge, workflows, 
 
 | Skill | Description |
 |-------|-------------|
+| [design-tournament](./design-tournament) | Run a blind, multi-round design tournament for logos, UI, pages, themes and data viz: divergent directions, lens judges, a code tally and owner checkpoints |
 | [evernote](./evernote) | Integrate Evernote note management into your development workflow |
 | [implementation-plan-html](./implementation-plan-html) | Generate a single-file, self-contained HTML implementation plan with real code excerpts, file trees, mockups, mermaid diagrams, and a step-by-step checklist |
 | [jira](./jira) | Interact with Jira Cloud via acli and REST API v3 with auto-configuration |
