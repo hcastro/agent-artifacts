@@ -42,6 +42,7 @@ See [Cursor Rules documentation](https://docs.cursor.com/context/rules) for more
 | Evernote | [`skills/evernote`](./skills/evernote) | Search, read, create, update, and tag Evernote notes from an agent workflow. | Set `EVERNOTE_TOKEN`; run scripts with `npx tsx`. |
 | Jira | [`skills/jira`](./skills/jira) | Query, create, edit, transition, assign, and comment on Jira Cloud tickets using `acli` or REST API v3. | Configure Jira credentials and run the skill's project configuration flow. |
 | LastPass | [`skills/lastpass`](./skills/lastpass) | Search, show, generate, create, update, copy, and export LastPass vault entries via `lpass`. | Install `lastpass-cli` and log in with `lpass login`. |
+| Natural Voice | [`skills/natural-voice`](./skills/natural-voice) | Write and edit text the way a person talks, from a voice profile with defined rules and Bad/Better examples, and build new profiles from another writer's samples. | No external setup required. |
 | QMD Knowledge Base Memory | [`skills/qmd-knowledge-base-memory`](./skills/qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory. | Install qmd externally and set `QMD_KB_PATH` or use a repo-local `knowledge-base`. |
 | Strategic Code Design | [`skills/strategic-code-design`](./skills/strategic-code-design) | Apply strategic design, correctness, review, refactoring, and complexity-management workflows to production code changes. | No external setup required. |
 
@@ -67,4 +68,5 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 - [Anthropic Skills](https://github.com/anthropics/skills) - Skill template and patterns
 - [Evernote SDK](https://github.com/evernote/evernote-sdk-js) - Official Evernote JavaScript SDK
+- [humanizer](https://github.com/blader/humanizer) by blader - Source of the AI-writing patterns condensed in the natural-voice skill
 - [qmd](https://github.com/tobi/qmd) - Markdown search and retrieval engine used by the qmd knowledge-base memory skill
