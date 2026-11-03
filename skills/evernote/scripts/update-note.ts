@@ -13,6 +13,7 @@ import {
   findTagsByNames,
   parseArgs,
   formatDate,
+  sectionHeaderRegex,
   Evernote,
 } from './evernote-client.js';
 import { toEnmlBody, type ContentFormat } from './enml-formatter.js';
@@ -34,8 +35,7 @@ function prependToSection(content: string, sectionName: string, newContent: stri
   const formatted = toEnmlBody(newContent, format);
 
   // Find the section header (h1, h2, or h3)
-  const headerRegex = new RegExp(`(<h[123][^>]*>\\s*${sectionName}\\s*</h[123]>)`, 'i');
-  const match = content.match(headerRegex);
+  const match = content.match(sectionHeaderRegex(sectionName));
 
   if (!match || match.index === undefined) {
     throw new Error(`Section "${sectionName}" not found in note`);
@@ -56,15 +56,14 @@ function appendToSection(content: string, sectionName: string, newContent: strin
   const formatted = toEnmlBody(newContent, format);
 
   // Find the section header (h1, h2, or h3)
-  const headerRegex = new RegExp(`(<h[123][^>]*>\\s*${sectionName}\\s*</h[123]>)`, 'i');
-  const match = content.match(headerRegex);
+  const match = content.match(sectionHeaderRegex(sectionName));
 
   if (!match || match.index === undefined) {
     throw new Error(`Section "${sectionName}" not found in note`);
   }
 
   // Determine the heading level that matched so we find the next sibling or higher
-  const matchedLevel = match[0].charAt(2); // e.g. '1', '2', or '3'
+  const matchedLevel = match[1]; // '1', '2', or '3'
   const insertIndex = match.index + match[0].length;
 
   // Find appropriate insertion point (after the header, before next same-or-higher-level section or end)

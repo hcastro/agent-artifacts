@@ -2,11 +2,20 @@
 
 Common patterns for working with the Evernote API.
 
+## Contents
+
+- [Authentication](#authentication)
+- [Searching Notes](#searching-notes)
+- [Reading Notes](#reading-notes)
+- [Creating Notes](#creating-notes)
+- [Updating Notes](#updating-notes)
+- [Managing Tags](#managing-tags)
+- [Error Handling](#error-handling)
+- [Best Practices](#best-practices)
+
 ## Authentication
 
-### Developer Token
-
-For personal use, developer tokens are the simplest approach:
+### Client setup
 
 ```typescript
 import Evernote from 'evernote';
@@ -194,8 +203,9 @@ const count = counts.tagCounts?.[tag.guid] || 0;
 try {
   await noteStore.getNote(guid, true, false, false, false);
 } catch (err) {
-  if (err.errorCode === Evernote.Errors.EDAMErrorCode.DATA_REQUIRED) {
-    console.error('Note not found');
+  if (err.identifier) {
+    // EDAMNotFoundException: no object with that GUID
+    console.error(`Not found: ${err.identifier} ${err.key ?? ''}`);
   } else if (err.errorCode === Evernote.Errors.EDAMErrorCode.PERMISSION_DENIED) {
     console.error('Access denied');
   } else if (err.errorCode === Evernote.Errors.EDAMErrorCode.AUTH_EXPIRED) {
@@ -224,5 +234,4 @@ async function processNotes(guids: string[]) {
 1. **Cache tag lookups** - Tags rarely change, cache the list
 2. **Use metadata queries** - Don't fetch full content unless needed
 3. **Batch operations** - Group related operations to minimize API calls
-4. **Handle token expiration** - Developer tokens expire after 1 year
-5. **Validate ENML** - Malformed ENML causes note creation to fail
+4. **Validate ENML** - Malformed ENML causes note creation to fail

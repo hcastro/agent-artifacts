@@ -19,9 +19,13 @@ A comprehensive guide for using the Atlassian Command Line Interface (acli) with
 - [Comments](#comments)
 - [Linking Work Items](#linking-work-items)
 - [Filters](#filters)
+- [Attachments](#attachments)
+- [Deleting Work Items](#deleting-work-items)
 - [Output Formats](#output-formats)
 - [Common Workflows](#common-workflows)
 - [JQL Reference](#jql-reference)
+- [Tips and Best Practices](#tips-and-best-practices)
+- [Troubleshooting](#troubleshooting)
 
 ---
 

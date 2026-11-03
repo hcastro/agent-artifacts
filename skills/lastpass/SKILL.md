@@ -1,33 +1,6 @@
 ---
 name: lastpass
-description: |
-  Manage LastPass password vault via the `lpass` CLI. Use when you need to:
-  (1) Search or list passwords, credentials, or secure notes,
-  (2) Show usernames, passwords, URLs, or custom fields for an entry,
-  (3) Generate new passwords for sites,
-  (4) Create or update vault entries,
-  (5) Copy passwords to clipboard,
-  (6) Export vault data.
-  Requires the `lpass` CLI to be installed and the user to be logged in (`lpass status`).
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "🔑",
-        "os": ["darwin", "linux"],
-        "requires": { "bins": ["lpass"] },
-        "install":
-          [
-            {
-              "id": "brew",
-              "kind": "brew",
-              "formula": "lastpass-cli",
-              "bins": ["lpass"],
-              "label": "Install LastPass CLI via Homebrew",
-            },
-          ],
-      },
-  }
+description: Searches, reads, generates, creates, and updates LastPass vault entries through the lpass CLI. Use when the user asks for a password, username, URL, TOTP seed, or secure note stored in LastPass, wants to copy a password to the clipboard, generate or save a password, move or delete an entry, or export the vault.
 ---
 
 # LastPass
@@ -37,7 +10,7 @@ Manage the LastPass vault via `lpass` CLI commands.
 ## Prerequisites
 
 1. `lpass` CLI installed (`brew install lastpass-cli`)
-2. User must be logged in — check with `lpass status`
+2. User must be logged in. Check with `lpass status`.
 3. If not logged in, the user must run `lpass login EMAIL` interactively (requires TTY for master password)
 
 ## Common Operations
@@ -51,8 +24,8 @@ lpass status
 ```bash
 lpass ls                          # all entries, tree view
 lpass ls "Social Media"           # entries in a folder
-lpass show -G "github" --expand-multi --json   # regex search, all matches, JSON
-lpass show "exact name" --json    # exact match
+lpass ls | grep -i "github"                 # find entries by name without printing secrets
+lpass show "exact name" --username          # one entry's username, no password
 ```
 
 ### Get credentials
@@ -63,7 +36,7 @@ lpass show "Site Name" --url                # URL only
 lpass show "Site Name" --notes              # secure notes
 lpass show "Site Name" --field="TOTP"       # custom field (e.g. TOTP seed)
 lpass show "Site Name" --clip               # copy password to clipboard
-lpass show "Site Name" --json               # full entry as JSON
+lpass show "Site Name" --json               # full entry as JSON, INCLUDING the password
 ```
 
 ### Generate passwords
@@ -87,14 +60,16 @@ lpass rm "Entry Name"
 
 ### Export
 ```bash
-lpass export --fields=name,username,password,url,grouping
+lpass export --fields=name,username,password,url,grouping > EXPORT_PATH.csv   # only after the user confirms; never print the file
 ```
+
+Tell the user where the file is and to delete it when they're done.
 
 ## Security Rules
 
 - NEVER display raw passwords in chat messages unless the user explicitly asks
 - Prefer `--clip` to copy to clipboard instead of printing passwords
-- When showing entries, default to `--username` or `--json` (which masks passwords in some contexts)
+- `lpass show NAME` and `lpass show NAME --json` both print the password. To show an entry, ask for one field at a time with `--username`, `--url`, `--notes` or `--field`.
 - Never export the full vault without explicit user confirmation
 
 ## Reference

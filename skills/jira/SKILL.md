@@ -1,13 +1,6 @@
 ---
 name: jira
-description: |
-  Interact with Jira Cloud via acli (for queries) or REST API v3 (for rich text).
-  Use when the user wants to query, create, edit, transition, assign, or comment on
-  Jira tickets. For creating tickets with rich text formatting (headings, lists, code
-  blocks, panels) or updating custom fields, use REST API v3. For searches, status
-  transitions, and quick queries, use acli. Triggers include "get my sprint tickets",
-  "create a Jira ticket", "add rich text comment", "update story points",
-  "configure jira", or any Jira/sprint/ticket-related task.
+description: Queries and updates Jira Cloud tickets with the Atlassian CLI (acli) and the Jira REST API v3. Uses acli for JQL searches, ticket views, transitions, and assignment, and REST API v3 with Atlassian Document Format (ADF) for rich-text descriptions and comments, story points, and other custom fields. Use when the user asks to get sprint tickets, search Jira with JQL, create, edit, transition, assign, or comment on a Jira ticket, update story points, add a rich-text comment, or configure Jira for a project.
 ---
 
 # Jira Skill
@@ -27,6 +20,10 @@ Interact with Jira Cloud using either the `acli` command-line tool or the REST A
 | **Bulk operations** | acli | Built-in pagination and batch support |
 
 **Rule of thumb:** Use REST API for *creating/updating content* (rich text), use acli for *reading/querying* operations.
+
+## Confirm before writing
+
+Jira is shared with the user's team. Before you create, edit, transition, assign, comment on or delete a ticket, show the user the exact change (ticket key, fields, body) and wait for approval, unless they already approved that exact content. Never run a bulk `--jql` or `--filter` write, a delete, or any command with `--yes` without explicit approval for that command.
 
 ---
 
@@ -63,7 +60,7 @@ acli jira board search --project <PROJECT_KEY> --json
 acli jira board list-sprints --id <BOARD_ID> --state active,future --json
 
 # Step 4: Discover custom fields via REST API
-curl -s -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Accept: application/json" \
   "https://$JIRA_BASE_URL/rest/api/3/field" | jq '[.[] | select(.custom == true) | {name, id, schema: .schema.type}]'
 ```
@@ -80,7 +77,6 @@ Present the custom fields to the user and ask which ones they want to map. Commo
 
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "instance": {
     "baseUrl": "yoursite.atlassian.net"
   },
@@ -116,18 +112,10 @@ When performing operations that need custom field IDs, board IDs, or sprint IDs:
 
 Example — updating story points using config:
 
-```typescript
-// Read config
-const config = JSON.parse(fs.readFileSync('.jira-config.json', 'utf8'));
-const storyPointsField = config.fields.storyPoints.id;
-
-await fetch(`https://${config.instance.baseUrl}/rest/api/3/issue/${issueKey}`, {
-  method: "PUT",
-  headers: { Authorization: authHeader, "Content-Type": "application/json" },
-  body: JSON.stringify({
-    fields: { [storyPointsField]: 5 }
-  })
-});
+```bash
+curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H "Content-Type: application/json" \
+  -X PUT "https://$JIRA_BASE_URL/rest/api/3/issue/<KEY>" \
+  -d '{"fields": {"<fields.storyPoints.id from .jira-config.json>": 5}}'
 ```
 
 ---
@@ -147,7 +135,7 @@ acli --version
 
 ### 2. Set Required Environment Variables
 
-Add these to your shell config (`~/.zshrc`, `~/.bashrc`, or `~/.config/fish/config.fish`):
+Add these to your shell config (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
 export JIRA_API_TOKEN="your-api-token"         # Generate at https://id.atlassian.com/manage-profile/security/api-tokens
@@ -158,18 +146,6 @@ export JIRA_EMAIL="your@email.com"              # Your Atlassian account email
 After adding, reload your shell config:
 ```bash
 source ~/.zshrc  # or ~/.bashrc for bash
-```
-
-### 3. Authenticate with acli
-
-The skill will automatically authenticate when needed using:
-```bash
-echo $JIRA_API_TOKEN | acli jira auth login --site $JIRA_BASE_URL --email $JIRA_EMAIL --token
-```
-
-To verify authentication:
-```bash
-acli jira auth status
 ```
 
 ## Agent Authentication Protocol
@@ -183,28 +159,14 @@ When this skill is invoked and the agent needs to authenticate against the Atlas
    echo "JIRA_EMAIL: ${JIRA_EMAIL:+set}"
    ```
 
-2. **If any variable is missing**, source the user's shell config:
-   ```bash
-   # For zsh (most common on macOS)
-   source ~/.zshrc
+2. **If any variable is missing**, ask the user to export it in their shell profile and restart the session. Don't `source` an rc file to fix it: shell state doesn't carry from one command to the next, so a later command won't see the variables.
 
-   # For bash
-   source ~/.bashrc
-
-   # For fish
-   source ~/.config/fish/config.fish
-   ```
-
-3. **Re-validate** the environment variables after sourcing.
-
-4. **If still missing**, inform the user they need to set the variables and reload their shell.
-
-5. **Authenticate** using the token-based login:
+3. **Authenticate** using the token-based login:
    ```bash
    echo $JIRA_API_TOKEN | acli jira auth login --site $JIRA_BASE_URL --email $JIRA_EMAIL --token
    ```
 
-6. **Verify** authentication succeeded:
+4. **Verify** authentication succeeded:
    ```bash
    acli jira auth status
    ```
@@ -215,184 +177,76 @@ When this skill is invoked and the agent needs to authenticate against the Atlas
 
 For creating tickets or comments with rich text formatting (headings, lists, code blocks, links, panels), use the Jira REST API v3 with Atlassian Document Format (ADF).
 
-### Environment Variables (Same as acli)
+### Create Ticket with Rich Text
 
-The REST API uses the same credentials:
+Save the fields as `payload.json`:
+
+```json
+{
+  "fields": {
+    "project": { "key": "PROJ" },
+    "issuetype": { "name": "Task" },
+    "summary": "Ticket title",
+    "description": {
+      "version": 1,
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Overview" }]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            { "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Item 1" }] }] },
+            { "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Item 2" }] }] }
+          ]
+        }
+      ]
+    },
+    "priority": { "name": "High" }
+  }
+}
+```
+
+Then create the ticket:
 
 ```bash
-export JIRA_EMAIL="your@email.com"
-export JIRA_API_TOKEN="your-api-token"
-export JIRA_BASE_URL="yoursite.atlassian.net"
-```
-
-### Create Ticket with Rich Text (TypeScript)
-
-```typescript
-const response = await fetch(`https://${process.env.JIRA_BASE_URL}/rest/api/3/issue`, {
-  method: "POST",
-  headers: {
-    Authorization: `Basic ${Buffer.from(`${email}:${token}`).toString("base64")}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    fields: {
-      project: { key: "PROJ" },
-      issuetype: { name: "Task" },
-      summary: "Ticket title",
-      description: {
-        version: 1,
-        type: "doc",
-        content: [
-          {
-            type: "heading",
-            attrs: { level: 3 },
-            content: [{ type: "text", text: "Overview" }]
-          },
-          {
-            type: "bulletList",
-            content: [
-              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Item 1" }] }] },
-              { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Item 2" }] }] }
-            ]
-          }
-        ]
-      },
-      priority: { name: "High" }
-    }
-  })
-});
-```
-
-### Update Custom Fields (Using Config)
-
-```typescript
-// Read project config
-const config = JSON.parse(fs.readFileSync('.jira-config.json', 'utf8'));
-
-// Update story points using discovered field ID
-await fetch(`https://${config.instance.baseUrl}/rest/api/3/issue/${issueKey}`, {
-  method: "PUT",
-  headers: { Authorization: authHeader, "Content-Type": "application/json" },
-  body: JSON.stringify({
-    fields: { [config.fields.storyPoints.id]: 5 }
-  })
-});
+curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H "Content-Type: application/json" \
+  -X POST "https://$JIRA_BASE_URL/rest/api/3/issue" -d @payload.json
 ```
 
 ### Add Comment with Rich Text
 
-```typescript
-await fetch(`https://${baseUrl}/rest/api/3/issue/${issueKey}/comment`, {
-  method: "POST",
-  headers: { Authorization: authHeader, "Content-Type": "application/json" },
-  body: JSON.stringify({
-    body: {
-      version: 1,
-      type: "doc",
-      content: [
-        {
-          type: "panel",
-          attrs: { panelType: "success" },
-          content: [{ type: "paragraph", content: [{ type: "text", text: "Fix verified!" }] }]
-        }
-      ]
-    }
-  })
-});
+Save the comment body as `comment.json`:
+
+```json
+{
+  "body": {
+    "version": 1,
+    "type": "doc",
+    "content": [
+      {
+        "type": "panel",
+        "attrs": { "panelType": "success" },
+        "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Fix verified!" }] }]
+      }
+    ]
+  }
+}
+```
+
+Then post it:
+
+```bash
+curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H "Content-Type: application/json" \
+  -X POST "https://$JIRA_BASE_URL/rest/api/3/issue/<KEY>/comment" -d @comment.json
 ```
 
 For complete ADF documentation including all node types, marks, and examples, see [references/jira-rest-api-v3-reference.md](references/jira-rest-api-v3-reference.md).
 
-### Move Issue to Sprint (Using Config)
-
-```typescript
-const config = JSON.parse(fs.readFileSync('.jira-config.json', 'utf8'));
-
-// Use the Agile API (not REST API v3) to move issues to sprints
-await fetch(`https://${config.instance.baseUrl}/rest/agile/1.0/sprint/${sprintId}/issue`, {
-  method: "POST",
-  headers: { Authorization: authHeader, "Content-Type": "application/json" },
-  body: JSON.stringify({ issues: [issueKey] }),
-});
-```
-
-### Update Rich Text Custom Fields (e.g., Acceptance Criteria)
-
-```typescript
-const config = JSON.parse(fs.readFileSync('.jira-config.json', 'utf8'));
-const acField = config.fields.acceptanceCriteria?.id;
-
-if (acField) {
-  const acceptanceCriteriaAdf = {
-    version: 1,
-    type: "doc",
-    content: [
-      {
-        type: "heading",
-        attrs: { level: 3 },
-        content: [{ type: "text", text: "Acceptance Criteria" }]
-      },
-      {
-        type: "bulletList",
-        content: [
-          { type: "listItem", content: [{ type: "paragraph", content: [
-            { type: "text", text: "Criterion 1", marks: [{ type: "strong" }] }
-          ]}]},
-          { type: "listItem", content: [{ type: "paragraph", content: [
-            { type: "text", text: "Criterion 2" }
-          ]}]}
-        ]
-      }
-    ]
-  };
-
-  await fetch(`https://${config.instance.baseUrl}/rest/api/3/issue/${issueKey}`, {
-    method: "PUT",
-    headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fields: { [acField]: acceptanceCriteriaAdf }
-    })
-  });
-}
-```
-
-### Discovering Custom Field IDs
-
-To find the correct field ID for your project (also used by the configuration flow):
-
-```typescript
-// List all fields
-const fields = await fetch(`https://${baseUrl}/rest/api/3/field`, {
-  headers: { Authorization: authHeader, Accept: "application/json" }
-}).then(r => r.json());
-
-// Filter by name
-fields.filter(f => f.name.toLowerCase().includes("story"));
-```
-
-### Verified ADF Components
-
-The following ADF components have been tested and render correctly in Jira:
-
-| Component | ADF Type | Notes |
-|-----------|----------|-------|
-| Headings | `heading` | Levels 1-6 supported |
-| Paragraphs | `paragraph` | Basic text container |
-| Bullet Lists | `bulletList` | Nested content supported |
-| Ordered Lists | `orderedList` | Start number configurable |
-| Code Blocks | `codeBlock` | Syntax highlighting via `language` attr |
-| Tables | `table` | Headers + data rows |
-| Panels | `panel` | info, note, warning, error, success |
-| Blockquotes | `blockquote` | Quoted text |
-| Expandable | `expand` | Collapsible sections |
-| Horizontal Rule | `rule` | Divider line |
-| Status Badges | `status` | Colored labels (neutral, purple, blue, green, yellow, red) |
-| Bold | `strong` mark | Text formatting |
-| Italic | `em` mark | Text formatting |
-| Strikethrough | `strike` mark | Text formatting |
-| Underline | `underline` mark | Text formatting |
-| Inline Code | `code` mark | Monospace text |
-| Links | `link` mark | Hyperlinks with href |
+To move an issue to a sprint or discover custom field IDs, see the curl Examples and Field Discovery sections of [references/jira-rest-api-v3-reference.md](references/jira-rest-api-v3-reference.md).
 
 ---
 

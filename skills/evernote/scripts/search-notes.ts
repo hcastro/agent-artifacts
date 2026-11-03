@@ -62,9 +62,21 @@ async function searchNotes(options: SearchOptions): Promise<void> {
 
   // Filter by days
   if (options.days) {
-    const since = Date.now() - options.days * 24 * 60 * 60 * 1000;
     filter.words = (filter.words ?? '') + ` created:day-${options.days}`;
     console.log(`Filtering to last ${options.days} days\n`);
+  }
+
+  // Filter by title (server-side, so --limit applies to matching notes).
+  // Evernote matches intitle: by word, not substring, so each word becomes a
+  // prefix match: --title auth finds "Authentication notes".
+  if (options.title) {
+    const titleTerms = options.title
+      .replace(/["*]/g, '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => `intitle:${word}*`);
+    filter.words = `${filter.words ?? ''} ${titleTerms.join(' ')}`.trim();
+    console.log(`Title has words starting with: "${options.title}"\n`);
   }
 
   // Metadata to retrieve
@@ -81,13 +93,7 @@ async function searchNotes(options: SearchOptions): Promise<void> {
     console.log(`Found ${result.totalNotes} total notes (showing ${result.notes?.length ?? 0})\n`);
     console.log('='.repeat(70));
 
-    // Filter by title if specified (client-side)
-    let notes = result.notes ?? [];
-    if (options.title) {
-      const titleLower = options.title.toLowerCase();
-      notes = notes.filter((n: any) => n.title?.toLowerCase().includes(titleLower));
-      console.log(`Filtered to ${notes.length} notes matching title: "${options.title}"\n`);
-    }
+    const notes = result.notes ?? [];
 
     for (const note of notes) {
       console.log(`\nTitle: ${note.title}`);
@@ -128,7 +134,7 @@ Usage:
 Options:
   --tag <name>      Filter by tag name
   --query <text>    Search note content
-  --title <text>    Filter by title (contains)
+  --title <text>    Filter by title words that start with each word of <text>
   --days <n>        Limit to last n days
   --limit <n>       Max results (default: 20)
   --sort <type>     Sort by: "updated" (default) or "created"

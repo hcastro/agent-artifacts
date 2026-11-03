@@ -1,11 +1,11 @@
 ---
 name: presenter-deck
-description: Turn a set of slides into a page you can present to a room, with present mode, a presenter view (current and next slide, speaker notes, clock, timer, pace), an audience window on a second screen that follows the presenter, and keyboard and clicker controls. Use when the user wants to present slides to a group, give a talk or a spike readout from a deck, wants presenter notes or a presenter view, needs the slides on a projector or second monitor, or asks for a presentable deck. Covers the presenting mechanics only. It takes slide HTML from anywhere and does not decide how slides look.
+description: Turns a set of HTML slides into one page that can be presented to a room, with present mode, a presenter view (current and next slide, speaker notes, clock, timer, pace), an audience window on a second screen that follows the presenter, and keyboard and clicker controls. Use when the user wants to present slides to a group, give a talk or readout from a deck, needs presenter notes or a presenter view, needs the slides on a projector or second monitor, or asks for a presentable deck. Covers presenting mechanics only; slide content and design come from elsewhere.
 ---
 
 # Presenter deck
 
-This skill packages a presenting runtime that was built for, and refined during, a real team talk. It covers how a deck gets presented. What the slides say and how they look come from the user, another skill or the deck author, and the runtime treats each slide as opaque HTML on a fixed canvas.
+The runtime treats each slide as opaque HTML on a fixed canvas. What the slides say and how they look come from the user or another skill.
 
 **Done when:** the deck is built, `check_deck.mjs` passes, the page is published with its own URL baked in, and the user has the link plus the presenting steps.
 
@@ -27,11 +27,13 @@ This skill packages a presenting runtime that was built for, and refined during,
    python3 scripts/build_deck.py deck.json -o deck-local.html --standalone
    node scripts/check_deck.mjs deck-local.html --shots shots/
    ```
-   `build_deck.py` warns about missing notes, notes outside the word range, missing minutes and duplicate ids. `check_deck.mjs` reports console errors and anything that runs past the canvas. It also tests present mode, presenter view and the audience tab end to end. It needs Playwright and runs outside the sandbox, because Chromium needs a mach port. Look at the shots before publishing.
+   `build_deck.py` warns about missing notes, notes outside the word range, missing minutes and duplicate ids. `check_deck.mjs` reports console errors and anything that runs past the canvas. It also tests present mode, presenter view and the audience tab end to end. It needs Playwright with Chromium (`npm i -g playwright && npx playwright install chromium`) and runs outside the sandbox, because Chromium needs a mach port. Look at the shots before publishing.
 5. **Publish in two passes.** The audience link has to be the page's own claude.ai URL, so:
    - Build without `--standalone` and publish the file as a new Artifact.
    - Put the returned URL in `published_url`, rebuild to the same path, and publish again. The URL stays the same.
    New artifacts are private, so the user has to share the page before anyone else can open it.
+
+   Without claude.ai Artifacts, build with `--standalone`, leave `published_url` empty, and host the file anywhere or present it from disk. <kbd>S</kbd> then opens the audience window directly.
 6. **Give the user the link and the presenting steps** (below). Name the shortcuts they need on the day.
 7. **Share copy, when asked:** use the PNGs from `--shots` (rendered at canvas size, `--scale 2` for sharper images). Assemble them into a PDF or a PowerPoint file with one full-bleed image per slide and no notes. Say that the text can't be edited and links don't click.
 
@@ -78,11 +80,11 @@ This skill packages a presenting runtime that was built for, and refined during,
 **Notes on your laptop, slides on the room's screen:**
 
 1. Open the link and press <kbd>S</kbd>. Presenter view opens and the slides link is copied.
-2. Press <kbd>⌘N</kbd> for a new window in the same browser, paste the link and press Return.
+2. Press <kbd>⌘N</kbd> (<kbd>Ctrl N</kbd> on Windows and Linux) for a new window in the same browser, paste the link and press Return.
 3. Drag that window to the screen the room sees and click it once. It goes full screen on that monitor.
 4. Present from the presenter window. The audience button in its header shows a green dot and "Audience window on slide NN" once the two windows are connected. Press <kbd>A</kbd> to see the steps again.
 
-The displays must be set to extend the desktop. If they mirror, change it in System Settings → Displays.
+The displays must be set to extend the desktop. If they mirror, change it in the display settings (System Settings → Displays on macOS).
 
 | Key | Does |
 | --- | --- |
@@ -101,9 +103,7 @@ The displays must be set to extend the desktop. If they mirror, change it in Sys
 
 ## Gotchas
 
-These came from presenting a real talk with this runtime.
-
-- **claude.ai blocks a window the page opens itself.** The published page runs in a sandboxed frame, and a window it opens inherits the sandbox. claude.ai refuses to load inside it, which shows as `ERR_BLOCKED_BY_RESPONSE`. On a published page, <kbd>S</kbd> therefore copies the link, and the presenter opens the window with <kbd>⌘N</kbd>. A local file still opens the window directly. The runtime treats a page as framed when `published_url` is set and the page isn't a local file. Set `window.__deckFramed = true` to force that behavior.
+- **claude.ai blocks a window the page opens itself.** The published page runs in a sandboxed frame, and a window it opens inherits the sandbox. claude.ai refuses to load inside it, which shows as `ERR_BLOCKED_BY_RESPONSE`. On a published page, <kbd>S</kbd> therefore copies the link, and the presenter opens the window with <kbd>⌘N</kbd> or <kbd>Ctrl N</kbd>. A local file still opens the window directly. The runtime treats a page as framed when `published_url` is set and the page isn't a local file. Set `window.__deckFramed = true` to force that behavior.
 - **A local test can't catch the frame problem.** `check_deck.mjs` runs from a file, which has no frame. After a change to the presenting code, open the published link in two real windows and confirm that the audience button shows the green dot.
 - **On a three-monitor setup, <kbd>S</kbd> alone didn't put the slides on another screen.** A popup can't land on another monitor unless the browser grants window management, and some setups mirror displays. The fix was the audience window with drag-and-click-once steps, plus the extend-not-mirror note in the panel. Locally, "Find my screens" uses `getScreenDetails` when the browser allows it.
 - **Both windows must be in the same browser and profile.** Sync uses `BroadcastChannel` and `localStorage`, and both are per profile and per origin. A window in another browser, or in a private window, never connects.

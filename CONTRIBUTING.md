@@ -1,115 +1,89 @@
-# Contributing to Agent Artifacts
+# Contributing
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to this repository.
+This repository holds personal agent skills. Issues and pull requests are welcome. The sections in this document explain the conventions every skill follows.
 
-## Types of Contributions
+## Skill layout
 
-### Adding a New Skill
+Each skill is a folder under `skills/` whose name matches the `name` field in its `SKILL.md` file. The following tree shows the parts a skill can have:
 
-1. **Create the skill directory:**
+```
+skills/SKILL_NAME/
+├── SKILL.md       # Required. Frontmatter and instructions for the agent.
+├── README.md      # Required. Overview, setup, and usage for people.
+├── scripts/       # Optional. Code the agent runs.
+├── references/    # Optional. Detail the agent reads when SKILL.md points to it.
+├── assets/        # Optional. Templates and files used in output.
+└── evals/         # Optional. Test prompts and expected behavior.
+```
+
+Create only the folders the skill uses.
+
+## Name a skill
+
+Pick a name that follows these rules:
+
+- A skill that does a job starts with a verb, such as `read-long-screenshot` or `review-pr`.
+- A reference skill is named by its topic, such as `swift-concurrency`. Don't add `-guide`, `-expert`, or `-best-practices`.
+- Don't start with a gerund.
+- Use three words or fewer, in lowercase letters, digits, and hyphens.
+- Don't add a team or brand prefix, or the words `anthropic` or `claude`.
+- Give skills in one family the same shape.
+
+These rules apply to new skills. Some older skill names predate them.
+
+## Write SKILL.md
+
+The frontmatter has two fields, `name` and `description`:
+
+```yaml
+---
+name: SKILL_NAME
+description: Does X for Y. Use when the user asks to A or B, or shares C.
+---
+```
+
+`name` is at most 64 characters and matches the folder name. `description` is at most 1,024 characters, written in third person, with no XML tags. It says what the skill does and when to use it, in the words a user would type. All guidance about when to use the skill goes in the description, because the agent reads only the description before it loads the skill.
+
+For the body, follow these rules:
+
+- Keep `SKILL.md` under 500 lines. Move detail into `references/`, link each file from `SKILL.md`, and say when to read it.
+- Keep references one level deep. Start a reference file longer than 100 lines with a table of contents.
+- Leave out what the agent already knows.
+- Give a multistep workflow a checklist the agent can copy. Give a quality-critical step a loop: validate, fix, and validate again.
+- Say whether the agent runs a script or reads it. A script handles its own errors and explains its constants. List its dependencies in `SKILL.md`.
+- Use forward slashes in paths and fully qualified MCP tool names, such as `ServerName:tool_name`.
+- Keep setup and install notes in the skill's `README.md`, not in extra files such as a changelog.
+
+For more information, see [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+
+## Write the skill README
+
+Each skill's `README.md` is for people browsing the repository. It covers what the skill does, what it needs, how to install it, and an example request that triggers it. Follow the [Google developer documentation style guide](https://developers.google.com/style).
+
+## Check a skill
+
+Before you open a pull request, follow these steps:
+
+1. Validate the frontmatter:
+
    ```bash
-   mkdir -p skills/your-skill-name/{scripts,references,assets}
+   uv run --with pyyaml python SKILL_CREATOR_DIR/scripts/quick_validate.py skills/SKILL_NAME
    ```
 
-2. **Create SKILL.md** with required frontmatter:
-   ```yaml
-   ---
-   name: your-skill-name
-   description: |
-     Clear description of what the skill does and when to use it.
-     Include specific triggers and use cases.
-   ---
-   ```
+   Replace `SKILL_CREATOR_DIR` with the path to a copy of the [skill-creator skill](https://github.com/anthropics/skills/tree/main/skills/skill-creator). The validator also accepts `license`, `allowed-tools`, and `metadata`, but skills in this repository use only `name` and `description`.
 
-3. **Add scripts** (TypeScript/JavaScript preferred):
-   - Place executable scripts in `scripts/`
-   - Include proper error handling
-   - Document environment variables needed
+2. Install the skill and try it on a few real requests, including one that must not trigger it.
+3. Add the skill's row to the table in the root `README.md`.
 
-4. **Add references** (optional):
-   - Place documentation in `references/`
-   - Keep SKILL.md lean, move detailed docs to references
+## Commit messages
 
-5. **Test your skill** before submitting
+This repository uses [Conventional Commits](https://www.conventionalcommits.org/). For example:
 
-### Adding Cursor Rules
-
-1. Create a new `.cursorrules` file in `cursor-rules/`
-2. Name it descriptively: `{language}-{framework}.cursorrules`
-3. Include a comment header explaining the rules
-
-### Improving Documentation
-
-- Fix typos or unclear explanations
-- Add examples
-- Improve README files
-
-## Code Style
-
-### TypeScript/JavaScript
-
-- Use TypeScript where possible
-- Use ES modules (`import/export`)
-- Include JSDoc comments for public functions
-- Handle errors gracefully with helpful messages
-
-### Markdown
-
-- Use ATX-style headers (`#`, `##`, etc.)
-- Include code blocks with language hints
-- Keep lines under 100 characters where practical
-
-## Pull Request Process
-
-1. **Fork the repository** and create a feature branch
-2. **Make your changes** following the guidelines above
-3. **Test your changes** thoroughly
-4. **Update documentation** as needed
-5. **Submit a PR** with a clear description of changes
-
-### PR Title Format
-
-```
-[type] Brief description
-
-Types:
-- [skill] - New or updated skill
-- [rules] - Cursor rules
-- [docs] - Documentation only
-- [fix] - Bug fixes
-```
-
-### PR Description Template
-
-```markdown
-## Summary
-Brief description of changes
-
-## Type of Change
-- [ ] New skill
-- [ ] Skill update
-- [ ] Cursor rules
-- [ ] Documentation
-- [ ] Bug fix
-
-## Testing
-How did you test these changes?
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Documentation updated
-- [ ] No sensitive data (tokens, keys) included
-```
+- `feat(skills): add read-long-screenshot skill`
+- `feat(jira): add generalized Jira Cloud skill with auto-configuration`
+- `fix(evernote): match h1-h3 headings in section append/prepend`
+- `docs(readme): list implementation-plan-html skill`
 
 ## Security
 
-**Never commit:**
-- API tokens or keys
-- Personal credentials
-- Sensitive configuration
-
-Always use environment variables for authentication.
-
-## Questions?
-
-Open an issue for questions or discussions about potential contributions.
+Never commit API tokens, keys, passwords, or personal credentials. Skills read secrets from environment variables. Don't commit local settings such as `.claude/settings.local.json`, or employer-internal names, URLs, and data.

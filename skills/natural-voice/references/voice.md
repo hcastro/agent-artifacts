@@ -2,6 +2,13 @@
 
 These rules cover anything you write for another person to read: texts, emails, letters, notes, posts and cards. Apply them to every draft before you send it. Only text labeled "Bad:" in this file breaks them.
 
+## Contents
+
+- How to write: shape, register, dates, secondhand news, caveats, voice
+- Constructions to avoid: contrast and negation, paragraph structure, rhythm, punctuation and openers, word choice, tone
+- Other signs of AI writing: content, language, formatting, communication
+- Pre-send checklist
+
 ## How to write
 
 ### Shape

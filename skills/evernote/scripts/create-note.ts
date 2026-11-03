@@ -146,7 +146,7 @@ Options:
 Formats:
   markdown    Converts markdown to rich ENML (headers, bold, italic, tables, lists, links, code)
   plain       Treats content as plain text, escapes all HTML
-  enml        Passes raw ENML through (caller is responsible for validity)
+  enml        Raw ENML body content (a full document is also accepted). Caller is responsible for validity.
 
 Templates:
   sprint    Creates note with Tasks/Links/Notes sections

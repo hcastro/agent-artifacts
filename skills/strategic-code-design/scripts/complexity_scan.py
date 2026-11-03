@@ -5,8 +5,8 @@ This script highlights places that may deserve design review. It is intentionall
 conservative: findings are design-pressure signals, not proof of defects.
 
 Usage:
-  python scripts/complexity_scan.py path/to/file_or_repo
-  python scripts/complexity_scan.py path/to/file_or_repo --json
+  python3 scripts/complexity_scan.py path/to/file_or_repo
+  python3 scripts/complexity_scan.py path/to/file_or_repo --json
 """
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ import ast
 import json
 import os
 import re
+import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable, List, Dict, Any, Optional
@@ -90,11 +91,16 @@ def rel(path: Path, root: Path) -> str:
         return str(path)
 
 
-def read_text(path: Path) -> str:
+def read_text(path: Path) -> Optional[str]:
+    """Return the file's text, or None (with a note on stderr) if it can't be read."""
     try:
-        return path.read_text(encoding="utf-8")
-    except UnicodeDecodeError:
-        return path.read_text(encoding="utf-8", errors="replace")
+        try:
+            return path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            return path.read_text(encoding="utf-8", errors="replace")
+    except OSError as e:
+        print(f"skipped {path}: {e}", file=sys.stderr)
+        return None
 
 
 def count_loc(lines: List[str]) -> int:
@@ -193,15 +199,31 @@ def python_ast_findings(path_label: str, text: str) -> List[Finding]:
     return findings
 
 
-def scan_file(path: Path, root: Path) -> FileSummary:
+def scan_file(path: Path, root: Path) -> Optional[FileSummary]:
     text = read_text(path)
+    if text is None:
+        return None
     lines = text.splitlines()
     label = rel(path, root)
-    findings = []
-    findings.extend(add_line_findings(label, lines))
-    findings.extend(duplicate_block_findings(label, lines))
+    line_findings = add_line_findings(label, lines)
     if path.suffix == ".py":
-        findings.extend(python_ast_findings(label, text))
+        # The AST checks overlap the line regexes. Keep the AST pass-through
+        # check, which is more precise, and drop a regex boolean-mode finding
+        # only where the AST already flagged that line, so `flag: bool`
+        # signatures the AST name check misses are still reported.
+        ast_findings = python_ast_findings(label, text)
+        ast_bool_lines = {f.line for f in ast_findings if f.kind == "boolean-mode"}
+        line_findings = [
+            f for f in line_findings
+            if f.kind != "possible-pass-through"
+            and not (f.kind == "boolean-mode" and f.line in ast_bool_lines)
+        ]
+    else:
+        ast_findings = []
+    findings = []
+    findings.extend(line_findings)
+    findings.extend(duplicate_block_findings(label, lines))
+    findings.extend(ast_findings)
     loc = count_loc(lines)
     if loc >= 800:
         findings.append(Finding(label, 1, "large-file", "medium", f"File has about {loc} non-comment LOC; inspect for multiple abstractions or mixed policy/mechanism.", f"{loc} LOC"))
@@ -274,7 +296,9 @@ def main() -> int:
     if not root.exists():
         raise SystemExit(f"Path not found: {root}")
 
-    summaries = [scan_file(path, root) for path in iter_code_files(root)]
+    summaries = [s for s in (scan_file(path, root) for path in iter_code_files(root)) if s is not None]
+    if not summaries:
+        raise SystemExit(f"No supported source files under {root}. Supported extensions: {', '.join(sorted(CODE_EXTENSIONS))}")
     if args.json:
         payload = {
             "summary": summarize(summaries),

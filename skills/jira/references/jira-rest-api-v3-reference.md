@@ -10,6 +10,7 @@ A comprehensive guide for using the Jira Cloud REST API v3 with Atlassian Docume
 - [Creating Issues](#creating-issues)
 - [Updating Issues](#updating-issues)
 - [Atlassian Document Format (ADF)](#atlassian-document-format-adf)
+  - [Verified ADF Components](#verified-adf-components)
   - [Document Structure](#document-structure)
   - [Block Nodes](#block-nodes)
   - [Inline Nodes](#inline-nodes)
@@ -54,7 +55,7 @@ Jira Cloud requires API tokens for authentication. Password-based basic auth is 
 3. Give it a descriptive label (e.g., "claude-code-jira")
 4. Copy the token immediately (you won't see it again)
 
-> **Note:** As of 2025, API tokens expire after 1 year by default.
+> **Note:** API tokens have an expiration date. You choose it when you create the token (up to one year), and the default is one year.
 
 #### 2. Build the Authorization Header
 
@@ -64,14 +65,16 @@ Jira Cloud requires API tokens for authentication. Password-based basic auth is 
 echo -n "your.email@company.com:your-api-token" | base64
 ```
 
+With curl, pass `-u "$JIRA_EMAIL:$JIRA_API_TOKEN"` and curl builds this header. If you build it by hand on Linux, use `base64 -w0` so GNU `base64` doesn't wrap the output.
+
 #### 3. Use in Requests
 
 ```bash
 # Header format
 Authorization: Basic <base64-encoded-credentials>
 
-# Example with curl
-curl -H "Authorization: Basic $(echo -n '$JIRA_EMAIL:$JIRA_API_TOKEN' | base64)" \
+# Example with curl (curl builds the Basic header from -u)
+curl -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
      -H "Content-Type: application/json" \
      "https://$JIRA_BASE_URL/rest/api/3/issue"
 ```
@@ -243,6 +246,46 @@ await fetch(`https://${config.instance.baseUrl}/rest/api/3/issue/${issueKey}`, {
 });
 ```
 
+### Update Rich Text Custom Fields (e.g., Acceptance Criteria)
+
+```typescript
+const config = JSON.parse(fs.readFileSync('.jira-config.json', 'utf8'));
+const acField = config.fields.acceptanceCriteria?.id;
+
+if (acField) {
+  const acceptanceCriteriaAdf = {
+    version: 1,
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 3 },
+        content: [{ type: "text", text: "Acceptance Criteria" }]
+      },
+      {
+        type: "bulletList",
+        content: [
+          { type: "listItem", content: [{ type: "paragraph", content: [
+            { type: "text", text: "Criterion 1", marks: [{ type: "strong" }] }
+          ]}]},
+          { type: "listItem", content: [{ type: "paragraph", content: [
+            { type: "text", text: "Criterion 2" }
+          ]}]}
+        ]
+      }
+    ]
+  };
+
+  await fetch(`https://${config.instance.baseUrl}/rest/api/3/issue/${issueKey}`, {
+    method: "PUT",
+    headers: { Authorization: authHeader, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fields: { [acField]: acceptanceCriteriaAdf }
+    })
+  });
+}
+```
+
 ### Response (Success - 204)
 
 No content returned on successful update.
@@ -252,6 +295,30 @@ No content returned on successful update.
 ## Atlassian Document Format (ADF)
 
 ADF is a JSON-based format for representing rich text in Atlassian products.
+
+### Verified ADF Components
+
+The following ADF components have been tested and render correctly in Jira:
+
+| Component | ADF Type | Notes |
+|-----------|----------|-------|
+| Headings | `heading` | Levels 1-6 supported |
+| Paragraphs | `paragraph` | Basic text container |
+| Bullet Lists | `bulletList` | Nested content supported |
+| Ordered Lists | `orderedList` | Start number configurable |
+| Code Blocks | `codeBlock` | Syntax highlighting via `language` attr |
+| Tables | `table` | Headers + data rows |
+| Panels | `panel` | info, note, warning, error, success |
+| Blockquotes | `blockquote` | Quoted text |
+| Expandable | `expand` | Collapsible sections |
+| Horizontal Rule | `rule` | Divider line |
+| Status Badges | `status` | Colored labels (neutral, purple, blue, green, yellow, red) |
+| Bold | `strong` mark | Text formatting |
+| Italic | `em` mark | Text formatting |
+| Strikethrough | `strike` mark | Text formatting |
+| Underline | `underline` mark | Text formatting |
+| Inline Code | `code` mark | Monospace text |
+| Links | `link` mark | Hyperlinks with href |
 
 ### Document Structure
 
@@ -822,7 +889,7 @@ Custom fields vary across Jira instances. Use these techniques to discover field
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Accept: application/json" \
   "https://$JIRA_BASE_URL/rest/api/3/field" \
   | jq '[.[] | select(.custom == true) | {name, id, schema: .schema.type}]'
@@ -855,7 +922,7 @@ Create an issue manually with desired formatting, then GET it to see the exact A
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/issue/PROJ-123?fields=description" \
   | jq '.fields.description'
 ```
@@ -864,7 +931,7 @@ curl -s \
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/issuetype" \
   | jq '[.[] | {name, id, subtask}]'
 ```
@@ -873,7 +940,7 @@ curl -s \
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/status" \
   | jq '[.[] | {name, id, statusCategory: .statusCategory.name}]'
 ```
@@ -1277,7 +1344,7 @@ console.log(`Created: ${client.getIssueUrl(result.key)}`);
 
 ```bash
 curl -X POST \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://$JIRA_BASE_URL/rest/api/3/issue" \
   -d '{
@@ -1312,7 +1379,7 @@ curl -X POST \
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/issue/PROJ-123?fields=description" \
   | jq '.fields.description'
 ```
@@ -1321,7 +1388,7 @@ curl -s \
 
 ```bash
 curl -X POST \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://$JIRA_BASE_URL/rest/api/3/issue/PROJ-123/comment" \
   -d '{
@@ -1342,7 +1409,7 @@ curl -X POST \
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/field" \
   | jq '[.[] | select(.custom == true) | {name, id, type: .schema.type}]'
 ```
@@ -1351,7 +1418,7 @@ curl -s \
 
 ```bash
 curl -X POST \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   "https://$JIRA_BASE_URL/rest/agile/1.0/sprint/<SPRINT_ID>/issue" \
   -d '{ "issues": ["PROJ-123"] }'
@@ -1376,7 +1443,7 @@ Create an issue manually with desired formatting, then fetch it via API to see t
 
 ```bash
 curl -s \
-  -H "Authorization: Basic $(echo -n "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)" \
+  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
   "https://$JIRA_BASE_URL/rest/api/3/issue/PROJ-123?fields=description" \
   | jq '.fields.description'
 ```
@@ -1423,18 +1490,16 @@ JIRA_API_TOKEN=your-api-token
 Jira Cloud has rate limits. Implement exponential backoff for bulk operations:
 
 ```typescript
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+async function withRetry(fn: () => Promise<Response>, maxRetries = 3): Promise<Response> {
   for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      if (error.status === 429 && i < maxRetries - 1) {
-        const delay = Math.pow(2, i) * 1000;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
-      }
-      throw error;
+    const res = await fn();
+    if (res.status === 429 && i < maxRetries - 1) {
+      // Honor Retry-After (seconds); fall back to exponential backoff
+      const retryAfter = Number(res.headers.get("Retry-After")) || 2 ** i;
+      await new Promise((r) => setTimeout(r, retryAfter * 1000));
+      continue;
     }
+    return res;
   }
   throw new Error("Max retries exceeded");
 }

@@ -30,3 +30,14 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# natural-voice profiles hold quotes from private writing samples
+skills/natural-voice/profiles/
+
+# Claude Code local settings
+**/.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/

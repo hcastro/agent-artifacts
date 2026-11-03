@@ -3,9 +3,9 @@
  * List Tags - List all tags with note counts
  *
  * Usage:
- *   npx ts-node list-tags.ts
- *   npx ts-node list-tags.ts --sort count
- *   npx ts-node list-tags.ts --filter "ai"
+ *   npx tsx scripts/list-tags.ts
+ *   npx tsx scripts/list-tags.ts --sort count
+ *   npx tsx scripts/list-tags.ts --filter "ai"
  */
 
 import {
@@ -138,7 +138,7 @@ async function main() {
 List Tags - List all tags with note counts
 
 Usage:
-  npx ts-node list-tags.ts [options]
+  npx tsx scripts/list-tags.ts [options]
 
 Options:
   --sort <type>     Sort by: "name" (default) or "count"
@@ -148,9 +148,9 @@ Options:
   --help            Show this help
 
 Examples:
-  npx ts-node list-tags.ts --sort count --limit 20
-  npx ts-node list-tags.ts --filter "ai" --counts
-  npx ts-node list-tags.ts --sort name
+  npx tsx scripts/list-tags.ts --sort count --limit 20
+  npx tsx scripts/list-tags.ts --filter "ai" --counts
+  npx tsx scripts/list-tags.ts --sort name
 `);
     process.exit(0);
   }

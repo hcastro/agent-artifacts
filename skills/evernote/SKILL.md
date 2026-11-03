@@ -1,18 +1,19 @@
 ---
 name: evernote
-description: |
-  Integrate Evernote note management into your development workflow.
-  Use when you need to: (1) Search and retrieve notes by tag, title, or content,
-  (2) Create new notes with proper tagging and notebook assignment,
-  (3) Update existing notes (append content, add to sections, modify text),
-  (4) Manage sprint/project notes with Tasks/Links/Notes structure,
-  (5) List and manage tags across your Evernote account.
-  Requires EVERNOTE_TOKEN environment variable set to your developer token.
+description: Searches, reads, creates, and updates Evernote notes and tags through bundled TypeScript scripts that call the Evernote API. Converts markdown to ENML and can append to a named section, such as the Tasks, Links, and Notes sections of a sprint note. Use when the user asks to find an Evernote note by tag, title, or content, create or tag a note, add content to an existing note or one of its sections, or list Evernote tags. Requires Node.js 18+ and an EVERNOTE_TOKEN with full-access API permissions.
 ---
 
 # Evernote Integration
 
-Manage your Evernote notes directly from Claude Code. Search, create, update, and organize notes without leaving your development environment.
+## Setup
+
+The scripts need Node.js 18 or later. Install their dependencies once, from the skill directory:
+
+```bash
+cd <skill-dir> && npm install
+```
+
+Run every script from `<skill-dir>`. The paths in this file are relative to it.
 
 ## Authentication
 
@@ -63,7 +64,7 @@ All scripts are in `scripts/` and can be run with `npx tsx`:
 | Script | Purpose |
 |--------|---------|
 | `auth-verify.ts` | Verify your token is valid and see your username |
-| `search-notes.ts` | Search notes by tag, title, content, or date range |
+| `search-notes.ts` | Search notes by tag, title, content, or date range. `--title` matches title words by prefix (`--title auth` finds "Authentication notes"), not arbitrary substrings |
 | `read-note.ts` | Read full note content with section extraction |
 | `create-note.ts` | Create new notes with title, content, tags (markdown by default) |
 | `update-note.ts` | Update existing notes — append, modify sections (markdown by default) |
@@ -87,9 +88,11 @@ npx tsx scripts/create-note.ts \
 ```
 
 This creates a note with the standard structure:
-- **Tasks** - Section for Evernote tasks
+- **Tasks** - Section for task items
 - **Links** - Section for relevant links
 - **Notes** - Section for freeform notes
+
+The API can't create native Evernote tasks. Text added to the Tasks section is plain content, and a markdown `- [ ]` item becomes an ENML checkbox.
 
 ### 3. Append to a Note Section
 
@@ -130,39 +133,7 @@ Use `--format plain` to disable markdown conversion, or `--format enml` to pass 
 npx tsx scripts/search-notes.ts --query "JWT authentication" --limit 10
 ```
 
-## Sprint Note Structure
-
-The skill supports a standard sprint note structure with three sections:
-
-```
-# Tasks
-[Evernote native tasks go here]
-
-# Links
-- [Link 1](url)
-- [Link 2](url)
-
-# Notes
-- Bullet points
-- Code blocks
-- Freeform text
-```
-
 ## References
 
-- [ENML Guide](references/enml-guide.md) - Understanding Evernote's markup language
-- [API Patterns](references/api-patterns.md) - Common API usage patterns
-
-## Error Handling
-
-All scripts will exit with helpful error messages if:
-- `EVERNOTE_TOKEN` is not set
-- Token is invalid or expired
-- Note/tag not found
-- Network errors occur
-
-## Security Notes
-
-- Never commit tokens to version control
-- Evernote tokens provide full access to your account - keep them secure
-- If your token is compromised, revoke it immediately in your Evernote account settings
+- [references/enml-guide.md](references/enml-guide.md): read before passing `--format enml` or when Evernote rejects content as invalid ENML.
+- [references/api-patterns.md](references/api-patterns.md): read when a task needs an API call the scripts don't cover, such as moving notes between notebooks.

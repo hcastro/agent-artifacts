@@ -2,6 +2,15 @@
 
 These examples are invented for this skill. They illustrate the design lenses without relying on source-book examples.
 
+## Contents
+
+- Tactical bug patch vs strategic bug fix
+- Shallow wrapper
+- Boolean flag modes
+- Comments that add leverage
+- Define an error out of existence
+- Performance without scattered complexity
+
 ## Example 1: Tactical bug patch vs strategic bug fix
 
 ### Situation

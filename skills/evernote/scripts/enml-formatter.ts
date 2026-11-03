@@ -13,6 +13,9 @@
 
 import { Marked } from 'marked';
 
+const escapeXml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 // ─── Types ───────────────────────────────────────────────────────────
 
 export type ContentFormat = 'markdown' | 'plain' | 'enml';
@@ -65,15 +68,20 @@ function markdownToBody(md: string): string {
       br: () => '<br/>',
       hr: () => '<hr/>',
       image(token: any) {
-        const titleAttr = token.title ? ` title="${token.title}"` : '';
-        return `<img src="${token.href}" alt="${token.text}"${titleAttr}/>`;
+        const titleAttr = token.title ? ` title="${escapeXml(token.title)}"` : '';
+        return `<img src="${escapeXml(token.href)}" alt="${escapeXml(token.text)}"${titleAttr}/>`;
       },
       // Code blocks — strip class attribute (ENML forbids it), use inline styles
       code(token: any) {
-        return `<pre style="font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>${token.text}</code></pre>`;
+        const body = token.escaped ? token.text : escapeXml(token.text);
+        return `<pre style="font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>${body}</code></pre>`;
       },
       codespan(token: any) {
-        return `<code style="font-family: monospace; background-color: #f5f5f5; padding: 2px 4px; border-radius: 2px;">${token.text}</code>`;
+        return `<code style="font-family: monospace; background-color: #f5f5f5; padding: 2px 4px; border-radius: 2px;">${escapeXml(token.text)}</code>`;
+      },
+      // ENML's native checkbox; <input> is prohibited
+      checkbox(token: any) {
+        return `<en-todo checked="${token.checked ? 'true' : 'false'}"/> `;
       },
       // Table cells — inline styles for borders and padding
       tablecell(token: any) {
@@ -121,8 +129,8 @@ export function toEnmlBody(content: string, format: ContentFormat = 'markdown'):
  */
 export function toEnmlDocument(content: string, format: ContentFormat = 'markdown'): string {
   if (format === 'enml') {
-    // Assume the caller provided a complete document
-    return content;
+    // Accept a full ENML document or a body fragment
+    return /^\s*(<\?xml|<!DOCTYPE|<en-note)/i.test(content) ? content : wrapEnml(content);
   }
   return wrapEnml(toEnmlBody(content, format));
 }

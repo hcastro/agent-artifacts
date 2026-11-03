@@ -3,9 +3,9 @@
  * Read Note - Get full content of a note with section extraction
  *
  * Usage:
- *   npx ts-node read-note.ts --guid "note-guid-here"
- *   npx ts-node read-note.ts --guid "note-guid" --section "Notes"
- *   npx ts-node read-note.ts --guid "note-guid" --raw
+ *   npx tsx scripts/read-note.ts --guid "note-guid-here"
+ *   npx tsx scripts/read-note.ts --guid "note-guid" --section "Notes"
+ *   npx tsx scripts/read-note.ts --guid "note-guid" --raw
  */
 
 import {
@@ -13,6 +13,7 @@ import {
   parseArgs,
   formatDate,
   stripEnml,
+  sectionHeaderRegex,
 } from './evernote-client.js';
 
 interface ReadOptions {
@@ -23,24 +24,26 @@ interface ReadOptions {
 
 /**
  * Extract a specific section from ENML content
- * Looks for <h1>Section Name</h1> and extracts content until next <h1>
+ * Looks for an <h1> to <h3> header with the section name and extracts content
+ * until the next heading at the same or a higher level
  */
 function extractSection(content: string, sectionName: string): string | null {
   // Find the section header
-  const headerRegex = new RegExp(`<h1[^>]*>\\s*${sectionName}\\s*</h1>`, 'i');
-  const headerMatch = content.match(headerRegex);
+  const headerMatch = content.match(sectionHeaderRegex(sectionName));
 
   if (!headerMatch || headerMatch.index === undefined) {
     return null;
   }
 
+  const level = headerMatch[1];
   const startIndex = headerMatch.index + headerMatch[0].length;
 
-  // Find the next h1 or end of content
-  const nextHeaderMatch = content.slice(startIndex).match(/<h1[^>]*>/i);
-  const endIndex = nextHeaderMatch?.index
+  // Find the next heading at the same or higher level, or end of content
+  const nextHeaderMatch = content.slice(startIndex).match(new RegExp(`<h[1-${level}][^>]*>`, 'i'));
+  const endNoteIndex = content.indexOf('</en-note>');
+  const endIndex = nextHeaderMatch?.index !== undefined
     ? startIndex + nextHeaderMatch.index
-    : content.indexOf('</en-note>');
+    : (endNoteIndex === -1 ? content.length : endNoteIndex);
 
   const sectionContent = content.slice(startIndex, endIndex);
   return stripEnml(sectionContent);
@@ -51,11 +54,11 @@ function extractSection(content: string, sectionName: string): string | null {
  */
 function extractAllSections(content: string): Record<string, string> {
   const sections: Record<string, string> = {};
-  const headerRegex = /<h1[^>]*>([^<]+)<\/h1>/gi;
+  const headerRegex = /<h([123])[^>]*>([^<]+)<\/h\1>/gi;
   let match;
 
   while ((match = headerRegex.exec(content)) !== null) {
-    const sectionName = match[1].trim();
+    const sectionName = match[2].trim();
     const sectionContent = extractSection(content, sectionName);
     if (sectionContent) {
       sections[sectionName] = sectionContent;
@@ -127,7 +130,7 @@ async function main() {
 Read Note - Get full content of a note with section extraction
 
 Usage:
-  npx ts-node read-note.ts --guid <note-guid> [options]
+  npx tsx scripts/read-note.ts --guid <note-guid> [options]
 
 Options:
   --guid <guid>       Note GUID (required)
@@ -136,9 +139,9 @@ Options:
   --help              Show this help
 
 Examples:
-  npx ts-node read-note.ts --guid "abc123"
-  npx ts-node read-note.ts --guid "abc123" --section "Notes"
-  npx ts-node read-note.ts --guid "abc123" --raw
+  npx tsx scripts/read-note.ts --guid "abc123"
+  npx tsx scripts/read-note.ts --guid "abc123" --section "Notes"
+  npx tsx scripts/read-note.ts --guid "abc123" --raw
 `);
     process.exit(args.help ? 0 : 1);
   }

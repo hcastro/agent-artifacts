@@ -2,6 +2,15 @@
 
 Use this file for PR reviews, codebase audits, and self-review before finalizing a patch.
 
+## Contents
+
+- Review priorities
+- Severity levels
+- Review method
+- Output template
+- Comment style for PRs
+- Approval guidance
+
 ## Review priorities
 
 1. Correctness and safety

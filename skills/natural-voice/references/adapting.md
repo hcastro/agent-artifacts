@@ -39,7 +39,7 @@ When the samples show the writer doing one of these on purpose, replace the rule
 
 ## 4. Write the profile
 
-Copy `voice.md` to `profiles/<name>.md` and change its title to "Voice profile: <name>." Under the title, add a "Voice notes" section of three to six habits from step 2, each with its quoted line.
+Copy `references/voice.md` to `profiles/<name>.md` at the skill root (create the folder if it's missing) and change its title to "Voice profile: <name>." Under the title, add a "Voice notes" section of three to six habits from step 2, each with its quoted line.
 
 Rewrite each replaced rule in the same format as the rest: a one-line definition and a Bad/Better pair. Model the Better example on a line from the samples. Then edit the matching checklist line so the checklist tests the new rule.
 

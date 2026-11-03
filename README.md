@@ -1,72 +1,86 @@
-# Agent Artifacts
+# Agent artifacts
 
-A collection of AI agent configurations, skills, and rules for Claude Code, Cursor, and other AI-powered development tools.
+Agent skills for Claude Code. Each skill is a folder with a `SKILL.md` file that tells the agent what the skill does and when to use it, plus optional scripts, reference files, and templates.
 
-## Overview
+## Skills
 
-This repository contains reusable artifacts that extend and customize AI-powered development tools:
+The following table lists each skill in this repository and what it needs before you use it:
 
-| Directory | Description |
-|-----------|-------------|
-| `skills/` | Agent skills for Claude Code and other AI assistants |
-| `cursor-rules/` | Project rules for Cursor IDE (`.mdc` files for `.cursor/rules/`) |
-| `mcp-servers/` | Model Context Protocol server implementations |
-| `shared/` | Shared utilities across tools |
+| Skill | What it does | Setup |
+|-------|--------------|-------|
+| [`capture-pr-evidence`](skills/capture-pr-evidence) | Captures screenshots and short video of a user-facing change and attaches them to a pull request. Keeps a durable copy outside the repository and never commits media. | Install `adb` for Android and Playwright for web, and authenticate `gh`. Optional: sign in to github.com in the Playwright browser for automated upload. Works with the optional `ui-recording-verification` and `pull-request` skills, which aren't in this repository. |
+| [`developer-docs-style`](skills/developer-docs-style) | Writes, edits, and reviews developer documentation in the style of the Google developer documentation style guide, with core rules, a review format, and references for voice, structure, punctuation, reference docs, images, and word choice. | None. |
+| [`evernote`](skills/evernote) | Searches, reads, creates, and updates Evernote notes and tags with bundled TypeScript scripts, converts markdown to ENML, and appends to named note sections. | Node.js 18 or later. Run `npm install` in the skill folder, export `EVERNOTE_TOKEN` (an OAuth token from a full-access API key, or a developer token you already have), then run `npx tsx scripts/auth-verify.ts`. |
+| [`jira`](skills/jira) | Queries and updates Jira Cloud tickets. Uses `acli` for JQL searches, views, transitions, and assignment, and REST API v3 with ADF for rich-text descriptions, comments, and custom fields such as story points. Asks before any write. | Install `acli` (`brew tap atlassian/homebrew-acli && brew install acli`) and export `JIRA_EMAIL`, `JIRA_API_TOKEN`, and `JIRA_BASE_URL` in your shell profile. Optional: say "configure jira" to write a `.jira-config.json` file with your field and board IDs. |
+| [`lastpass`](skills/lastpass) | Searches, reads, generates, creates, updates, moves, and exports LastPass vault entries through `lpass`, with rules that keep passwords out of the transcript. | Install `lastpass-cli` and sign in with `lpass login EMAIL`, where `EMAIL` is your LastPass account email. |
+| [`natural-voice`](skills/natural-voice) | Writes and edits text the way a person talks, from a voice profile with defined rules and Bad/Better examples, and builds new profiles from another writer's samples. | None. Profiles you build go in `profiles/`, which git ignores. |
+| [`presenter-deck`](skills/presenter-deck) | Turns HTML slides into a presentable page with a presenter view, speaker notes, a timer, and a synced audience window. | Python 3. For `check_deck.mjs`, Node.js with Playwright and Chromium (`npm i -g playwright && npx playwright install chromium`). |
+| [`qmd-memory`](skills/qmd-memory) | Retrieves project memory from a qmd-indexed markdown knowledge base before broad grep, condenses it into a short context pack, and writes discoveries back with dated frontmatter and a dry-run index refresh. In beta. | Install qmd (`npm install -g @tobilu/qmd`) and export `QMD_KB_PATH`. From your project root, run `bash ~/.claude/skills/qmd-memory/scripts/qmd-memory.sh setup`, review the commands it prints, then run it again with `--apply`. |
+| [`read-long-screenshot`](skills/read-long-screenshot) | Reads a full-page or scrolling screenshot at full detail by slicing it into overlapping tiles that stay inside Claude's vision limits. | Python 3 with Pillow (`python3 -m pip install pillow`), or `sips` on macOS. |
+| [`run-design-tournament`](skills/run-design-tournament) | Runs a blind, multi-round tournament between design directions, with rubric scoring by lens judges, a code tally, and owner checkpoints. | Claude Code with the Workflow tool, or subagents as a fallback. Headless Chrome or Playwright for renders. |
+| [`strategic-code-design`](skills/strategic-code-design) | Reviews and shapes code design for low complexity with deep modules, information hiding, simple error models, and a severity rubric for reviews. | None. The optional scanner needs Python 3.8 or later and uses only the standard library. |
+| [`write-implementation-plan`](skills/write-implementation-plan) | Writes a self-contained HTML plan with real code excerpts, diffs, Mermaid diagrams, and a step checklist before coding starts. | None. The page loads fonts, highlight.js 11.9.0, and Mermaid 11.4.1 from CDNs. |
 
-## Quick Start
+Each skill's folder has a `README.md` with setup and usage in more detail. To open it, click the skill's name in the table.
 
-### Installing a Skill
+## Install a skill
 
-```bash
-# Clone and copy to Claude Code skills directory
-git clone https://github.com/hcastro/agent-artifacts.git
-cp -r agent-artifacts/skills/<skill-name> ~/.claude/skills/
+Claude Code loads personal skills from `~/.claude/skills/` and project skills from `.claude/skills/` in a repository. To install a skill for your user account, follow these steps:
+
+1. Clone this repository:
+
+   ```bash
+   git clone https://github.com/hcastro/agent-artifacts.git
+   ```
+
+2. Link the skill into your skills folder, so that `git pull` keeps it current:
+
+   ```bash
+   mkdir -p ~/.claude/skills
+   ln -s "$PWD/agent-artifacts/skills/SKILL_NAME" ~/.claude/skills/SKILL_NAME
+   ```
+
+   Replace `SKILL_NAME` with a folder name from the table in the [Skills](#skills) section.
+
+3. Complete the setup listed in the skill's row of the table.
+4. Start a new Claude Code session. Claude loads the skill when a request matches its description. To run it directly, type `/SKILL_NAME`.
+
+To share a skill with everyone who works in a project, put it in that project's `.claude/skills/` folder instead of `~/.claude/skills/`.
+
+## Repository layout
+
+The repository has the following structure:
+
+```
+agent-artifacts/
+├── README.md          # This document
+├── skills/            # One folder per skill
+│   ├── README.md      # Points back to this document
+│   └── SKILL_NAME/
+│       ├── SKILL.md   # Frontmatter and instructions for the agent
+│       ├── README.md  # Setup and usage for people
+│       ├── scripts/   # Code the agent runs
+│       ├── references/
+│       ├── assets/
+│       └── evals/     # Test prompts and expected behavior
+├── CONTRIBUTING.md    # Conventions for adding a skill
+└── LICENSE
 ```
 
-### Using Cursor Rules
+Each skill folder holds only the parts it uses.
 
-Cursor now uses `.cursor/rules/` with `.mdc` files instead of the deprecated `.cursorrules` file. Copy rule files to your project:
+## Add a skill
 
-```bash
-# Create the rules directory and copy rules
-mkdir -p /path/to/your/project/.cursor/rules
-cp cursor-rules/*.mdc /path/to/your/project/.cursor/rules/
-```
-
-See [Cursor Rules documentation](https://docs.cursor.com/context/rules) for more details.
-
-## Available Skills
-
-| Skill | Path | Description | Setup |
-|-------|------|-------------|-------|
-| Evernote | [`skills/evernote`](./skills/evernote) | Search, read, create, update, and tag Evernote notes from an agent workflow. | Set `EVERNOTE_TOKEN`; run scripts with `npx tsx`. |
-| Jira | [`skills/jira`](./skills/jira) | Query, create, edit, transition, assign, and comment on Jira Cloud tickets using `acli` or REST API v3. | Configure Jira credentials and run the skill's project configuration flow. |
-| LastPass | [`skills/lastpass`](./skills/lastpass) | Search, show, generate, create, update, copy, and export LastPass vault entries via `lpass`. | Install `lastpass-cli` and log in with `lpass login`. |
-| Natural Voice | [`skills/natural-voice`](./skills/natural-voice) | Write and edit text the way a person talks, from a voice profile with defined rules and Bad/Better examples, and build new profiles from another writer's samples. | No external setup required. |
-| QMD Knowledge Base Memory | [`skills/qmd-knowledge-base-memory`](./skills/qmd-knowledge-base-memory) | Beta: use qmd as a retrieval and writeback layer for persistent markdown project memory. | Install qmd externally and set `QMD_KB_PATH` or use a repo-local `knowledge-base`. |
-| Strategic Code Design | [`skills/strategic-code-design`](./skills/strategic-code-design) | Apply strategic design, correctness, review, refactoring, and complexity-management workflows to production code changes. | No external setup required. |
-
-See [`skills/README.md`](./skills/README.md) and each skill's `SKILL.md` for detailed usage.
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
-### Adding a New Skill
-
-1. Create a new directory under `skills/`
-2. Follow the [Anthropic skill-creator template](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
-3. Include a `SKILL.md` with proper frontmatter
-4. Add scripts, references, and assets as needed
-5. Submit a PR with documentation
+To add a skill, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+This repository uses the MIT License. For details, see [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-- [Anthropic Skills](https://github.com/anthropics/skills) - Skill template and patterns
-- [Evernote SDK](https://github.com/evernote/evernote-sdk-js) - Official Evernote JavaScript SDK
-- [humanizer](https://github.com/blader/humanizer) by blader - Source of the AI-writing patterns condensed in the natural-voice skill
-- [qmd](https://github.com/tobi/qmd) - Markdown search and retrieval engine used by the qmd knowledge-base memory skill
+- [Anthropic skills](https://github.com/anthropics/skills): the skill-creator template and skill patterns.
+- [Evernote JavaScript SDK](https://github.com/evernote/evernote-sdk-js): used by the `evernote` skill.
+- [Google developer documentation style guide](https://developers.google.com/style): the source of the rules in the `developer-docs-style` skill.
+- [humanizer](https://github.com/blader/humanizer) by blader: the source of the AI-writing patterns condensed in the `natural-voice` skill.
+- [qmd](https://github.com/tobi/qmd): the markdown search engine behind the `qmd-memory` skill.

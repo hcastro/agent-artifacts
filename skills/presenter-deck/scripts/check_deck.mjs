@@ -24,12 +24,21 @@ const scale = Number(values.scale) || 1;
 
 let pw;
 try { pw = await import("playwright"); } catch {
-  const root = execSync("npm root -g").toString().trim();
-  pw = await import(pathToFileURL(join(root, "playwright", "index.mjs")).href);
+  try {
+    const root = execSync("npm root -g").toString().trim();
+    pw = await import(pathToFileURL(join(root, "playwright", "index.mjs")).href);
+  } catch {
+    console.error("check_deck needs Playwright: npm i -g playwright && npx playwright install chromium");
+    process.exit(2);
+  }
 }
 const { chromium } = pw;
 const url = pathToFileURL(resolve(file)).href;
-const browser = await chromium.launch();
+let browser;
+try { browser = await chromium.launch(); } catch (e) {
+  console.error(`Chromium did not launch (${String(e.message).split("\n")[0]}). Run npx playwright install chromium, or run outside the sandbox.`);
+  process.exit(2);
+}
 const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: scale });
 const problems = [];
 const errors = [];

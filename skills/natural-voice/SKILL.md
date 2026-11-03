@@ -1,6 +1,6 @@
 ---
 name: natural-voice
-description: Write and edit text the way a person talks, from a voice profile with defined rules and Bad/Better examples. Writes drafts in the active profile, edits an existing draft against the profile's pre-send checklist, and builds a new profile from samples of another writer's own text. Use when drafting or revising anything a person will read (texts, emails, letters, posts, cards, notes), when asked to make writing sound natural, human or less like AI, to "clean up" or "edit" a draft, to write in someone's voice, or to create a voice profile from writing samples.
+description: Writes and edits text the way a person talks, from a voice profile with defined rules and Bad/Better examples. Drafts in the active profile, edits an existing draft against the profile's pre-send checklist, and builds a new profile from samples of another writer's own text. Use when drafting or revising anything a person will read (texts, emails, letters, posts, cards, notes), when asked to make writing sound natural, human or less like AI, to "clean up" or "edit" a draft, to write in someone's voice, or to create a voice profile from writing samples.
 ---
 
 # Natural voice

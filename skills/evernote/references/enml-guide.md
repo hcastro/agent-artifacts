@@ -2,6 +2,18 @@
 
 Evernote Markup Language (ENML) is a subset of XHTML used by Evernote to store note content.
 
+## Contents
+
+- [Basic Structure](#basic-structure)
+- [Supported Elements](#supported-elements)
+- [Prohibited Elements](#prohibited-elements)
+- [Special Evernote Elements](#special-evernote-elements)
+- [Section Pattern](#section-pattern)
+- [Rich Text Formatting](#rich-text-formatting)
+- [Escaping Content](#escaping-content)
+- [Extracting Text](#extracting-text)
+- [Resources](#resources)
+
 ## Basic Structure
 
 Every ENML document follows this structure:
@@ -74,6 +86,8 @@ ENML does **NOT** support:
 - `<iframe>` - No embedded frames
 - `<object>`, `<embed>` - No plugins
 - `<applet>` - No Java applets
+
+Prohibited attributes: `id`, `class`, `accesskey`, `data`, `dynsrc`, `tabindex`, and any `on*` event handler. Use inline `style` for formatting.
 
 ## Special Evernote Elements
 

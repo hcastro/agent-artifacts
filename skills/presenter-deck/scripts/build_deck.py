@@ -26,11 +26,17 @@ UNSPOKEN = re.compile(r"(If asked|Prompts if|Reminder)")
 SLIDE_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 warnings: list[str] = []
+errors: list[str] = []
 
 
 def warn(msg: str) -> None:
     warnings.append(msg)
     print(f"warning: {msg}", file=sys.stderr)
+
+
+def fail(msg: str) -> None:
+    errors.append(msg)
+    print(f"error: {msg}", file=sys.stderr)
 
 
 def esc(s) -> str:
@@ -51,7 +57,7 @@ def load_slide_html(s: dict, base: Path) -> str:
     if s.get("file"):
         p = (base / s["file"]).resolve()
         if not p.exists():
-            warn(f"slide {s.get('id')}: file {s['file']} not found")
+            fail(f"slide {s.get('id')}: file {s['file']} not found")
             return ""
         return p.read_text(encoding="utf-8")
     return s.get("html") or ""
@@ -66,7 +72,11 @@ def main() -> int:
     ap.add_argument("--standalone", action="store_true", help="emit a full HTML document for local use")
     a = ap.parse_args()
 
-    spec = json.loads(a.deck.read_text(encoding="utf-8"))
+    try:
+        spec = json.loads(a.deck.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"error: cannot read {a.deck}: {e}", file=sys.stderr)
+        return 1
     base = a.deck.resolve().parent
     title = spec.get("title") or "Slides"
     key = re.sub(r"[^a-z0-9-]+", "-", (spec.get("key") or title).lower()).strip("-") or "deck"
@@ -121,7 +131,7 @@ def main() -> int:
         if p.exists():
             author_css.append(p.read_text(encoding="utf-8"))
         else:
-            warn(f"style file {rel} not found")
+            fail(f"style file {rel} not found")
     css = (ASSETS / "presenter.css").read_text(encoding="utf-8") + "\n" + "\n".join(author_css)
     js = (ASSETS / "presenter.js").read_text(encoding="utf-8")
     head_extra = "\n".join(spec.get("head") or [])
@@ -132,7 +142,7 @@ def main() -> int:
     <h1>{esc(title)}</h1>
     {f'<p class="pd-sub">{esc(subtitle)}</p>' if subtitle else ""}
     <p class="pd-meta">{n} slides · {mins}</p>
-    <p class="pd-howto">Press <kbd>P</kbd> or <strong>Present</strong> to show the slides in this window. To present with notes, press <kbd>S</kbd> or <strong>Presenter view</strong>: your notes open here and the link to the slides is copied. Open it in a new window (<kbd>⌘N</kbd>, paste), drag that window to the screen the room sees, and click it once for full screen.</p>
+    <p class="pd-howto">Press <kbd>P</kbd> or <strong>Present</strong> to show the slides in this window. To present with notes, press <kbd>S</kbd> or <strong>Presenter view</strong>: your notes open here and the link to the slides is copied. Open it in a new window (<kbd>⌘N</kbd> or <kbd>Ctrl N</kbd>, paste), drag that window to the screen the room sees, and click it once for full screen.</p>
   </header>
   <div class="deck" id="deck" tabindex="0" data-deck-key="{esc(key)}" data-canvas-w="{cw}" data-canvas-h="{ch}" data-published-url="{esc(published)}" aria-label="Slides. Arrow keys move, P presents, N shows notes.">
     <div class="deck-stage" id="deck-stage">
@@ -200,8 +210,9 @@ def main() -> int:
     a.out.write_text(page, encoding="utf-8")
     print(f"wrote {a.out} · {n} slides · {mins} · canvas {cw}x{ch} · key {key}"
           + (f" · published {published}" if published else " · no published URL yet")
-          + f" · {len(warnings)} warning(s)")
-    return 0
+          + f" · {len(warnings)} warning(s)"
+          + (f" · {len(errors)} error(s)" if errors else ""))
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

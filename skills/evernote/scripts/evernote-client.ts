@@ -15,12 +15,9 @@ export function getToken(): string {
   const token = process.env.EVERNOTE_TOKEN;
   if (!token) {
     console.error('Error: EVERNOTE_TOKEN environment variable is not set.');
-    console.error('');
-    console.error('To get a developer token:');
-    console.error('1. Go to https://dev.evernote.com/doc/');
-    console.error('2. Sign in with your Evernote account');
-    console.error('3. Generate a developer token');
-    console.error('4. Set it: export EVERNOTE_TOKEN="your-token-here"');
+    console.error('Set it to an OAuth access token from a full-access Evernote API key, or an existing developer token:');
+    console.error('  export EVERNOTE_TOKEN="your-token-here"');
+    console.error('See the Authentication section of SKILL.md.');
     process.exit(1);
   }
   return token;
@@ -84,6 +81,19 @@ export async function findTagsByNames(tagNames: string[]): Promise<any[]> {
   const tags = await noteStore.listTags();
   const lowerNames = tagNames.map(n => n.toLowerCase());
   return tags.filter((t: any) => t.name && lowerNames.includes(t.name.toLowerCase()));
+}
+
+/**
+ * Escape a string for literal use inside a RegExp
+ */
+export const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Match a section header (<h1> to <h3>) with the given name.
+ * Group 1 holds the heading level.
+ */
+export function sectionHeaderRegex(name: string): RegExp {
+  return new RegExp(`<h([123])[^>]*>\\s*${escapeRegExp(name)}\\s*</h\\1>`, 'i');
 }
 
 /**

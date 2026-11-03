@@ -4,6 +4,27 @@ This reference maps the book's major ideas into agent behaviors. Read it when tu
 
 The mapping is paraphrased and operational. It is not a substitute for the book.
 
+## Contents
+
+- 1\. Introduction: complexity as the central design problem
+- 2\. The Nature of Complexity
+- 3\. Working Code Isn't Enough
+- 4\. Modules Should Be Deep
+- 5\. Information Hiding and Leakage
+- 6\. General-Purpose Modules Are Deeper
+- 7\. Different Layer, Different Abstraction
+- 8\. Pull Complexity Downwards
+- 9\. Better Together or Better Apart
+- 10\. Define Errors Out of Existence
+- 11\. Design It Twice
+- 12-15\. Comments, Documentation, Names, and Comments First
+- 16\. Modifying Existing Code
+- 17-18\. Consistency and Obviousness
+- 19\. Software Trends
+- 20\. Designing for Performance
+- 21\. Decide What Matters
+- 22\. Conclusion
+
 ## 1. Introduction: complexity as the central design problem
 
 **Book idea:** Software becomes expensive when developers can no longer understand and safely modify it.

@@ -1,7 +1,6 @@
 ---
 name: strategic-code-design
-description: Guides production code implementation, review, refactoring, debugging, API design, and architecture decisions using low-complexity, deep-module, information-hiding design principles. Use whenever the user asks to write or change code, review a PR or diff, improve correctness, simplify code, reduce bugs, design modules or APIs, or make a quick fix that could affect maintainability.
-compatibility: Works with code-editing agents that can inspect files and run tests. No external network access required.
+description: Reviews and shapes code design for low complexity, using deep modules, information hiding, simple error models, and a severity rubric. Use when designing or refactoring a module, API, error model, or data boundary, when weighing two designs, when a quick fix might spread one rule across many callers, when a bug fix should repair the invariant that allowed the bug, when asked whether code is too complex, shallow, or leaky, or when a code review needs a design rubric with severity levels. Includes an optional heuristic scanner that flags where to look in a large review.
 ---
 
 # Strategic Code Design
@@ -70,7 +69,7 @@ When reviewing a diff or PR, prioritize correctness first, then design quality. 
 4. **Give actionable feedback**: tie every finding to evidence, risk, and a concrete fix.
 5. **Distinguish blockers from design pressure**: not every smell should block a merge, but repeated small smells are how systems become hard to change.
 
-Use `references/review-rubric.md` for severity and output format.
+Use `references/review-rubric.md` for severity levels and the output template.
 
 ## Default workflow for refactoring
 
@@ -98,7 +97,6 @@ A bug fix should repair the design path that allowed the bug, not just suppress 
 Read `references/principles.md` when a task involves API design, module boundaries, refactoring, comments, naming, error handling, performance, or architectural tradeoffs.
 
 Read `references/book-concept-map.md` only when the user asks how this skill maps back to the source book, wants to tune the skill, or wants deeper rationale for the workflows.
-
 
 Use these distilled principles:
 
@@ -134,37 +132,19 @@ High-value red flags:
 
 ## Optional static scan
 
-For larger reviews, run the heuristic scanner to find design pressure points. This is not a substitute for reading code.
+For a large review, run the heuristic scanner to find where to look. It needs Python 3.8+ and the standard library only. Run it from this skill's directory, or pass the script's full path.
 
 ```bash
-python scripts/complexity_scan.py path/to/file_or_repo
-python scripts/complexity_scan.py path/to/file_or_repo --json
+python3 scripts/complexity_scan.py PATH            # Markdown report
+python3 scripts/complexity_scan.py PATH --json     # machine-readable
 ```
 
-Use the output to decide where to inspect, then apply the design principles manually.
+Treat its output as places to inspect, then read the code.
 
 ## Response style
 
 For implementation tasks, include the patch or code, tests/validation performed, and important design reasoning. Keep the reasoning concise but make tradeoffs explicit.
 
-For reviews, use this compact structure unless the user requested another format:
-
-```markdown
-## Verdict
-[merge/block/needs changes, with one-sentence rationale]
-
-## Correctness and safety
-- [severity] [issue]: evidence, risk, suggested fix
-
-## Design quality
-- [severity] [issue]: evidence, risk, suggested fix
-
-## Tests and verification
-- Existing coverage observed
-- Tests to add or run
-
-## Suggested next patch
-[smallest strategic change]
-```
+For reviews, use the output template in `references/review-rubric.md` unless the user asked for another format: a verdict of Approve, Needs changes, or Block, and findings rated Blocker, High, Medium, or Low with evidence, risk, and fix.
 
 When the user asks for a quick fix, still check whether the quick fix adds future complexity. If it does, provide the tactical patch only with a safer strategic alternative and explain the tradeoff briefly.

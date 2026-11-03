@@ -79,7 +79,7 @@
     })) : null;
     if (ro) ro.observe(stage); else window.addEventListener("resize", scale);
 
-    /* timer: starts the first time you present, survives a reload, shared by nothing */
+    /* timer: starts the first time you present, survives a reload, and is shared by every window through storage */
     const timer = (() => {
       let t = { start: 0, acc: 0, running: false };
       try { t = { ...t, ...JSON.parse(store.get(TIMER_KEY) || "{}") }; } catch (e) { /* fresh timer */ }
@@ -255,7 +255,7 @@
       $$(".pv-stage", el).forEach((st) => { if (ro) ro.observe(st); });
       $(".pv-aud-url code", el).textContent = audienceHref();
       $(".pv-tip", el).textContent = framed
-        ? "Slides for the room: open the copied link in a new window (⌘N). A copies it again."
+        ? "Slides for the room: open the copied link in a new window (⌘N or Ctrl N). A copies it again."
         : "The audience window follows this one. Drag it to the screen the room sees, then click it once for full screen.";
       $(".pv-aud-why", el).hidden = !framed;
       pv = {
@@ -290,8 +290,8 @@
         return;
       }
       li.textContent = state === "copied"
-        ? "The link is copied. Press ⌘N for a new browser window, paste it into the address bar and press Return."
-        : "Copy the link below, press ⌘N for a new browser window, then paste it into the address bar.";
+        ? "The link is copied. Press ⌘N or Ctrl N for a new browser window, paste it into the address bar and press Return."
+        : "Copy the link below, press ⌘N or Ctrl N for a new browser window, then paste it into the address bar.";
     };
     const copyText = (text) => {
       try { return navigator.clipboard.writeText(text).then(() => true, () => false); }
@@ -307,7 +307,7 @@
         showAudPanel(true);
         copyText(audienceHref()).then((ok) => {
           setStep1(ok ? "copied" : null);
-          say(ok ? "Slides link copied. Press ⌘N, paste it, and drag that window to the room's screen."
+          say(ok ? "Slides link copied. Press ⌘N or Ctrl N, paste it, and drag that window to the room's screen."
                  : "Copy the slides link from the panel, then open it in a new window.");
         });
         tick();
