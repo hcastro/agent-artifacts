@@ -1,112 +1,89 @@
-# Knowledge-Base Writeback Protocol
+# Knowledge-base writeback protocol
 
-Use this when a coding task produces durable knowledge.
+Use this reference when saving a discovery or correcting an existing note. Choose its destination before editing.
 
-## Contents
+## Choose where to save it
 
-- [What Belongs In Memory](#what-belongs-in-memory)
-- [Where To Write](#where-to-write)
-- [Frontmatter](#frontmatter)
-- [Body Structure For A New Note](#body-structure-for-a-new-note)
-- [Updating Plans](#updating-plans)
-- [Resolving Contradictions](#resolving-contradictions)
-- [Refresh QMD](#refresh-qmd)
+Save a discovery in the primary project KB when it meets these conditions:
 
-## What Belongs In Memory
+- Another contributor or future session working on the project would benefit.
+- Evidence supports the claim, such as a working runbook or a decision with its rationale.
+- The note is safe to share and contains no secret values or personal data.
+- It concerns a project the KB covers, with enough context for someone else to act on it.
 
-Write memory for discoveries that are not obvious from source code:
+Use the private workbench for unfinished hypotheses and personal notes. Research about your own workflow belongs there too. When the destination is uncertain, keep the draft private until it can be reviewed.
 
-- External API or vendor behavior observed in development, staging, or production.
-- Migration, refactor, or rollout sequencing and why a phase was split.
-- Feature-flag, configuration, or environment interactions.
-- Test instability root causes and stable rerun commands.
-- Data backfill counts, dry-run outcomes, rollout constraints, or rollback steps.
-- Decisions that future agents are likely to accidentally revisit.
-- Gaps that are intentionally deferred.
+Keep secret values in a secrets manager or machine-local environment. A note can name the variable or secret reference needed to retrieve them. Do not copy the value into either KB.
 
-Do not write memory for trivial code edits that are already clear in the diff.
+Promotion to the primary KB is a reviewed change. Remove private details, check the evidence, and move the note into the appropriate topic. Stamp `last_updated` with the current system date before publishing.
 
-## Where To Write
+## Decide what to record
 
-1. Update an existing note when the topic already exists and the new information changes the same story.
-2. Create a new dated note when the discovery is a new slice, a new vendor gotcha, or a standalone runbook.
-3. Update the living plan when progress, surprises, decisions, outcomes, or acceptance gates change.
+Write down discoveries that source code alone cannot explain:
 
-## Frontmatter
+- External API behavior observed in a specific environment.
+- Migration order and the reasons for splitting a phase.
+- Interactions between feature flags or environments.
+- Causes of flaky tests and commands that rerun them reliably.
+- Backfill results and constraints on a cutover.
+- Decisions that a future agent could otherwise reopen.
+- Work deliberately deferred and the reason for it.
 
-Every markdown memory file should have frontmatter like:
+Update an existing note when the discovery changes the same topic. Create a dated note for a separate incident or runbook. If the project has a living plan, update its progress and decisions when they change.
+
+## Date the note
+
+Give new notes this frontmatter, using the system date:
 
 ```yaml
 ---
-created: 2026-04-23
-last_updated: 2026-04-23
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
 topic: <topic-name>
 status: active
 ---
 ```
 
-If the file already has frontmatter, preserve stable fields and update `last_updated`.
+Preserve stable fields in existing frontmatter and update `last_updated`. Keep event dates distinct from the date you reviewed the evidence.
 
-Use `status: superseded` only when the whole note should no longer guide future work. Prefer a dated correction or supersession notice in the body when only part of a note is stale.
+## Write enough to resume the work
 
-## Body Structure For A New Note
+Start with the discovery and its consequence. Include evidence that another person can check, then name the affected files or commands. Add follow-ups only when work remains.
 
-```markdown
-# <Specific discovery or runbook title>
+For a living plan, update the sections the project already uses. Common sections are `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective`. Record dated proof for completed work so a future session can resume from the document.
 
-## Summary
-<What changed or was discovered, in 3-6 sentences.>
+## Resolve contradictions
 
-## Evidence
-- <Command, route, browser proof, runtime probe, log, metric, PR, or code path.>
-- <Observed result.>
+When two notes disagree, or a note conflicts with current evidence:
 
-## Decision or implication
-<What future agents should do differently because of this.>
+1. Cite the competing claims and their file paths. Check `created` and `last_updated` dates.
+2. Use the appropriate authority: code for implementation, runtime evidence for observed behavior, and dated decisions for rationale.
+3. Compare evidence quality before preferring a newer note.
+4. Correct the stale claim in place. Include the date and a link to the evidence, then update `last_updated`.
+5. Use `status: superseded` only when the entire note has been replaced. A correction in the body is enough for a partial change.
+6. Update the active plan if the correction affects its scope or a decision.
 
-## Implementation anchors
-- `<repo/file/or/script>`
-- `<test command>`
+If the evidence leaves the conflict unresolved, record what is unknown and what would resolve it. Future answers must preserve that uncertainty.
 
-## Follow-ups
-- [ ] <Concrete remaining task, if any.>
-```
+## Refresh or publish
 
-## Updating Plans
-
-When a task moves long-running work forward, update these sections when present:
-
-- `Progress`: dated checkbox with proof.
-- `Surprises & Discoveries`: new gotchas, root causes, or vendor findings.
-- `Decision Log`: decisions with rationale and date.
-- `Outcomes & Retrospective`: user-visible or validation outcome after a phase/slice closes.
-
-Keep the plan restartable: a new agent should be able to resume from the document without rereading the entire conversation.
-
-## Resolving Contradictions
-
-Use this when two memory notes disagree, or when memory disagrees with current code, runtime behavior, PRs, issues, or user direction.
-
-1. Identify the exact conflicting claims and cite the file paths plus `created` and `last_updated` dates.
-2. Verify against the right authority: current code for implementation, direct runtime evidence for behavior, and dated PRs/issues/decisions for rationale.
-3. Prefer newer notes only when evidence quality is comparable. Do not discard an older note that contains direct proof unless newer proof supersedes it.
-4. Update the stale or incorrect note in place with a dated correction, a link to the replacement evidence, and an updated `last_updated`.
-5. Mark `status: superseded` only when the entire note has been replaced. Keep historical context when it explains why the stale decision was reasonable at the time.
-6. Update the active plan when the contradiction changes progress, scope, a decision, a validation gate, or a known risk.
-7. If unresolved, create or update a note with an `Unresolved conflict` section that lists competing claims, evidence checked, current impact, owner/next step if known, and the date. Treat the topic as uncertain in future answers.
-
-## Refresh QMD
-
-After memory writes:
+Refresh after changing private workbench notes:
 
 ```bash
 bash <skill-dir>/scripts/qmd-memory.sh refresh
 ```
 
-The refresh helper prints the qmd mutation commands by default. Ask before applying them. After approval:
+When only a private index is configured, run `qmd --index <private-index> update` and `qmd --index <private-index> embed`. Use the index name printed by the helper's `env` command.
+
+For shared project notes, inspect the KB's Git state before publishing. The helper stages markdown throughout the KB checkout, so check for unrelated work before running it:
 
 ```bash
-bash <skill-dir>/scripts/qmd-memory.sh refresh --apply
+bash <skill-dir>/scripts/qmd-memory.sh publish "topic: change"
 ```
 
-If qmd cannot refresh, mention that the memory file was written but the index may be stale.
+`publish` commits markdown in `QMD_KB_PATH` and refreshes its indexes. The configured mode controls whether it pushes:
+
+- In `review` mode, the default, the commit stays local. Show the pending commits and obtain approval for that set before running the helper's `push` command.
+- In `auto` mode, it pushes during the configured window. The default is weekdays, 09:00-20:00 local time. It reads the real clock and defers pushes outside that window.
+
+Use the helper for KB publishing so its mode and time window apply. Private workbench notes stay local. If a refresh fails, report that retrieval may be stale; if a push is deferred or fails, state that the note has not been shared.

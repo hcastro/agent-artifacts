@@ -3,71 +3,111 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I am new to this repository. Use the knowledge base to onboard me to the billing subsystem before we edit code.",
-      "expected_output": "A compact memory context pack with retrieved docs, current state, key decisions, implementation anchors, validation gates, and unknowns.",
+      "prompt": "Continue the checkout migration. Before editing code, use the knowledge base to tell me what remains for PROJ-1234 after the anonymous public-read slice.",
+      "expected_output": "A compact memory context pack, not a broad grep dump, with current state, remaining work, decisions, gotchas, implementation anchors, and validation gates.",
       "expectations": [
-        "Checks or describes checking qmd and knowledge-base availability before broad source grep.",
-        "Retrieves current/dated project memory and weights recent notes higher only after considering evidence quality.",
-        "Produces a compact context pack instead of dumping full documents.",
-        "Names likely code/test anchors before inspecting broad source."
+        "Checks or describes checking qmd/knowledge-base availability before broad source grep.",
+        "Compares evidence quality before preferring newer migration notes.",
+        "Identifies the remaining scope (topology, sync, realtime, cutover, or parity work) relevant to the prompt from retrieved notes.",
+        "Names likely code/test anchors instead of dumping entire documents."
       ]
     },
     {
       "id": 2,
-      "prompt": "Continue the data-pipeline cutover from persisted memory. What remains before we can remove the legacy exporter?",
-      "expected_output": "A context-pack answer grounded in memory retrieval, with remaining work, decisions to preserve, risks, and validation gates.",
+      "prompt": "We just learned that a checkout browser test only fails under next dev but passes under next start. Update durable memory and refresh the qmd index.",
+      "expected_output": "A writeback plan or performed writeback that updates the relevant memory note/ExecPlan with frontmatter dates and then refreshes qmd.",
       "expectations": [
-        "Uses semantic qmd retrieval for task shape before broad grep.",
-        "Retrieves plans or decision logs when present without assuming a specific project structure.",
-        "Identifies remaining work and validation gates relevant to the cutover.",
-        "Keeps the output concise and action-oriented."
+        "Confirms the knowledge-base path exists before writing.",
+        "Uses current date for last_updated/frontmatter.",
+        "Updates the appropriate Progress, Surprises, Decision Log, or Outcomes section when this affects an ExecPlan.",
+        "Runs or recommends qmd update/embed via the bundled refresh helper."
       ]
     },
     {
       "id": 3,
-      "prompt": "The architecture note says cache invalidation is event-driven, but current code appears to poll. Resolve the stale-memory question before refactoring.",
-      "expected_output": "A contradiction-resolution plan that cites memory dates, verifies current code as implementation truth, updates stale memory or records uncertainty, and asks before refreshing qmd.",
+      "prompt": "Why did we preserve the legacy order-fanout topology for the first checkout composer slice?",
+      "expected_output": "A rationale-focused answer grounded in memory retrieval, including the decision, why it was lower risk, and what proof validated it.",
       "expectations": [
-        "Does not silently choose one memory note or blend contradictory claims.",
-        "Compares created/last_updated dates and evidence quality.",
-        "Treats current code as source of truth for implementation.",
-        "Marks stale memory with a correction or status: superseded when appropriate.",
-        "Asks before running qmd update/embed or uses dry-run helper output."
+        "Searches memory for the decision/rationale rather than only looking at code.",
+        "Distinguishes historical rationale from current implementation truth.",
+        "Mentions validation evidence or browser/test gates if present in retrieved memory."
       ]
     },
     {
       "id": 4,
-      "prompt": "Two deploy runbooks disagree about whether rollback needs a database restore. Find the reliable answer and update durable memory if needed.",
-      "expected_output": "A retrieval and contradiction workflow that compares both runbooks, checks evidence, records the resolved or unresolved conflict, and does not mutate qmd state without approval.",
-      "expectations": [
-        "Searches for exact anchors like rollback, restore, deploy, and database terms.",
-        "Identifies the conflicting claims and their dates.",
-        "Verifies against the appropriate source of truth such as current scripts, recent incidents, or deployment docs.",
-        "Records unresolved uncertainty instead of presenting an unproven claim as fact.",
-        "Asks before applying qmd setup or refresh mutations."
-      ]
-    },
-    {
-      "id": 5,
       "prompt": "qmd is not installed on this machine, but I need to continue the project now. What should the agent do?",
       "expected_output": "A degraded but safe retrieval path that avoids silently adding dependencies to the repo, asks before creating a missing KB, and uses narrow markdown search until qmd is installed externally.",
       "expectations": [
-        "Does not run package installation as a project dependency unless explicitly requested.",
-        "Recommends global or external qmd installation.",
+        "Does not install qmd as a project dependency inside the working repo.",
+        "Recommends global/external qmd installation or npx/bunx use.",
         "Uses narrow markdown fallback search and states that retrieval quality is degraded.",
         "Asks before creating a missing knowledge-base directory."
       ]
     },
     {
-      "id": 6,
-      "prompt": "We learned a staging-only vendor API quirk that changes how future agents should debug auth failures. Update memory and keep the qmd index safe.",
-      "expected_output": "A writeback plan or performed writeback with frontmatter dates, evidence, implications, and a dry-run qmd refresh command unless the user explicitly approves applying it.",
+      "id": 5,
+      "prompt": "Two knowledge-base notes disagree about whether checkout order-totals are sourced from current code or a stage-only probe. Resolve the contradiction before editing.",
+      "expected_output": "A contradiction-resolution plan or performed writeback that cites both notes and dates, verifies against the right source of truth, updates stale memory or records an unresolved conflict, and refreshes qmd.",
       "expectations": [
-        "Confirms the knowledge-base path exists before writing.",
-        "Uses current date for created/last_updated frontmatter.",
-        "Writes only durable knowledge that is not obvious from code alone.",
-        "Updates a relevant plan or decision log when the discovery changes active work.",
-        "Does not run qmd update/embed without explicit approval or --apply opt-in."
+        "Does not silently choose one memory note or blend contradictory claims.",
+        "Compares created/last_updated dates and evidence quality.",
+        "Treats current code as source of truth for implementation and direct stage/prod evidence as source of truth for runtime behavior.",
+        "Marks stale memory with a correction or status: superseded when appropriate.",
+        "Runs or recommends the bundled qmd refresh helper after memory updates."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Search the knowledge base for what we know about the feed flicker bug. Also check my personal notes.",
+      "expected_output": "The helper searches the team KB (plus any docs index naming the repo) and, because the user asked, the private workbench, outside the sandbox; findings are reported per index, with workbench hits labeled as personal working notes.",
+      "expectations": [
+        "Reads the team KB with qmd-memory.sh search, and reads the workbench because the user asked for personal notes: with --with-workbench, a separate search --workbench, or a default search when QMD_SEARCH_WORKBENCH=always. Never runs --workbench alone as the only search. Never passes --index \"$QMD_INDEX\" when that variable is unset.",
+        "Runs the search outside the sandbox. If a run inside the sandbox exits 3, treats the search as not run and reruns the same command outside it.",
+        "Reports team-KB findings and workbench findings separately and presents workbench findings as personal working notes, not team truth.",
+        "Does not search a wrong index if QMD_WORKBENCH_PATH is unset on this machine. When the helper notes that no workbench is configured (or --workbench exits 1), states the workbench is not configured and answers from the team KB."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "We validated a new vendor-webhook gotcha on stage at 22:30 on a Tuesday. Write it back to the knowledge base and share it with the team.",
+      "expected_output": "A writeback that ends with the publish helper: note written with correct frontmatter, committed to the KB repo, push correctly deferred because the real clock is outside the publish window, and the index refreshed.",
+      "expectations": [
+        "Writes the note with current-date frontmatter and runs the bundled publish helper (or equivalent git -C \"$QMD_KB_PATH\" commit) rather than stopping at the file save.",
+        "Reads the actual time from the system date command instead of assuming it.",
+        "Recognizes 22:30 is outside the default weekday 09:00-20:00 publish window: commits locally, defers the push, and tells the user the note is committed but not yet shared.",
+        "Refreshes the qmd index in the same step as the write.",
+        "Targets the KB repo for git operations, not the code repo the session is working in."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "The team KB uses review mode. Save the caching behavior we verified in staging and share it with the team.",
+      "expected_output": "A writeback that commits via the publish helper, then presents the pending commits to the user and asks for approval before any push; the push happens only after explicit approval via the push helper.",
+      "expectations": [
+        "Runs the publish helper; recognizes review mode means the commit is held locally, not pushed.",
+        "Shows the user the pending commits (from the helper output or the pending command) and explicitly asks whether to push.",
+        "Runs the push helper only after the user explicitly approves in this conversation; treats approval as covering only the commits shown.",
+        "If the user declines or does not answer, leaves the commits local, states they are safe and listed by the pending command, and does not push.",
+        "Never bypasses the gate with raw git push to the KB remote."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Use my private notes to find the apartment administration contact. I am outside a Git repo, QMD_KB_PATH is unset, and QMD_WORKBENCH_PATH and QMD_WORKBENCH_INDEX are configured.",
+      "expected_output": "Retrieval from the explicitly configured private index, with the contact attributed to the saved personal note.",
+      "expectations": [
+        "Uses lex or search with --workbench and preserves the private source label.",
+        "Does not require or create a primary team KB for this private-only request.",
+        "Does not choose a knowledge base using an employer name or a remembered home-directory path."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "What does Array.prototype.map return in JavaScript?",
+      "expected_output": "A direct explanation with a short example; the QMD memory workflow does not apply.",
+      "expectations": [
+        "Does not query a project or private KB for a general programming question.",
+        "Does not run index setup or alter project configuration."
       ]
     }
   ]

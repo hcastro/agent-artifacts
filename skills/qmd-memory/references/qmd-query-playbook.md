@@ -1,120 +1,82 @@
-# QMD Query Playbook For Project Memory
+# QMD query playbook
 
-Use this playbook when a task is too large for one obvious search or when prior decisions matter.
+Use this reference when the first search leaves a question unanswered. Choose words from the project's notes and `.kb-config` contexts.
 
-## Contents
+In these examples, `qmd-memory.sh` means `bash <skill-dir>/scripts/qmd-memory.sh`. Run it from the project you are working on so the helper can identify its remote.
 
-- [Build The Query From Facets](#build-the-query-from-facets)
-- [Use A Three-Pass Retrieval Pattern](#use-a-three-pass-retrieval-pattern)
-- [Retrieve Only What Matters](#retrieve-only-what-matters)
-- [Turn Results Into Action](#turn-results-into-action)
-- [Query Examples](#query-examples)
+## Select the sources
 
-## Build The Query From Facets
+Run `indexes` to see the available sources. Default searches read the primary KB and docs indexes whose context names the current repository. Add private notes with `--with-workbench` when the user requests them, or when the primary KB has no relevant result.
 
-Good qmd queries combine several facets:
-
-- Product or code surface: `checkout`, `dashboard`, `admin`, `mobile`, `worker`, `API`, `database`
-- User or runtime state: `anonymous`, `authenticated`, `offline`, `staging`, `production`, `local`
-- Operation: `read`, `write`, `create`, `edit`, `delete`, `sync`, `backfill`, `deploy`, `rollback`
-- Technical construct: feature flag, route, table, queue, event name, SDK method, package, config key
-- Ticket or phase: issue ID, milestone, PR number, migration phase, release name
-- Proof or failure: test suite, command, browser mode, log message, error string, metric, alert
-
-Example:
+For a question about another repository, choose its docs index explicitly:
 
 ```bash
-qmd --index "$QMD_INDEX" query --json -n 10 --min-score 0.25 \
-  "checkout authenticated create order feature flag staging validation"
+qmd-memory.sh search --team --index reader-docs "release process for the reader app"
 ```
 
-## Use A Three-Pass Retrieval Pattern
-
-### Pass 1: semantic task query
-
-Use `qmd query` for "what is relevant to this task?"
+To search only personal notes:
 
 ```bash
-qmd --index "$QMD_INDEX" query --json -n 10 --min-score 0.25 \
-  "remaining payment migration webhook retry idempotency decisions"
+qmd-memory.sh search --workbench "apartment administration contact"
 ```
 
-### Pass 2: exact anchors
+`--team`, `--workbench`, and `--index` replace the default set. Each result retains its index and source label. Keep those labels when using the results in an answer.
 
-Use `qmd search` for weird strings, route paths, suite names, feature flags, table names, or error messages.
+## Build a query
+
+Start with the surface and operation. Add identifiers that distinguish the task, such as a ticket or feature flag. For example:
 
 ```bash
-qmd --index "$QMD_INDEX" search --json -n 10 \
-  '"PAYMENTS_V2_ENABLED" "POST /webhooks/payment" "duplicate event id"'
+qmd-memory.sh search "PROJ-1234 anonymous checkout reads cold cache validation"
 ```
 
-### Pass 3: proof and decision query
-
-Use qmd to find why a choice was made and what proved it.
+Use `lex` for an exact error or identifier:
 
 ```bash
-qmd --index "$QMD_INDEX" query --json -n 8 --min-score 0.25 \
-  "why preserve legacy webhook retry behavior and what validation proved it"
+qmd-memory.sh lex '"NEW_CHECKOUT_ENABLED" "getOrdersForAnonymousUser"'
 ```
 
-## Retrieve Only What Matters
-
-Read top results with line windows first:
+When the task needs the reason for a decision, ask for it:
 
 ```bash
-qmd --index "$QMD_INDEX" get "topic/current-plan.md:120" -l 160
+QMD_LIMIT=6 qmd-memory.sh search "why keep the legacy order fanout during migration"
 ```
 
-Use full documents only when the document is short or the whole plan is needed:
+`search` runs qmd's hybrid query with a default score floor of 0.25. `lex` runs keyword search without that floor. Both return at most 10 results per index unless you set `QMD_LIMIT`.
+
+## Read sections
+
+Open a result near its relevant lines before requesting the full document:
 
 ```bash
-qmd --index "$QMD_INDEX" get "topic/2026-04-23-validation-runbook.md" --full
+qmd-memory.sh get --index reader-docs "runbooks/releases.md:40" -l 100
+qmd-memory.sh multi-get --index reader-docs "runbooks/*.md" -l 80
 ```
 
-Use `multi-get` when several top qmd results need to be passed to an agent together:
+`get` can use a full result URI carrying `?index=<name>`. `multi-get` needs the index flag explicitly. For a bare path or doc ID, choose the result's index when it came from outside the primary KB.
+
+Use `-l` to limit excerpts. `--max-bytes` skips entire files that exceed the limit, which can hide a long note containing the answer. Read a full document when its overall structure matters or it is short enough to fit the task.
+
+## Use the result
+
+Record the notes that change the task and the evidence behind them. Before editing code, identify the affected files and the tests that establish the required behavior. Stop querying memory when the remaining question can be answered from those files.
+
+For a long-running task, search its phase and remaining work:
 
 ```bash
-qmd --index "$QMD_INDEX" multi-get "#a1b2c3,#d4e5f6,topic/*identity*" --json -l 120
+qmd-memory.sh search "Phase 2 order history migration remaining work"
 ```
 
-## Turn Results Into Action
-
-After retrieval, produce these coding anchors:
-
-1. Memory docs that matter.
-2. Implementation files likely to change.
-3. Existing tests and scripts that prove the surface.
-4. Decisions that should not be accidentally reversed.
-5. Risks that require runtime, staging, production, or browser validation.
-
-Then inspect code. Do not keep querying qmd when the next unknown is an implementation detail in source.
-
-## Query Examples
-
-### Remaining Work
+For a runtime failure, search the exact message and command:
 
 ```bash
-qmd --index "$QMD_INDEX" query --json -n 10 \
-  "remaining migration cutover rollback validation gaps"
+qmd-memory.sh lex '"TLS issuer" "next start"'
 ```
 
-### Identity Or Data Sync
+If an index fails, inspect its error. A failed query gives no evidence about whether the note exists. Exit 3 means the environment blocked all selected indexes; partial failures return exit 1 with separate errors in the JSON output.
 
-```bash
-qmd --index "$QMD_INDEX" query --json -n 8 \
-  "identity sync provisioning deactivation backfill decision validation"
-```
+## Use raw qmd deliberately
 
-### Test Or Runtime Gotchas
+The helper resolves the primary index from `.kb-config` without exporting `QMD_INDEX` to the parent shell. qmd also ignores that environment variable. An empty `--index "$QMD_INDEX"` opens its default index, which can return stale or unrelated notes.
 
-```bash
-qmd --index "$QMD_INDEX" search --json -n 10 \
-  '"headful" "TLS" "timeout" "staging" "next start"'
-```
-
-### Legacy Artifact Cleanup
-
-```bash
-qmd --index "$QMD_INDEX" query --json -n 10 \
-  "remove legacy artifacts after migration compatibility fallback cleanup"
-```
+Run `qmd-memory.sh env` first and type its printed index name after `qmd --index`. Use raw qmd for operations the helper does not cover, such as refreshing a standalone docs index.
