@@ -1,6 +1,6 @@
 # Agent artifacts
 
-Agent skills for Claude Code. Each skill is a folder with a `SKILL.md` file that tells the agent what the skill does and when to use it, plus optional scripts, reference files, and templates.
+Agent skills for Claude Code and Codex. Each skill is a folder with a `SKILL.md` file that tells the agent what the skill does and when to use it, plus optional scripts, reference files, and templates.
 
 ## Skills
 
@@ -17,6 +17,7 @@ The following table lists each skill in this repository and what it needs before
 | [`presenter-deck`](skills/presenter-deck) | Turns HTML slides into a presentable page with a presenter view, speaker notes, a timer, and a synced audience window. | Python 3. For `check_deck.mjs`, Node.js with Playwright and Chromium (`npm i -g playwright && npx playwright install chromium`). |
 | [`qmd-memory`](skills/qmd-memory) | Retrieves project memory from a qmd-indexed markdown knowledge base before broad grep, condenses it into a short context pack, and writes discoveries back with dated frontmatter and a dry-run index refresh. In beta. | Install qmd (`npm install -g @tobilu/qmd`) and export `QMD_KB_PATH`. From your project root, run `bash ~/.claude/skills/qmd-memory/scripts/qmd-memory.sh setup`, review the commands it prints, then run it again with `--apply`. |
 | [`read-long-screenshot`](skills/read-long-screenshot) | Reads a full-page or scrolling screenshot at full detail by slicing it into overlapping tiles that stay inside Claude's vision limits. | Python 3 with Pillow (`python3 -m pip install pillow`), or `sips` on macOS. |
+| [`research-social-video`](skills/research-social-video) | Researches Instagram posts, Reels, ordered carousels and saved collections with originals, timestamped frames and local speech transcription. Includes a TikTok download path. Runs through Codex shell and image-viewing tools without Juniper. | Python 3.11+, FFmpeg, yt-dlp, and a signed-in research browser profile for Instagram. Optional MLX Whisper runtime and local model for speech on Apple Silicon. |
 | [`run-design-tournament`](skills/run-design-tournament) | Runs a blind, multi-round tournament between design directions, with rubric scoring by lens judges, a code tally, and owner checkpoints. | Claude Code with the Workflow tool, or subagents as a fallback. Headless Chrome or Playwright for renders. |
 | [`strategic-code-design`](skills/strategic-code-design) | Reviews and shapes code design for low complexity with deep modules, information hiding, simple error models, and a severity rubric for reviews. | None. The optional scanner needs Python 3.8 or later and uses only the standard library. |
 | [`write-implementation-plan`](skills/write-implementation-plan) | Writes a self-contained HTML plan with real code excerpts, diffs, Mermaid diagrams, and a step checklist before coding starts. | None. The page loads fonts, highlight.js 11.9.0, and Mermaid 11.4.1 from CDNs. |
@@ -46,6 +47,17 @@ Claude Code loads personal skills from `~/.claude/skills/` and project skills fr
 4. Start a new Claude Code session. Claude loads the skill when a request matches its description. To run it directly, type `/SKILL_NAME`.
 
 To share a skill with everyone who works in a project, put it in that project's `.claude/skills/` folder instead of `~/.claude/skills/`.
+
+## Install in Codex
+
+Codex user skills live in `~/.codex/skills/`. From this repository root, link a skill into that directory:
+
+```bash
+mkdir -p ~/.codex/skills
+ln -s "$PWD/skills/SKILL_NAME" ~/.codex/skills/SKILL_NAME
+```
+
+Inspect an existing destination before replacing it. Complete the skill's setup and use it on the next Codex turn. Some older skills assume Claude-specific tools; check their requirements before installing them in Codex. `research-social-video` bundles its executable helpers for Codex.
 
 ## Repository layout
 
