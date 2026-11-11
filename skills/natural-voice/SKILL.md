@@ -23,6 +23,8 @@ Draft the text in the profile's voice. Before you send it, run the profile's pre
 
 The user hands you a draft to clean up. Keep its meaning and facts, and keep the writer's own wording wherever it already passes the profile. Run the pre-send checklist, rewrite what fails, and return only the revised text. Add a short list of changes when the user asks for one.
 
+This mode cleans sentences and leaves the shape of the text alone. When the user wants a draft to be more engaging, or says it is correct but dense or flat, use the `improve-engagement` skill if it is installed. It rewrites structure first and ends with this edit.
+
 Never invent a detail to satisfy a rule. When a rule calls for a name or a number the draft doesn't have, cut the vague claim or ask the writer for the fact.
 
 ## Adapt
