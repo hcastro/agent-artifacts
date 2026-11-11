@@ -10,19 +10,11 @@ To use the skill, you need the following:
 
 - Python 3, to build the deck.
 - Optional: Node.js with Playwright and Chromium, to check the deck before you present it. To install them, run `npm i -g playwright && npx playwright install chromium`.
-- Optional: claude.ai Artifacts, to publish the deck at a link. Without them, Claude builds a standalone HTML file you can host anywhere or open from disk.
+- Optional: A hosting service to share the deck at a link. You can also open the standalone HTML file from disk.
 
 ## Install the skill
 
-To install the skill for Claude Code, clone the repository and link the skill into your skills folder:
-
-```bash
-git clone https://github.com/hcastro/agent-artifacts.git
-mkdir -p ~/.claude/skills
-ln -s "$PWD/agent-artifacts/skills/presenter-deck" ~/.claude/skills/presenter-deck
-```
-
-The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `presenter-deck`.
 
 ## Use the skill
 
@@ -32,7 +24,7 @@ Ask for a deck you can present. The following requests trigger the skill:
 - "I'm giving the quarterly readout on a projector tomorrow. Set up the deck so my notes stay on my laptop."
 - "Add a timer and pace tracking to this deck for a 20-minute talk."
 
-Claude collects each slide's HTML, title, planned minutes, and speaker notes into a deck file. It builds the page, checks it, publishes it, and gives you the link with the presenting steps.
+The agent collects each slide's HTML, title, planned minutes, and speaker notes into a deck file. It builds the page, checks it, publishes it, and gives you the link with the presenting steps.
 
 ## Build the deck yourself
 

@@ -1,6 +1,6 @@
 # strategic-code-design
 
-This skill gives Claude a set of design lenses for writing, reviewing, refactoring, and debugging code. It favors deep modules, information hiding, and simple error models, and it rates review findings on a fixed severity scale.
+This skill gives your agent a set of design lenses for writing, reviewing, refactoring, and debugging code. It favors deep modules, information hiding, and simple error models, and it rates review findings on a fixed severity scale.
 
 The skill turns design principles from John Ousterhout's *A Philosophy of Software Design* into agent workflows.
 
@@ -21,26 +21,18 @@ You need an agent that can read files and run tests. The skill calls no outside 
 
 ## Install the skill
 
-To install the skill for Claude Code, clone the repository and link the skill into your skills folder:
-
-```bash
-git clone https://github.com/hcastro/agent-artifacts.git
-mkdir -p ~/.claude/skills
-ln -s "$PWD/agent-artifacts/skills/strategic-code-design" ~/.claude/skills/strategic-code-design
-```
-
-The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `strategic-code-design`.
 
 ## How it works
 
-[`SKILL.md`](SKILL.md) holds four workflows. Claude picks the one that fits the task:
+[`SKILL.md`](SKILL.md) holds four workflows. The agent picks the one that fits the task:
 
-- **Change.** Claude maps the current design, writes the correctness contract (inputs, outputs, invariants, and failure behavior), and tests the change against design pressure. For a change to an interface or module boundary, it sketches two designs and picks the simpler one.
-- **Review.** Claude checks correctness first, then design. Each finding carries evidence, risk, and a fix, rated Blocker, High, Medium, or Low. The review ends with a verdict of Approve, Needs changes, or Block. The template is in [`references/review-rubric.md`](references/review-rubric.md).
-- **Refactor.** Claude sets up a safety net of tests, names the design problem, picks a narrow seam, and refactors in small steps that keep behavior the same.
-- **Debug.** Claude finds the broken invariant or hidden assumption, fixes it where it belongs, and adds a regression test.
+- **Change.** The agent maps the current design, writes the correctness contract (inputs, outputs, invariants, and failure behavior), and tests the change against design pressure. For a change to an interface or module boundary, it sketches two designs and picks the simpler one.
+- **Review.** The agent checks correctness first, then design. Each finding carries evidence, risk, and a fix, rated Blocker, High, Medium, or Low. The review ends with a verdict of Approve, Needs changes, or Block. The template is in [`references/review-rubric.md`](references/review-rubric.md).
+- **Refactor.** The agent sets up a safety net of tests, names the design problem, picks a narrow seam, and refactors in small steps that keep behavior the same.
+- **Debug.** The agent finds the broken invariant or hidden assumption, fixes it where it belongs, and adds a regression test.
 
-The reference files hold the detail. Claude reads each one only when the task needs it.
+The reference files hold the detail. The agent reads each one only when the task needs it.
 
 ## Example requests
 

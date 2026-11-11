@@ -1,16 +1,14 @@
 # read-long-screenshot
 
-This skill lets Claude read a full-page screenshot at full detail. It slices the image into overlapping tiles that stay inside Claude's vision limits, reads every tile in page order, and reports what the page says.
+This skill lets your agent read a full-page screenshot at full detail. It slices the image into overlapping tiles that fit the image-viewing tool's limits, reads every tile in page order, and reports what the page says.
 
 Use it for scrolling captures of web pages, long Slack or email threads, receipts, and tall infographics.
 
 ## Why tall images are hard to read
 
-Claude's vision input scales down any image whose long edge is over 1568 px or whose area is over about 1.15 megapixels. It keeps the aspect ratio, so a tall capture shrinks to a thin strip.
+Vision tools often resize large images before showing them to an agent. A tall capture can shrink to a thin strip with unreadable text.
 
-A 1440x9000 page capture arrives about 250 px wide. At that size body text is a few pixels tall, and the model reports that the image is unreadable.
-
-The skill's script cuts the capture into tiles that each fit inside both limits. Each tile reaches the model at the size the script wrote it, so the text stays sharp. Neighboring tiles overlap, so a line cut at one tile's edge appears whole in the next.
+The script cuts the capture into overlapping tiles, with configurable limits for edge length and pixel area. Set those limits to match your agent's image-viewing tool so each tile stays readable. Overlap keeps a line cut at one tile's edge visible in the next.
 
 ## Before you begin
 
@@ -21,21 +19,13 @@ The script needs Python 3 and one image engine:
 
 ## Install the skill
 
-To install the skill for Claude Code, clone the repository and link the skill into your skills folder:
-
-```bash
-git clone https://github.com/hcastro/agent-artifacts.git
-mkdir -p ~/.claude/skills
-ln -s "$PWD/agent-artifacts/skills/read-long-screenshot" ~/.claude/skills/read-long-screenshot
-```
-
-The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `read-long-screenshot`.
 
 ## Use the skill
 
-Share a long screenshot with Claude and ask about it, for example "Summarize this page capture" or "Transcribe this Slack thread." The skill triggers on its own for long captures and for any image more than about twice as tall as it is wide.
+Share a long screenshot with your agent and ask about it, for example "Summarize this page capture" or "Transcribe this Slack thread." The skill triggers on its own for long captures and for any image more than about twice as tall as it is wide.
 
-Claude then follows the workflow in [`SKILL.md`](SKILL.md): it slices the image, reads every tile, zooms in on any area that's still blurry, and reports in top-to-bottom order.
+The agent then follows the workflow in [`SKILL.md`](SKILL.md): it slices the image, reads every tile, zooms in on any area that's still blurry, and reports in top-to-bottom order.
 
 ### Run the script yourself
 
@@ -78,11 +68,11 @@ The following table lists the script's options. To print them from the script, r
 | `--x-range X0 X1` | Full width | Keep only source columns `X0` to `X1`, for example to drop a sidebar. |
 | `--y-range Y0 Y1` | Full height | Keep only source rows `Y0` to `Y1`, for example to zoom on one region. |
 | `--overlap PX` | `80` | Rows shared by neighboring tiles, in output pixels. 80 px is about two lines of text on a 2x capture. |
-| `--max-edge PX` | `1568` | Longest tile edge, matching Claude's long-edge limit. |
-| `--max-pixels N` | `1150000` | Largest tile area, matching Claude's area limit. |
+| `--max-edge PX` | `1568` | Maximum length of a tile edge. Adjust to your image-viewing tool. |
+| `--max-pixels N` | `1150000` | Maximum tile area in pixels. Adjust to your image-viewing tool. |
 | `--engine` | `auto` | `pillow`, or `sips` on macOS. `auto` picks Pillow when it's installed. |
 
-If Claude reports that a tile was displayed at a smaller size, lower `--max-edge` and `--max-pixels` to fit that size.
+If the agent reports that a tile was displayed at a smaller size, lower `--max-edge` and `--max-pixels` to fit that size.
 
 ## Limits
 

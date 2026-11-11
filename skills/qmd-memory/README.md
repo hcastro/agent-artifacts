@@ -13,17 +13,11 @@ Use it with any repository. You choose the knowledge-base path and index names. 
 
 The helper puts qmd's bin directory first on `PATH`. If qmd is missing, it tries the default nvm environment. It never installs qmd for you.
 
-## Install
+## Install the skill
 
-Clone this repository, then link the skill into your agent's user skills directory. For Codex:
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `qmd-memory`.
 
-```bash
-git clone https://github.com/hcastro/agent-artifacts.git
-mkdir -p ~/.codex/skills
-ln -s "$PWD/agent-artifacts/skills/qmd-memory" ~/.codex/skills/qmd-memory
-```
-
-For Claude Code, use `~/.claude/skills` as the destination. The link picks up changes when you pull this repository. If you already have a QMD memory skill installed under another name, replace that installation to avoid duplicate instructions.
+If you already have a QMD memory skill installed under another name, remove the old installation to avoid duplicate instructions. Then choose a knowledge base as described below.
 
 ## Choose a knowledge base
 

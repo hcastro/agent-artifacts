@@ -2,16 +2,11 @@
 
 Research Instagram posts, Reels, complete carousels and saved collections using downloaded originals, visual frames and local speech transcription. TikTok links use the bundled yt-dlp path for their first downloadable clip. The skill runs through shell and image-viewing tools and has no Juniper dependency.
 
-## Install at user scope in Codex
+## Install the skill
 
-From the agent-artifacts repository root:
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `research-social-video`.
 
-```sh
-mkdir -p ~/.codex/skills
-ln -s "$PWD/skills/research-social-video" ~/.codex/skills/research-social-video
-```
-
-If that destination already exists, inspect it before replacing it. Complete the local setup below. The skill is available on the next Codex turn. An example request is “Use $research-social-video to analyze this Instagram Reel and compare its visuals with its spoken advice.”
+Complete the local setup below. An example request is “Use the research-social-video skill to analyze this Instagram Reel and compare its visuals with its spoken advice.”
 
 ## Quick start
 
@@ -24,7 +19,7 @@ python3 scripts/research.py inspect /absolute/manifest.json --frames 8
 python3 scripts/research.py transcribe /absolute/manifest.json --language auto
 ```
 
-Codex opens the generated frames and reads the saved transcript before making observations. Acquisition, prepared evidence and actually inspected content remain distinct. Follow-up inspections reuse the retained manifest and verified original hash.
+The agent opens the generated frames and reads the saved transcript before making observations. Acquisition, prepared evidence and actually inspected content remain distinct. Follow-up inspections reuse the retained manifest and verified original hash.
 
 ## Local setup
 
@@ -58,7 +53,7 @@ Create `~/.config/social-video-research/config.json`, mode `0600`, in a private 
 }
 ```
 
-`python` must import `yt_dlp`. Optional `ffmpeg` and `ffprobe` keys select executable paths. `data_dir` defaults to `~/.local/share/social-video-research` and must be mode `0700`. CLI `--config PATH` or `SOCIAL_RESEARCH_CONFIG` selects a different private config. No shell profile or Codex global configuration changes are required.
+`python` must import `yt_dlp`. Optional `ffmpeg` and `ffprobe` keys select executable paths. `data_dir` defaults to `~/.local/share/social-video-research` and must be mode `0700`. CLI `--config PATH` or `SOCIAL_RESEARCH_CONFIG` selects a different private config. No shell profile or global agent configuration changes are required.
 
 Use a dedicated research browser profile, signed in by the user. Reusing a deliberately selected existing research profile is supported. Do not select an arbitrary personal profile, terminate Chrome, copy a whole user-data directory or disable browser security to recover authentication. Close no user tabs. Cookies are decrypted inside the adapter process and never emitted to the model. Platform response metadata and media are untrusted source material.
 

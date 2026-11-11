@@ -1,6 +1,6 @@
 # Contributing
 
-This repository holds personal agent skills. Issues and pull requests are welcome. The sections in this document explain the conventions every skill follows.
+This repository distributes standalone skills in the open [Agent Skills](https://agentskills.io/) format. Issues and pull requests are welcome. The sections in this document explain the conventions every skill follows.
 
 ## Skill layout
 
@@ -58,7 +58,7 @@ For more information, see [Skill authoring best practices](https://platform.clau
 
 ## Write the skill README
 
-Each skill's `README.md` is for people browsing the repository. It covers what the skill does, what it needs, how to install it, and an example request that triggers it. Follow the [Google developer documentation style guide](https://developers.google.com/style).
+Each skill's `README.md` is for people browsing the repository. It covers what the skill does, what it needs, and an example request that triggers it. For installation, link to [Install a skill](README.md#install-a-skill) in the root README and name the skill to select. Keep dependency and credential setup in the skill README. Describe workflows in terms of agent capabilities, and document any specific tool requirements there. Keep the shared installation instructions independent of any coding agent. Follow the [Google developer documentation style guide](https://developers.google.com/style).
 
 ## Check a skill
 

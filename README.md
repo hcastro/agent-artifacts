@@ -1,6 +1,6 @@
 # Agent artifacts
 
-Agent skills for Claude Code and Codex. Each skill is a folder with a `SKILL.md` file that tells the agent what the skill does and when to use it, plus optional scripts, reference files, and templates.
+Reusable skills for coding agents that support the open [Agent Skills](https://agentskills.io/) format. Each skill is a folder with a `SKILL.md` file that tells the agent what the skill does and when to use it, plus optional scripts, reference files, and templates.
 
 ## Skills
 
@@ -16,9 +16,9 @@ The following table lists each skill in this repository and what it needs before
 | [`natural-voice`](skills/natural-voice) | Writes and edits text the way a person talks, from a voice profile with defined rules and Bad/Better examples, and builds new profiles from another writer's samples. | None. Profiles you build go in `profiles/`, which git ignores. |
 | [`presenter-deck`](skills/presenter-deck) | Turns HTML slides into a presentable page with a presenter view, speaker notes, a timer, and a synced audience window. | Python 3. For `check_deck.mjs`, Node.js with Playwright and Chromium (`npm i -g playwright && npx playwright install chromium`). |
 | [`qmd-memory`](skills/qmd-memory) | Searches project knowledge and private notes with qmd, retrieves relevant sections, and saves dated discoveries. Works across repositories with configurable indexes. | Install qmd 2.8 or later and set `QMD_KB_PATH`. Run the helper's `setup` command to build the indexes. See the skill README for per-project configuration and publishing. |
-| [`read-long-screenshot`](skills/read-long-screenshot) | Reads a full-page or scrolling screenshot at full detail by slicing it into overlapping tiles that stay inside Claude's vision limits. | Python 3 with Pillow (`python3 -m pip install pillow`), or `sips` on macOS. |
-| [`research-social-video`](skills/research-social-video) | Researches Instagram posts, Reels, ordered carousels and saved collections with originals, timestamped frames and local speech transcription. Includes a TikTok download path. Runs through Codex shell and image-viewing tools without Juniper. | Python 3.11+, FFmpeg, yt-dlp, and a signed-in research browser profile for Instagram. Optional MLX Whisper runtime and local model for speech on Apple Silicon. |
-| [`run-design-tournament`](skills/run-design-tournament) | Runs a blind, multi-round tournament between design directions, with rubric scoring by lens judges, a code tally, and owner checkpoints. | Claude Code with the Workflow tool, or subagents as a fallback. Headless Chrome or Playwright for renders. |
+| [`read-long-screenshot`](skills/read-long-screenshot) | Reads a full-page or scrolling screenshot at full detail by slicing it into overlapping tiles for detailed inspection. | Python 3 with Pillow (`python3 -m pip install pillow`), or `sips` on macOS. |
+| [`research-social-video`](skills/research-social-video) | Researches Instagram posts, Reels, ordered carousels and saved collections with originals, timestamped frames and local speech transcription. Includes a TikTok download path. Uses shell and image-viewing tools. | Python 3.11+, FFmpeg, yt-dlp, and a signed-in research browser profile for Instagram. Optional MLX Whisper runtime and local model for speech on Apple Silicon. |
+| [`run-design-tournament`](skills/run-design-tournament) | Runs a blind, multi-round tournament between design directions, with rubric scoring by lens judges, a code tally, and owner checkpoints. | An agent with subagents or workflow orchestration. Headless Chrome or Playwright for renders. |
 | [`strategic-code-design`](skills/strategic-code-design) | Reviews and shapes code design for low complexity with deep modules, information hiding, simple error models, and a severity rubric for reviews. | None. The optional scanner needs Python 3.8 or later and uses only the standard library. |
 | [`write-implementation-plan`](skills/write-implementation-plan) | Writes a self-contained HTML plan with real code excerpts, diffs, Mermaid diagrams, and a step checklist before coding starts. | None. The page loads fonts, highlight.js 11.9.0, and Mermaid 11.4.1 from CDNs. |
 
@@ -26,38 +26,17 @@ Each skill's folder has a `README.md` with setup and usage in more detail. To op
 
 ## Install a skill
 
-Claude Code loads personal skills from `~/.claude/skills/` and project skills from `.claude/skills/` in a repository. To install a skill for your user account, follow these steps:
-
-1. Clone this repository:
-
-   ```bash
-   git clone https://github.com/hcastro/agent-artifacts.git
-   ```
-
-2. Link the skill into your skills folder, so that `git pull` keeps it current:
-
-   ```bash
-   mkdir -p ~/.claude/skills
-   ln -s "$PWD/agent-artifacts/skills/SKILL_NAME" ~/.claude/skills/SKILL_NAME
-   ```
-
-   Replace `SKILL_NAME` with a folder name from the table in the [Skills](#skills) section.
-
-3. Complete the setup listed in the skill's row of the table.
-4. Start a new Claude Code session. Claude loads the skill when a request matches its description. To run it directly, type `/SKILL_NAME`.
-
-To share a skill with everyone who works in a project, put it in that project's `.claude/skills/` folder instead of `~/.claude/skills/`.
-
-## Install in Codex
-
-Codex user skills live in `~/.codex/skills/`. From this repository root, link a skill into that directory:
+Use the [Skills CLI](https://skills.sh/docs) to install a skill for your coding agent. It requires Node.js 22.20 or later. From your project directory, run:
 
 ```bash
-mkdir -p ~/.codex/skills
-ln -s "$PWD/skills/SKILL_NAME" ~/.codex/skills/SKILL_NAME
+npx skills add hcastro/agent-artifacts --skill natural-voice
 ```
 
-Inspect an existing destination before replacing it. Complete the skill's setup and use it on the next Codex turn. Some older skills assume Claude-specific tools; check their requirements before installing them in Codex. `research-social-video` bundles its executable helpers for Codex.
+Replace `natural-voice` with a name from the [Skills](#skills) table and choose your agent when prompted. Skills install in the current project by default; add `--global` to make them available across your projects.
+
+Complete the setup in the skill's README, then ask your agent to use it. Each skill lists the tools and runtime dependencies it needs.
+
+For updates, run `npx skills check` and `npx skills update`. See the [Skills CLI reference](https://github.com/vercel-labs/skills/blob/main/docs/commands.md) for other installation and management options.
 
 ## Repository layout
 

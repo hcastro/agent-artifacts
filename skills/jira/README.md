@@ -1,8 +1,8 @@
 # jira
 
-This skill lets Claude query and update Jira Cloud tickets. It uses the Atlassian CLI (`acli`) for JQL searches, ticket views, status transitions, and assignment. It uses the Jira REST API v3 with Atlassian Document Format (ADF) for rich-text descriptions and comments, story points, and other custom fields.
+This skill lets your agent query and update Jira Cloud tickets. It uses the Atlassian CLI (`acli`) for JQL searches, ticket views, status transitions, and assignment. It uses the Jira REST API v3 with Atlassian Document Format (ADF) for rich-text descriptions and comments, story points, and other custom fields.
 
-Claude shows you every write, such as a new ticket, an edit, a transition, or a comment, and waits for your approval before it runs.
+The agent shows you every write, such as a new ticket, an edit, a transition, or a comment, and waits for your approval before it runs.
 
 ## Before you begin
 
@@ -19,17 +19,9 @@ To use the skill, you need the following:
 
 ## Install the skill
 
-To install the skill for Claude Code, follow these steps:
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `jira`.
 
-1. Clone the repository and link the skill into your skills folder:
-
-   ```bash
-   git clone https://github.com/hcastro/agent-artifacts.git
-   mkdir -p ~/.claude/skills
-   ln -s "$PWD/agent-artifacts/skills/jira" ~/.claude/skills/jira
-   ```
-
-   The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Then complete the following setup:
 
 1. Add your Jira settings to your shell profile, such as `~/.zshrc`:
 
@@ -45,9 +37,9 @@ To install the skill for Claude Code, follow these steps:
    - `API_TOKEN`: your Atlassian API token.
    - `SITE`: your Jira Cloud site name. Leave out `https://`.
 
-1. Open a new terminal and start a new Claude Code session, so both see the variables.
+1. Open a new terminal and start a new agent session, so both see the variables.
 
-1. Optional: In a project, say "configure jira." Claude finds your projects, boards, sprints, and custom fields, and writes their IDs to a `.jira-config.json` file in the project root. Later requests read field IDs, such as the story points field, from that file.
+1. Optional: In a project, say "configure jira." The agent finds your projects, boards, sprints, and custom fields, and writes their IDs to a `.jira-config.json` file in the project root. Later requests read field IDs, such as the story points field, from that file.
 
 ## Use the skill
 

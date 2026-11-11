@@ -1,8 +1,8 @@
 # lastpass
 
-This skill lets Claude search, read, generate, create, update, move, and export entries in your LastPass vault through the LastPass CLI, `lpass`.
+This skill lets your agent search, read, generate, create, update, move, and export entries in your LastPass vault through the LastPass CLI, `lpass`.
 
-The skill keeps passwords out of the conversation. Claude copies a password to the clipboard instead of printing it, and asks for one field at a time when it shows an entry. It exports the vault only after you confirm.
+The skill keeps passwords out of the conversation. The agent copies a password to the clipboard instead of printing it, and asks for one field at a time when it shows an entry. It exports the vault only after you confirm.
 
 ## Before you begin
 
@@ -13,17 +13,9 @@ To use the skill, you need the following:
 
 ## Install the skill
 
-To install the skill for Claude Code, follow these steps:
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `lastpass`.
 
-1. Clone the repository and link the skill into your skills folder:
-
-   ```bash
-   git clone https://github.com/hcastro/agent-artifacts.git
-   mkdir -p ~/.claude/skills
-   ln -s "$PWD/agent-artifacts/skills/lastpass" ~/.claude/skills/lastpass
-   ```
-
-   The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Then complete the following setup:
 
 1. In your own terminal, sign in to LastPass:
 
@@ -31,7 +23,7 @@ To install the skill for Claude Code, follow these steps:
    lpass login EMAIL
    ```
 
-   Replace `EMAIL` with your LastPass account email. `lpass` prompts for your master password, so run this command yourself rather than through Claude.
+   Replace `EMAIL` with your LastPass account email. `lpass` prompts for your master password, so run this command yourself rather than through your agent.
 
 1. Check that you're signed in:
 
@@ -52,5 +44,5 @@ Ask for what you need from the vault. The following requests trigger the skill:
 
 The skill folder holds the following files:
 
-- `SKILL.md`: common `lpass` commands and the security rules Claude follows.
+- `SKILL.md`: common `lpass` commands and the security rules the agent follows.
 - `references/lpass-reference.md`: `lpass` options and format strings.

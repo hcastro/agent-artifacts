@@ -8,21 +8,13 @@ The skill works for logos and marks, UI screens and components, pages, themes an
 
 To use the skill, you need the following:
 
-- Claude Code. The skill runs best with the Workflow tool, and falls back to subagents without it.
+- An agent that can run subagents. The bundled Workflow script uses Claude Code's Workflow tool; other agents follow the same process with their own subagent tools.
 - Headless Chrome or Playwright, to render each entry at its real sizes.
 - Optional: The `logo-design` skill, which isn't in this repository. For marks, its render scripts produce the sheets. Without it, the agents capture SVG pages with headless Chrome.
 
 ## Install the skill
 
-To install the skill for Claude Code, clone the repository and link the skill into your skills folder:
-
-```bash
-git clone https://github.com/hcastro/agent-artifacts.git
-mkdir -p ~/.claude/skills
-ln -s "$PWD/agent-artifacts/skills/run-design-tournament" ~/.claude/skills/run-design-tournament
-```
-
-The link keeps the skill current when you run `git pull` in the clone. For other install locations, see [Install a skill](../../README.md#install-a-skill).
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `run-design-tournament`.
 
 ## Use the skill
 
@@ -36,15 +28,15 @@ A request for a tournament counts as your opt-in to multi-agent work.
 
 ## How it works
 
-Claude follows the process in [`SKILL.md`](SKILL.md):
+The agent follows the process in [`SKILL.md`](SKILL.md):
 
-1. **Brief.** Claude quotes your taste words and references, lists what to stay clear of, and drafts the rubric, gates, round plan, and judge lenses. It shows them once and goes ahead unless you object.
+1. **Brief.** The agent quotes your taste words and references, lists what to stay clear of, and drafts the rubric, gates, round plan, and judge lenses. It shows them once and goes ahead unless you object.
 1. **Harness.** One fixed content fixture keeps everything but the design the same. One command renders each entry, and scripted gates such as contrast and minimum text size disqualify what fails.
 1. **Round 1.** Four to six directions that differ in type, palette, and structure.
 1. **Blind judging.** Entries get neutral labels. Three judges with different lenses score every entry against the rubric and give one strength, one weakness, and one change.
 1. **Tally.** Code averages the scores, applies named tie-breaks, and treats gaps under about 6% of the scale as ties.
-1. **Checkpoint.** Claude stops after round 1 and shows you every direction. You can keep a low scorer or cut a high one.
-1. **Later rounds and delivery.** Survivors refine from their notes. Claude delivers a gallery, the winner applied to the real target, a spec, and a section on what the tournament never tested.
+1. **Checkpoint.** The agent stops after round 1 and shows you every direction. You can keep a low scorer or cut a high one.
+1. **Later rounds and delivery.** Survivors refine from their notes. The agent delivers a gallery, the winner applied to the real target, a spec, and a section on what the tournament never tested.
 
 The scores are evidence for your decision. Your taste overrides them.
 

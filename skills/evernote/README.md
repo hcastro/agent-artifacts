@@ -1,6 +1,6 @@
 # evernote
 
-This skill lets Claude search, read, create, and update your Evernote notes and tags. It runs bundled TypeScript scripts that call the Evernote API, converts markdown to ENML (Evernote's note format), and can add content to a named section of a note, such as the Tasks, Links, and Notes sections of a sprint note.
+This skill lets your agent search, read, create, and update your Evernote notes and tags. It runs bundled TypeScript scripts that call the Evernote API, converts markdown to ENML (Evernote's note format), and can add content to a named section of a note, such as the Tasks, Links, and Notes sections of a sprint note.
 
 ## Before you begin
 
@@ -14,25 +14,14 @@ For more information about API keys and OAuth, see the [Evernote authentication 
 
 ## Install the skill
 
-To install the skill for Claude Code, follow these steps:
+Follow [Install a skill](../../README.md#install-a-skill) in the repository README, selecting `evernote`.
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/hcastro/agent-artifacts.git
-   ```
-
-1. Link the skill into your skills folder, so that `git pull` in the clone keeps it current:
-
-   ```bash
-   mkdir -p ~/.claude/skills
-   ln -s "$PWD/agent-artifacts/skills/evernote" ~/.claude/skills/evernote
-   ```
+Then complete these steps from the installed skill folder:
 
 1. Install the script dependencies inside the skill folder:
 
    ```bash
-   cd ~/.claude/skills/evernote && npm install
+   npm install
    ```
 
 1. Add your token to your shell profile, such as `~/.zshrc`:
@@ -53,13 +42,13 @@ To install the skill for Claude Code, follow these steps:
 
 ## Use the skill
 
-Ask Claude for what you want in plain words. The following requests trigger the skill:
+Ask your agent for what you want in plain words. The following requests trigger the skill:
 
 - "Find my Evernote notes tagged `weekly-notes` from the last two weeks."
 - "Create a sprint note called Project Alpha Sprint 2026-01-20 with the `weekly-notes` tag."
 - "Add this decision to the Notes section of my Project Alpha sprint note: we're using JWT for auth."
 
-Claude follows the workflows in [`SKILL.md`](SKILL.md). It writes content as markdown by default, and the scripts convert it to ENML.
+The agent follows the workflows in [`SKILL.md`](SKILL.md). It writes content as markdown by default, and the scripts convert it to ENML.
 
 The Evernote API can't create native Evernote tasks. Text that the skill adds to a Tasks section is plain note content, and a markdown `- [ ]` item becomes an ENML checkbox.
 
