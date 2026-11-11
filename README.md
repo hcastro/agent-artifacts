@@ -73,5 +73,4 @@ This repository uses the MIT License. For details, see [LICENSE](LICENSE).
 - [Anthropic skills](https://github.com/anthropics/skills): the skill-creator template and skill patterns.
 - [Evernote JavaScript SDK](https://github.com/evernote/evernote-sdk-js): used by the `evernote` skill.
 - [Google developer documentation style guide](https://developers.google.com/style): the source of the rules in the `developer-docs-style` skill.
-- [humanizer](https://github.com/blader/humanizer) by blader: the source of the AI-writing patterns condensed in the `natural-voice` skill.
 - [qmd](https://github.com/tobi/qmd): the markdown search engine behind the `qmd-memory` skill.

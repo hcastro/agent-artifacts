@@ -35,7 +35,3 @@ The skill folder holds the following files:
 - `SKILL.md`: the three modes and how the agent chooses a profile.
 - `references/voice.md`: the default voice profile and its pre-send checklist.
 - `references/adapting.md`: how to gather samples, read them for habits, and write and test a new profile.
-
-## Acknowledgments
-
-The patterns of AI writing in the default profile are condensed from [humanizer](https://github.com/blader/humanizer) by blader.
