@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>build-interactive-course figures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Light is the default. Add class="dark" on <html> for the dark render. */
+  :root {
+    --paper: #FFFFFF; --sheet: #FAFAF7; --ink: #1E1E1C; --muted: #5C5C57;
+    --rule: #D8D8D3; --text-line: #CFCFC8;
+    --l1: #C8452D; --l2: #2E7D4F; --l3: #2D5BA8; --l4: #7A4A9C;
+  }
+  :root.dark {
+    --paper: #141413; --sheet: #1C1C1A; --ink: #F2F2EE; --muted: #A9A9A2;
+    --rule: #3A3A36; --text-line: #4A4A45;
+    --l1: #F07B62; --l2: #5CC48A; --l3: #8FB1F0; --l4: #C49BE6;
+  }
+  html, body { margin: 0; background: var(--paper); }
+  body { padding: 24px; }
+  svg { display: block; width: 1280px; height: auto; background: var(--paper); margin-bottom: 24px; }
+  .title { font: 600 36px "Barlow Condensed", sans-serif; fill: var(--ink); }
+  .sub { font: 400 17px Barlow, sans-serif; fill: var(--muted); }
+  .name { font: 600 22px "Barlow Condensed", sans-serif; fill: var(--ink); }
+  .term { font: 700 26px "Barlow Condensed", sans-serif; fill: var(--ink); }
+  .detail { font: 400 14.5px Barlow, sans-serif; fill: var(--muted); }
+  .note { font: italic 400 14.5px Barlow, sans-serif; fill: var(--muted); }
+  .key { font: 500 14.5px Barlow, sans-serif; fill: var(--muted); }
+  .num { font: 600 20px "Barlow Condensed", sans-serif; fill: var(--ink); }
+  .letter { font: 700 38px "Barlow Condensed", sans-serif; fill: var(--ink); }
+</style>
+</head>
+<body>
+<svg data-name="01-course-line" viewBox="0 0 1280 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Build mode drawn as a transit line from the sources to one course file">
+<text class="title" x="60" y="72">Sources go in one end, and one course file comes out the other</text>
+<text class="sub" x="60" y="104">Research and fact-checking fan out to separate agents. The learner can send the build back before the prose pass.</text>
+<path d="M920 226 V316 Q920 348 888 348 H722 Q690 348 690 316 V226" fill="none" stroke="var(--l2)" stroke-width="9" stroke-linecap="round"/>
+<text class="note" x="805" y="378" text-anchor="middle">your reactions change the look and the words</text>
+<path d="M1118 226 V386" stroke="var(--l3)" stroke-width="8" fill="none"/>
+<path d="M1142 226 V386" stroke="var(--l3)" stroke-width="8" fill="none"/>
+<path d="M1111 313 L1118 305 L1125 313" stroke="var(--paper)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1135 305 L1142 313 L1149 305" stroke="var(--paper)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text class="detail" x="1100" y="304" text-anchor="end"><tspan x="1100" dy="0">progress file</tspan><tspan x="1100" dy="18">comes back</tspan></text>
+<text class="detail" x="1160" y="304" text-anchor="start"><tspan x="1160" dy="0">new questions</tspan><tspan x="1160" dy="18">go out</tspan></text>
+<rect x="1104" y="382" width="52" height="22" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="1130" y="432" text-anchor="middle">Tutor mode</text>
+<text class="detail" x="1130" y="454" text-anchor="middle"><tspan x="1130" dy="0">your agent picks up</tspan><tspan x="1130" dy="18">where the learner left off</tspan></text>
+<path d="M76 226 H130" stroke="var(--l1)" stroke-width="14" fill="none"/>
+<path d="M130 226 C160 226 165 194 195 194 H555 C585 194 590 226 620 226" stroke="var(--l1)" stroke-width="8" fill="none"/>
+<path d="M130 226 H620" stroke="var(--l1)" stroke-width="8" fill="none"/>
+<path d="M130 226 C160 226 165 258 195 258 H555 C585 258 590 226 620 226" stroke="var(--l1)" stroke-width="8" fill="none"/>
+<path d="M620 226 H1130" stroke="var(--l1)" stroke-width="14" fill="none" stroke-linecap="round"/>
+<rect x="62" y="200" width="14" height="52" rx="4" fill="var(--ink)"/>
+<text class="term" x="60" y="182">The sources</text>
+<text class="detail" x="60" y="276" text-anchor="start"><tspan x="60" dy="0">code, docs,</tspan><tspan x="60" dy="18">real captures</tspan></text>
+<rect x="229" y="180" width="22" height="92" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="240" y="168" text-anchor="middle">Research</text>
+<text class="detail" x="240" y="298" text-anchor="middle"><tspan x="240" dy="0">one dossier</tspan><tspan x="240" dy="18">per area</tspan></text>
+<rect x="364" y="180" width="22" height="92" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="375" y="168" text-anchor="middle">Author</text>
+<text class="detail" x="375" y="298" text-anchor="middle"><tspan x="375" dy="0">scenario</tspan><tspan x="375" dy="18">questions</tspan></text>
+<rect x="499" y="180" width="22" height="92" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="510" y="168" text-anchor="middle">Fact-check</text>
+<text class="detail" x="510" y="298" text-anchor="middle"><tspan x="510" dy="0">by an agent that</tspan><tspan x="510" dy="18">didn't write it</tspan></text>
+<circle cx="690" cy="226" r="13" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+<text class="name" x="690" y="174" text-anchor="middle"><tspan x="690" dy="0">Build and</tspan><tspan x="690" dy="22">design</tspan></text>
+<circle cx="800" cy="226" r="10" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="800" y="196" text-anchor="middle"><tspan x="800" dy="0">Test</tspan></text>
+<circle cx="920" cy="226" r="13" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+<text class="name" x="920" y="174" text-anchor="middle"><tspan x="920" dy="0">Learner</tspan><tspan x="920" dy="22">checkpoint</tspan></text>
+<circle cx="1025" cy="226" r="10" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+<text class="name" x="1025" y="196" text-anchor="middle"><tspan x="1025" dy="0">Voice pass</tspan></text>
+<text class="detail" x="800" y="268" text-anchor="middle"><tspan x="800" dy="0">a scripted learner</tspan><tspan x="800" dy="18">opens the file</tspan></text>
+<rect x="1104" y="215" width="52" height="22" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+<text class="term" x="1104" y="182">Course file</text>
+<path d="M60 467 h40" stroke="var(--l1)" stroke-width="8" stroke-linecap="round"/>
+<text class="key" x="112" y="472">Build mode</text>
+<path d="M228 467 h40" stroke="var(--l2)" stroke-width="8" stroke-linecap="round"/>
+<text class="key" x="280" y="472">Learner feedback</text>
+<path d="M432 467 h40" stroke="var(--l3)" stroke-width="8" stroke-linecap="round"/>
+<text class="key" x="484" y="472">Tutor mode</text>
+</svg>
+</body>
+</html>

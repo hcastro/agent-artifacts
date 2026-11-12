@@ -28,11 +28,16 @@ For sentence-level cleanup alone, use `natural-voice`.
 
 ## How it works
 
-The agent follows the process in [`SKILL.md`](SKILL.md). The following figure shows the loop:
+The agent follows the process in [`SKILL.md`](SKILL.md). The following figure shows the two passes and the blind read test:
 
-![Eight boxes in two rows. The top row runs left to right: name the reader, measure the draft, rewrite one sample, and the script guard. The bottom row runs right to left: the blind read test, the fidelity check, the writer's pick, and applying the pick to the rest of the text. A dashed edge goes from the fidelity check back to the rewrite, and another goes from the blind read test back to naming the reader when no version beats the original.](assets/01-loop.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/01-engagement-pages-dark.webp">
+  <img src="assets/01-engagement-pages.webp" alt="Three pages side by side. The first is a dense draft packed with code names. The second is the same page after the structure pass, with a bold verdict line first and shorter paragraphs. The third is the page after the voice pass, with the changed sentences marked in the margin. Next come three shuffled pages labeled X, Y, and Z, which hide whether each one is the original, the light version, or the deep version. A reader judge and an editor judge each pick a first place for 16 items. The tally shows the deep version ranked first 22 times out of 32, the light version 10 times, and the original never.">
+</picture>
 
-Diagram source: `assets/diagrams-source.html`, rendered with the `doc-diagrams` skill.
+The numbers come from a first trial on one 16-question section, ranked by two model judges.
+
+Figure source: `assets/figures-source.html`. Open it in a browser. For the dark version, add `class="dark"` to its `<html>` element.
 
 The steps are as follows:
 
@@ -76,4 +81,4 @@ The skill folder holds the following files:
 - `scripts/check_rewrite.py`: finds new code names, new numbers, changed quotations, and outsized growth.
 - `scripts/build_blind_sheet.py`: builds the unlabeled sheet and a separate key.
 - `scripts/tally_blind.py`: tallies judge results against the key.
-- `assets/01-loop.webp` and `assets/diagrams-source.html`: the figure in this README and its source.
+- `assets/01-engagement-pages.webp`, `assets/01-engagement-pages-dark.webp`, and `assets/figures-source.html`: the figure in this README, in light and dark, and its source.

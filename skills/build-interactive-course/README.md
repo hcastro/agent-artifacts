@@ -42,11 +42,14 @@ For a one-off explanation, ask the question directly.
 
 ## How it works
 
-The agent follows the process in [`SKILL.md`](SKILL.md). The following figure shows build mode:
+The agent follows the process in [`SKILL.md`](SKILL.md). The following figure shows build mode and where tutor mode picks up:
 
-![A dashed box for the sources leads into seven numbered steps. The top row runs left to right: research, author, and fact-check. The bottom row runs right to left: build and design, test and hand over, learner checkpoint, and voice pass. A dashed edge runs from the learner checkpoint back to build and design, labeled with the learner's reactions changing the look and the words.](assets/01-pipeline.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/01-course-line-dark.webp">
+  <img src="assets/01-course-line.webp" alt="Build mode drawn as a transit line. It starts at a terminus labeled the sources and ends at a terminus labeled course file. Research, author, and fact-check sit on three parallel tracks, one for each agent working at the same time, and the tracks merge back into one line. The stations after that are build and design, test, learner checkpoint, and voice pass. A green branch loops from the learner checkpoint back to build and design, because the learner's reactions change the look and the words. A blue branch runs from the course file down to tutor mode. A progress file comes back on it, and new questions go out.">
+</picture>
 
-Diagram source: `assets/diagrams-source.html`, rendered with the `doc-diagrams` skill.
+Figure source: `assets/figures-source.html`. Open it in a browser. For the dark version, add `class="dark"` to its `<html>` element.
 
 The steps are as follows:
 
@@ -122,4 +125,4 @@ The skill folder holds the following files:
 - `scripts/learner_test.mjs`: a scripted learner that takes the course in a browser.
 - `scripts/check_evidence.py`: finds citations that no longer match the sources.
 - `scripts/extract_prose.py` and `scripts/merge_prose.py`: pull out the text a learner reads, and put a rewrite back only where it kept every code name and number.
-- `assets/01-pipeline.webp` and `assets/diagrams-source.html`: the figure in this README and its source.
+- `assets/01-course-line.webp`, `assets/01-course-line-dark.webp`, and `assets/figures-source.html`: the figure in this README, in light and dark, and its source.
