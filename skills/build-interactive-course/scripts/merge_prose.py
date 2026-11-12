@@ -37,7 +37,7 @@ def check(old, new, key):
     words = len(new.split())
     if key == "primer" and words > 60:
         return "primer over 60 words"
-    if key.startswith("options/") and key.endswith("/text") and words > max(27, len(old.split()) + 2):
+    if "options/" in key and key.endswith("/text") and words > max(27, len(old.split()) + 2):
         return "option too long"
     # owner lines share one opening across a course so they read as a set
     if key == "owner" and new.split()[:3] != old.split()[:3]:
@@ -49,9 +49,25 @@ def check(old, new, key):
     return None
 
 
+def owner_of(item, parts):
+    """Follows a step path such as steps/3/pause/options/b/text to the dict that holds the last key."""
+    node = item["steps"][int(parts[1])]
+    rest = parts[2:]
+    if rest[0] == "pause":
+        node, rest = node["pause"], rest[1:]
+        if rest[0] == "options":
+            node, rest = next(o for o in node["options"] if o["id"] == rest[1]), rest[2:]
+    return node, rest[0]
+
+
 def getf(item, key):
     parts = key.split("/")
     try:
+        if parts[0] == "steps":
+            node, k = owner_of(item, parts)
+            return node.get(k)
+        if parts[0] in ("line_notes", "line_probes"):
+            return item[parts[0]].get(parts[1])
         if parts[0] == "probes":
             return item["probes"][int(parts[1])]
         if parts[0] == "options":
@@ -67,7 +83,12 @@ def getf(item, key):
 
 def setf(item, key, val):
     parts = key.split("/")
-    if parts[0] == "probes":
+    if parts[0] == "steps":
+        node, k = owner_of(item, parts)
+        node[k] = val
+    elif parts[0] in ("line_notes", "line_probes"):
+        item[parts[0]][parts[1]] = val
+    elif parts[0] == "probes":
         item["probes"][int(parts[1])] = val
     elif parts[0] == "options":
         next(o for o in item["options"] if o["id"] == parts[1])[parts[2]] = val

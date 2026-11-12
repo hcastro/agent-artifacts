@@ -1,32 +1,38 @@
 #!/usr/bin/env python3
-"""Validate a course and build its page.
+"""Validate a course and build it into one self-contained HTML file.
 
     python3 build_course.py <course_dir> [--out <dir>]
 
-<course_dir> holds course.json, content/<stop-id>.json, build/head.html and js/*.js.
-The output folder gets index.html (the page body the publisher wraps in a document),
-preview.html (the same page in a full document, for local testing), js/ and data/content.json.
+<course_dir> holds course.json, content/<stop-id>.json, build/head.html, js/*.js and js/components/*.js.
+The output folder gets course.html: the page, its styles, its scripts and all course data inline. It
+opens from disk in any modern browser, with no server and no network.
 
-Every problem is printed. Errors break the page or drop authored work, and make the exit code 1.
-Warnings leave the page working but weaken it, such as a level nobody can earn.
-Standard library only.
+Every problem is printed. Errors break the page or drop authored work, make the exit code 1 and stop
+the file from being written. Warnings leave the page working but weaken it, such as a level nobody can
+earn. Standard library only.
 """
 import argparse
 import html
 import json
-import shutil
+import re
 import sys
 import time
 from pathlib import Path
 
-FORMATS = ("choice", "multi", "order", "bucket", "text")
+# Formats the kit ships. A course can add its own by dropping js/components/<format>.js in place.
+BUILT_IN = ("choice", "multi", "order", "bucket", "text", "reveal", "replay", "spot", "estimate")
 TYPES = ("predict", "explain", "flaw", "apply", "connect", "teach")
 RELS = ("owner", "useful", "mechanics")
 RESUME = ("open", "misconception")
-SCRIPTS = ("engine", "util", "fx", "tutor", "learn", "views", "main")
+# Load order matters: the engine first, then the helpers and the component registry, every
+# component, and last the views that use them.
+CORE_BEFORE = ("engine", "util", "fx", "tutor", "components")
+CORE_AFTER = ("learn", "views", "main")
+# A spot block longer than this is a wall to click through, and a replay longer than this is a lecture.
+SPOT_MAX_LINES = 40
+REPLAY_STEPS = (2, 20)
 
-BODY = """
-<div class="app" id="app">
+BODY = """<div class="app" id="app">
   <header class="top"><div class="top-in" id="top-in">
     <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="5"/></svg>{title}</div>
   </div></header>
@@ -35,11 +41,20 @@ BODY = """
 </div>
 """
 
-# the same skeleton the publisher wraps a page in, so a local preview behaves like the published page
-PREVIEW = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
-           '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-           '<style>:root{color-scheme:light}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>'
-           '</head><body>{page}</body></html>')
+PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+{head}
+</head>
+<body>
+{body}<script type="application/json" id="course-data">{data}</script>
+{scripts}
+</body>
+</html>
+"""
 
 
 class Report:
@@ -79,8 +94,9 @@ def check_course(course, rep):
             rep.error("course.json", "every line needs `id` and `name`")
             continue
         stops = line.get("stops") or []
-        if not 3 <= len(stops) <= 10:
-            rep.error(f"line {lid}", f"{len(stops)} stops, the map supports 3 to 10")
+        # a lesson is a single stop, so a line may be that short
+        if not 1 <= len(stops) <= 10:
+            rep.error(f"line {lid}", f"{len(stops)} stops, the map supports 1 to 10")
         ids = []
         for st in stops:
             sid = st.get("id")
@@ -104,7 +120,144 @@ def check_course(course, rep):
     return [st["id"] for line in lines for st in (line.get("stops") or []) if st.get("id")]
 
 
-def check_question(q, ideas, rep, final=False):
+def check_options(holder, rep, where, lo=3, hi=6):
+    """A single-answer option list: unique ids and exactly one correct option."""
+    opts = (holder.get("options") if isinstance(holder, dict) else None) or []
+    n_ok = sum(1 for o in opts if o.get("correct"))
+    ids = [o.get("id") for o in opts]
+    if len(set(ids)) != len(ids) or None in ids:
+        rep.error(where, "option ids are missing or repeated")
+        return False
+    if n_ok != 1 or not lo <= len(opts) <= hi:
+        rep.error(where, f"needs exactly 1 correct of {lo} to {hi} options, has {n_ok} of {len(opts)}")
+        return False
+    return True
+
+
+def check_rubric(q, rep, qid):
+    must = (q.get("rubric") or {}).get("must") or []
+    if not must:
+        rep.error(qid, "written answer without a rubric")
+        return False
+    if (q["rubric"].get("pass") or len(must)) > len(must):
+        rep.error(qid, "rubric `pass` is larger than the number of `must` points")
+        return False
+    return True
+
+
+def is_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def check_spot(q, rep, qid):
+    body = (q.get("block") or {}).get("body")
+    if not isinstance(body, str) or not body.strip():
+        rep.error(qid, "spot needs `block.body` as a string")
+        return False
+    n = len(body.split("\n"))
+    if not 2 <= n <= SPOT_MAX_LINES:
+        rep.error(qid, f"spot block has {n} lines, the component supports 2 to {SPOT_MAX_LINES}")
+        return False
+    lines = q.get("lines") or []
+    if not lines or len(set(lines)) != len(lines) or any(not isinstance(x, int) or isinstance(x, bool) or not 1 <= x <= n for x in lines):
+        rep.error(qid, f"spot `lines` must be distinct line numbers from 1 to {n}")
+        return False
+    for key in ("line_notes", "line_probes"):
+        for k in q.get(key) or {}:
+            if not str(k).isdigit() or not 1 <= int(k) <= n:
+                rep.error(qid, f"`{key}` names line {k}, which is not in the block")
+                return False
+    if len(lines) == n:
+        rep.warn(qid, "every line is part of the answer, so marking everything wins")
+    return True
+
+
+def check_replay(q, rep, qid):
+    steps = q.get("steps") or []
+    lo, hi = REPLAY_STEPS
+    if not lo <= len(steps) <= hi:
+        rep.error(qid, f"replay needs {lo} to {hi} steps, has {len(steps)}")
+        return False
+    ok, pauses = True, 0
+    for i, s in enumerate(steps):
+        if not isinstance(s, dict) or not s.get("label"):
+            rep.error(qid, f"step {i + 1} needs a `label`")
+            ok = False
+            continue
+        if "pause" in s:
+            pauses += 1
+            ok = check_options(s["pause"], rep, f"{qid} step {i + 1} pause", lo=2) and ok
+    if not pauses:
+        rep.error(qid, "replay needs at least one step with a `pause`")
+        ok = False
+    return ok
+
+
+def check_estimate(q, rep, qid):
+    v, rng, sc = q.get("value"), q.get("range"), q.get("scale")
+    if not is_num(v) or not (isinstance(rng, list) and len(rng) == 2 and all(is_num(x) for x in rng)):
+        rep.error(qid, "estimate needs a number `value` and a `range` of two numbers")
+        return False
+    if not rng[0] <= v <= rng[1]:
+        rep.error(qid, "estimate `value` must sit inside `range`")
+        return False
+    if sc is not None and not (isinstance(sc, list) and len(sc) == 2 and all(is_num(x) for x in sc) and sc[0] <= rng[0] and rng[1] <= sc[1]):
+        rep.error(qid, "estimate `scale` must be two numbers that contain `range`")
+        return False
+    if not q.get("unit"):
+        rep.warn(qid, "estimate has no `unit`, so the learner guesses a bare number")
+    return True
+
+
+def check_format(q, fmt, rep, custom):
+    """Format-specific checks. Returns True when the question can be shown."""
+    qid = q.get("id") or "(question without id)"
+    if fmt == "choice":
+        return check_options(q, rep, qid)
+    if fmt == "multi":
+        opts = q.get("options") or []
+        n_ok = sum(1 for o in opts if o.get("correct"))
+        ids = [o.get("id") for o in opts]
+        if len(set(ids)) != len(ids) or None in ids:
+            rep.error(qid, "option ids are missing or repeated")
+            return False
+        if n_ok < 2 or not 4 <= len(opts) <= 6:
+            rep.error(qid, f"multi needs 2 or more correct of 4 to 6 options, has {n_ok} of {len(opts)}")
+            return False
+        return True
+    if fmt == "order":
+        if not 3 <= len(q.get("items") or []) <= 7:
+            rep.error(qid, "order needs 3 to 7 items")
+            return False
+        return True
+    if fmt == "bucket":
+        bids = {b.get("id") for b in q.get("buckets") or []}
+        items = q.get("items") or []
+        if len(bids) < 2 or not items or any(it.get("bucket") not in bids for it in items):
+            rep.error(qid, "bucket ids do not match the items")
+            return False
+        return True
+    if fmt == "text":
+        return check_rubric(q, rep, qid)
+    if fmt == "reveal":
+        b = q.get("block") or {}
+        if not all(isinstance(b.get(k), str) and b[k].strip() for k in ("shown", "hidden")):
+            rep.error(qid, "reveal needs `block.shown` and `block.hidden`")
+            return False
+        return check_options(q, rep, qid, lo=2) if q.get("options") else check_rubric(q, rep, qid)
+    if fmt == "replay":
+        return check_replay(q, rep, qid)
+    if fmt == "spot":
+        return check_spot(q, rep, qid)
+    if fmt == "estimate":
+        return check_estimate(q, rep, qid)
+    if fmt in custom and not (q.get("rubric") or {}).get("must"):
+        # The build cannot know a custom component's data, so it checks the text fallback instead.
+        rep.warn(qid, f"custom format {fmt} has no `rubric`, so its text fallback checks against the whole answer")
+    return True
+
+
+def check_question(q, ideas, rep, custom, final=False):
     """Returns True when the question can be shown. Anything that cannot is an error."""
     qid = q.get("id") or "(question without id)"
     ok = True
@@ -113,42 +266,13 @@ def check_question(q, ideas, rep, final=False):
             rep.error(qid, f"missing `{key}`")
             ok = False
     fmt = q.get("format", "text" if final else None)
-    if fmt not in FORMATS:
-        rep.error(qid, f"unknown format {fmt!r}")
+    if fmt not in BUILT_IN and fmt not in custom:
+        rep.error(qid, f"unknown format {fmt!r}. Add js/components/{fmt}.js or use one of: {', '.join(BUILT_IN)}")
         return False
     if q.get("type", "apply" if final else None) not in TYPES:
         rep.error(qid, f"unknown type {q.get('type')!r}")
         ok = False
-    if fmt in ("choice", "multi"):
-        opts = q.get("options") or []
-        n_ok = sum(1 for o in opts if o.get("correct"))
-        ids = [o.get("id") for o in opts]
-        if len(set(ids)) != len(ids) or None in ids:
-            rep.error(qid, "option ids are missing or repeated")
-            ok = False
-        if fmt == "choice" and (n_ok != 1 or not 3 <= len(opts) <= 6):
-            rep.error(qid, f"choice needs exactly 1 correct of 3 to 6 options, has {n_ok} of {len(opts)}")
-            ok = False
-        if fmt == "multi" and (n_ok < 2 or not 4 <= len(opts) <= 6):
-            rep.error(qid, f"multi needs 2 or more correct of 4 to 6 options, has {n_ok} of {len(opts)}")
-            ok = False
-    if fmt == "order" and not 3 <= len(q.get("items") or []) <= 7:
-        rep.error(qid, "order needs 3 to 7 items")
-        ok = False
-    if fmt == "bucket":
-        bids = {b.get("id") for b in q.get("buckets") or []}
-        items = q.get("items") or []
-        if len(bids) < 2 or not items or any(it.get("bucket") not in bids for it in items):
-            rep.error(qid, "bucket ids do not match the items")
-            ok = False
-    if fmt == "text":
-        must = (q.get("rubric") or {}).get("must") or []
-        if not must:
-            rep.error(qid, "text question without a rubric")
-            ok = False
-        elif (q["rubric"].get("pass") or len(must)) > len(must):
-            rep.error(qid, "rubric `pass` is larger than the number of `must` points")
-            ok = False
+    ok = check_format(q, fmt, rep, custom) and ok
     if q.get("idea") and q.get("idea") not in ideas:
         rep.warn(qid, f"idea {q.get('idea')} is not declared, so it has no primer and opens no card")
     if q.get("rel") not in (None,) + RELS:
@@ -171,7 +295,7 @@ def check_question(q, ideas, rep, final=False):
     return ok
 
 
-def check_stop(sid, d, rep, all_ids):
+def check_stop(sid, d, rep, all_ids, custom):
     ideas = {i.get("id") for i in d.get("ideas") or []}
     for i in d.get("ideas") or []:
         if not i.get("id") or not i.get("name"):
@@ -183,7 +307,7 @@ def check_stop(sid, d, rep, all_ids):
         if q.get("id") in all_ids:
             rep.error(q.get("id"), "question id is used twice")
             continue
-        if check_question(q, ideas, rep):
+        if check_question(q, ideas, rep, custom):
             all_ids.add(q["id"])
             q["difficulty"] = int(q["difficulty"])
             q.setdefault("probes", [])
@@ -195,7 +319,7 @@ def check_stop(sid, d, rep, all_ids):
             continue
         # a final ties ideas together, so it may stand under a synthetic idea of its own
         f.setdefault("idea", sid + ".final")
-        if check_question(f, ideas | {sid + ".final"}, rep, final=True):
+        if check_question(f, ideas | {sid + ".final"}, rep, custom, final=True):
             all_ids.add(f["id"])
             f.update(format="text", difficulty=5, isFinal=True)
             f.setdefault("type", "apply")
@@ -229,6 +353,11 @@ def check_stop(sid, d, rep, all_ids):
             "cards": d.get("cards") or [], "open_questions": d.get("open_questions") or []}
 
 
+def inline_script(src, name):
+    # A literal "</script" inside a script would end the tag early, so it is broken up.
+    return f"<script>/* {name} */\n" + re.sub(r"</(script)", r"<\\/\1", src, flags=re.I) + "\n</script>"
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("course_dir", type=Path)
@@ -237,6 +366,16 @@ def main():
     src = args.course_dir.resolve()
     out = (args.out or src / "dist").resolve()
     rep = Report()
+
+    comp_dir = src / "js" / "components"
+    comp_files = sorted(comp_dir.glob("*.js")) if comp_dir.is_dir() else []
+    custom = {p.stem for p in comp_files} - set(BUILT_IN)
+    for name in BUILT_IN:
+        if not (comp_dir / f"{name}.js").exists():
+            rep.error(f"js/components/{name}.js", "file missing")
+    for name in CORE_BEFORE + CORE_AFTER:
+        if not (src / "js" / f"{name}.js").exists():
+            rep.error(f"js/{name}.js", "file missing")
 
     course = load_json(src / "course.json", rep) or {}
     stop_ids = check_course(course, rep) if course else []
@@ -248,7 +387,7 @@ def main():
             continue
         d = load_json(path, rep)
         if d is not None:
-            stops[sid] = check_stop(sid, d, rep, all_ids)
+            stops[sid] = check_stop(sid, d, rep, all_ids, custom)
     for path in sorted((src / "content").glob("*.json")):
         if path.stem not in stop_ids:
             rep.warn(path.name, "not a stop in course.json, so it is ignored")
@@ -257,38 +396,46 @@ def main():
         rep.error("course.json", "no line has questions at every stop, so the map would be empty")
 
     head_path = src / "build" / "head.html"
+    head_text = ""
     if not head_path.exists():
         rep.error("build/head.html", "file missing")
-    for name in SCRIPTS:
-        if not (src / "js" / f"{name}.js").exists():
-            rep.error(f"js/{name}.js", "file missing")
+    else:
+        head_text = head_path.read_text(encoding="utf-8")
+        # the file has to open offline and make no requests, so flag anything that reaches out
+        m = re.search(r"""(?:href|src)\s*=\s*["']?(?:https?:)?//|@import|url\(\s*["']?(?:https?:)?//""", head_text, flags=re.I)
+        if m:
+            rep.warn("build/head.html", f"loads something from the network ({m.group(0)!r}), so the page needs a connection")
 
-    if course and head_path.exists():
+    if course and head_text and not rep.errors:
         title = html.escape(course.get("title", "Course"))
-        head = head_path.read_text(encoding="utf-8").replace("{{title}}", title)
-        scripts = "".join(f'<script src="js/{n}.js"></script>\n' for n in SCRIPTS)
-        page = head + BODY.replace("{title}", title) + scripts
-        (out / "data").mkdir(parents=True, exist_ok=True)
-        (out / "index.html").write_text(page, encoding="utf-8")
-        (out / "preview.html").write_text(PREVIEW.replace("{page}", page), encoding="utf-8")
-        if (out / "js").exists():
-            shutil.rmtree(out / "js")
-        shutil.copytree(src / "js", out / "js")
+        names = [f"js/{n}.js" for n in CORE_BEFORE] + [f"js/components/{p.name}" for p in comp_files] + [f"js/{n}.js" for n in CORE_AFTER]
+        scripts = "\n".join(inline_script((src / n).read_text(encoding="utf-8"), n) for n in names)
         content = {"course": course, "stops": stops, "built": time.strftime("%Y-%m-%d %H:%M")}
-        (out / "data" / "content.json").write_text(json.dumps(content, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+        # "<" is escaped so no string in the course data can close the data tag
+        data = json.dumps(content, separators=(",", ":"), ensure_ascii=False).replace("<", "\\u003c")
+        page = PAGE.format(head=head_text.replace("{{title}}", title).strip(), body=BODY.replace("{title}", title), data=data, scripts=scripts)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "course.html").write_text(page, encoding="utf-8")
 
         nq = sum(len(s["questions"]) for s in stops.values())
         hidden = sum(1 for s in stops.values() for q in s["questions"] if q.get("rel") == "mechanics")
-        print(f"built {out}")
+        fmts = {}
+        for s in stops.values():
+            for q in s["questions"]:
+                fmts[q["format"]] = fmts.get(q["format"], 0) + 1
+        print(f"built {out / 'course.html'} ({len(page.encode('utf-8')) // 1024} KB)")
         print(f"  {len(full_lines)} of {len(course.get('lines') or [])} lines on the map, {len(stops)} stops, {nq} questions ({hidden} mechanics),"
               f" {sum(len(s['finals']) for s in stops.values())} finals, {sum(len(s['cards']) for s in stops.values())} cards,"
               f" {sum(len(s['open_questions']) for s in stops.values())} open questions")
+        print("  formats: " + ", ".join(f"{k} {v}" for k, v in sorted(fmts.items())))
+        if custom:
+            print("  custom components: " + ", ".join(sorted(custom)))
     for w in rep.warnings:
         print("  warning", w)
     for e in rep.errors:
         print("  error", e)
     if rep.errors:
-        print(f"{len(rep.errors)} error(s), {len(rep.warnings)} warning(s)")
+        print(f"{len(rep.errors)} error(s), {len(rep.warnings)} warning(s), nothing written")
         sys.exit(1)
     print(f"no errors, {len(rep.warnings)} warning(s)")
 

@@ -1,4 +1,4 @@
-/* Course boot: load the data, restore progress and route between views. */
+/* Course boot: read the course data built into the page, restore progress and route between views. */
 (function () {
   'use strict';
   const C = window.Course, h = C.h, icon = C.icon;
@@ -13,6 +13,25 @@
       const fresh = C.newState(this.course);
       Object.keys(fresh).forEach(k => { if (state[k] === undefined) state[k] = fresh[k]; });
       return state;
+    },
+    // Loads a progress file or a save block. Returns a sentence for the learner.
+    loadProgress(text) {
+      const got = C.Engine.parseProgress(text, this.course.storage_key);
+      if (got.error) return { ok: false, message: got.error };
+      if (got.state) {
+        this.engine = new C.Engine(this.content, this.fill(got.state));
+        this.save();
+        return { ok: true, message: 'Progress loaded.' };
+      }
+      // starting levels from earlier tutoring, which the learner accepts or skips on the Learn page
+      const eng = this.engine;
+      eng.s.offer = got.offer;
+      const line = eng.offerLine();
+      if (!line) { eng.s.offer = null; return { ok: false, message: 'Those levels name no stop in this course.' }; }
+      if (eng.s.placed[line.id]) { eng.s.offer = null; return { ok: false, message: 'You have already started ' + line.name.toLowerCase() + ' here, so the starting levels were not used. Erase progress first to start from them.' }; }
+      eng.s.line = line.id;
+      this.save();
+      return { ok: true, message: 'Starting levels loaded. Open Learn to pick up from them.' };
     },
     openAll() {
       const out = [];
@@ -57,14 +76,13 @@
     NAV.forEach(n => tab.appendChild(h('button', { data: { nav: n[0] }, onclick: () => app.go(n[0]) }, icon(n[2]), n[1])));
   }
 
-  async function boot() {
+  function boot() {
     const view = document.getElementById('view');
     try {
-      // the storage key lives in the course data, so storage starts after the content arrives
-      app.content = await C.getJSON('data/content.json');
+      // the build puts the course data in the page, so nothing is fetched and the file opens from disk
+      app.content = JSON.parse(document.getElementById('course-data').textContent);
       app.course = app.content.course;
-      const got = await Promise.all([C.Store.init(app.course.storage_key), C.Tutor.init().catch(() => {})]);
-      let state = got[0];
+      let state = C.Store.init(app.course.storage_key);
       if (state && (state.v !== 1 || !state.stops)) state = null;
       app.engine = new C.Engine(app.content, state ? app.fill(state) : C.newState(app.course));
       Object.keys(app.engine.stops).forEach(k => {
@@ -77,7 +95,7 @@
       app.render();
     } catch (e) {
       view.innerHTML = '';
-      view.appendChild(h('div', { class: 'loading' }, h('p', null, 'The course data did not load.'), h('p', { class: 'muted' }, String((e && e.message) || e)), h('button', { class: 'btn', onclick: () => location.reload() }, 'Reload')));
+      view.appendChild(h('div', { class: 'loading' }, h('p', null, 'The course did not start.'), h('p', { class: 'muted' }, String((e && e.message) || e)), h('button', { class: 'btn', onclick: () => location.reload() }, 'Reload')));
     }
   }
 

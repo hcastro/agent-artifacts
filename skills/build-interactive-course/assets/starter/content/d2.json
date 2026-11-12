@@ -48,7 +48,7 @@
       ],
       "answer": "It goes onto the hold shelf with a slip for the patron who placed the hold. That patron then gets a pickup notice. The hold shelf keeps the item set aside so nobody else borrows it first.",
       "evidence": [
-        "Desk handbook, section 2.1"
+        "sources/desk-handbook.md:42-48"
       ],
       "probes": [
         "What does the message on the screen tell you to do?",
@@ -104,7 +104,7 @@
       ],
       "answer": "Three things stop a renewal: a hold by another patron, both renewals already used, and the item being a quick pick. An overdue item can still be renewed when none of those apply.",
       "evidence": [
-        "Desk handbook, section 2.4"
+        "sources/desk-handbook.md:66-76"
       ],
       "probes": [
         "List the things that stop a renewal. Check each item against the list.",
@@ -147,7 +147,7 @@
       ],
       "answer": "It is due on the 25th. A renewal gives a full new loan period counted from the day of the renewal, so 21 days from the 4th. Renewing early does not add the days that were left on the old loan.",
       "evidence": [
-        "Desk handbook, section 2.4"
+        "sources/desk-handbook.md:66-76"
       ],
       "probes": [
         "What day does a renewal start counting from?",
@@ -172,7 +172,7 @@
       ],
       "answer": "The date has to be set back before any drop item is scanned, or those items check in late. The screen shows a hold message during the scan, so routing comes after it. The date goes back to today before the desk opens, so a patron returning an item in person is checked in on the real day.",
       "evidence": [
-        "Desk handbook, section 2.2"
+        "sources/desk-handbook.md:50-60"
       ],
       "probes": [
         "Which step would go wrong if the date were still today?",
@@ -223,8 +223,8 @@
       ],
       "answer": "The renewal is allowed, since being overdue does not stop one. It gives a new 7-day loan from today and stops any further fines. The $3.00 that built up before the renewal stays on the account.",
       "evidence": [
-        "Desk handbook, section 2.4",
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:66-76",
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "Split this into two questions: what happens to the due date, and what happens to the money?",
@@ -257,8 +257,8 @@
       },
       "answer": "Items in the drop came back while the library was closed, so the day they are scanned is later than the day they were returned. Checking them in on the scan date would charge fines for closed days. Setting the date to the last open day keeps fines to open days only.",
       "evidence": [
-        "Desk handbook, section 2.2",
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:50-60",
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "When did a book drop item really come back, and when is it scanned?",
@@ -302,8 +302,8 @@
       ],
       "answer": "The renewal stands. The hold rule is checked when a renewal is made, and at that moment there was no hold. The new hold waits in the queue, and the patron will not be able to renew the book again while it is there.",
       "evidence": [
-        "Desk handbook, section 2.4",
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:66-76",
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "At the moment of the renewal, was there a hold on the book?",
@@ -339,8 +339,8 @@
       },
       "answer": "The book goes to the hold shelf for the waiting patron. The returning patron cannot take it again now, since the hold gives that copy to someone else. They can place their own hold and get it when their turn comes.",
       "evidence": [
-        "Desk handbook, section 2.1",
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:42-48",
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "Who has the claim on this copy once it is checked in?",
@@ -384,8 +384,8 @@
       ],
       "answer": "The overdue DVD shows the claim is wrong. A renewal changes the due date and stops further fines, but the fine that built up before it stays on the account. Renewing helps, but it does not reset the money already owed.",
       "evidence": [
-        "Desk handbook, section 2.4",
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:66-76",
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "What does a renewal change, and what does it leave alone?",
@@ -416,7 +416,7 @@
       },
       "answer": "The desk does not charge for damage. It notes the damage on the item record and puts the item in the repair bin. The branch manager decides whether the damage goes beyond normal wear and whether the patron pays anything.",
       "evidence": [
-        "Desk handbook, section 2.3"
+        "sources/desk-handbook.md:62-64"
       ],
       "probes": [
         "What are the two things the desk itself does with a damaged item?",
@@ -445,7 +445,9 @@
       },
       "answer": "A trustworthy explanation covers both halves. On return, the scan ends the loan, held items go to the hold shelf and book drop items are dated to the last open day. On renewal, the item gets a full new loan from today, up to twice, never for quick picks and never while someone else has a hold. Fines already owed stay.",
       "evidence": [
-        "Desk handbook, sections 2.1, 2.2 and 2.4"
+        "sources/desk-handbook.md:42-48",
+        "sources/desk-handbook.md:50-60",
+        "sources/desk-handbook.md:66-76"
       ],
       "probes": [
         "Walk one item from the book drop to the shelf. What happens at each step?",
@@ -488,7 +490,7 @@
       ],
       "answer": "Twice. After two renewals the book has to come back, even if nobody is waiting for it.",
       "evidence": [
-        "Desk handbook, section 2.4"
+        "sources/desk-handbook.md:66-76"
       ],
       "probes": [
         "Find the number in the renewal rule.",
@@ -496,6 +498,180 @@
       ],
       "diagnostic": false,
       "rel": "mechanics"
+    },
+    {
+      "id": "d2-q13",
+      "idea": "d2.renew",
+      "type": "predict",
+      "difficulty": 2,
+      "format": "reveal",
+      "title": "A renewal the screen is about to answer",
+      "prompt": "A patron asks to renew a regular book. Nobody has a hold on it. The volunteer types the renewal, and the screen is about to answer. What will it say?",
+      "block": {
+        "kind": "log",
+        "label": "Desk screen",
+        "shown": "> renew 31207-0088\n  title      Rivers of the North (book)\n  renewals   2 used\n  holds      none\n  due        the 14th",
+        "hidden": "  result     refused: renewal limit reached\n  due        the 14th, unchanged",
+        "hidden_label": "What the screen printed"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": "Refused, because the book has used both of its renewals",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Renewed for 21 days from today, since nobody is waiting",
+          "correct": false,
+          "probe": "How many times can an item be renewed, and how many has this one used?"
+        },
+        {
+          "id": "c",
+          "text": "Renewed, but only for 14 days",
+          "correct": false,
+          "probe": "Does any rule give a shorter renewal? What does a renewal give?"
+        },
+        {
+          "id": "d",
+          "text": "Refused, because books cannot be renewed at the desk",
+          "correct": false,
+          "probe": "Where can patrons renew, according to the renewal rules?"
+        }
+      ],
+      "answer": "The screen refuses it. An item can be renewed twice, and this one shows 2 renewals used, so the limit is reached even with no hold on it. The due date stays the 14th, and the book has to come back.",
+      "evidence": [
+        "sources/desk-handbook.md:68-74"
+      ],
+      "probes": [
+        "Read every line the screen already shows. Which one decides this?",
+        "List the three reasons a renewal is refused. Does any of them apply?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can tell a patron why a renewal will fail before the screen does."
+    },
+    {
+      "id": "d2-q14",
+      "idea": "d2.checkin",
+      "type": "predict",
+      "difficulty": 3,
+      "format": "replay",
+      "title": "Monday morning at the book drop",
+      "prompt": "Step through the first fifteen minutes of a Monday shift. The library was closed on Sunday. At each pause, call what happens next.",
+      "steps": [
+        {
+          "time": "8:45",
+          "label": "Book drop opened",
+          "detail": "Twelve items came in while the library was closed on Sunday. The last open day was Saturday."
+        },
+        {
+          "time": "8:46",
+          "label": "Check-in date set to Saturday",
+          "detail": "Every scan from now on is dated Saturday, the last day the items could have been returned at the desk.",
+          "pause": {
+            "prompt": "Before the first drop item is scanned, what does the volunteer do?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Set the check-in date to Saturday, the last open day",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "Scan the items right away, then fix any that show as late",
+                "correct": false,
+                "probe": "If the scan uses today's date, which days does it count as late?"
+              },
+              {
+                "id": "c",
+                "text": "Open the desk first so patrons are not kept waiting",
+                "correct": false,
+                "probe": "Which step of the routine comes last, and what has to be finished before it?"
+              }
+            ]
+          }
+        },
+        {
+          "time": "8:52",
+          "label": "Seventh item scanned: The Night Garden",
+          "detail": "The screen shows a hold for another patron."
+        },
+        {
+          "time": "8:52",
+          "label": "Routed to the hold shelf",
+          "detail": "A slip with the waiting patron's name goes in the book, and that patron gets a pickup notice.",
+          "pause": {
+            "prompt": "What happens to The Night Garden next?",
+            "options": [
+              {
+                "id": "a",
+                "text": "It goes to the hold shelf with a slip, and the waiting patron is told",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "It goes back on the regular shelf until the waiting patron asks for it",
+                "correct": false,
+                "probe": "What is the hold shelf for, and who can take an item from it?"
+              },
+              {
+                "id": "c",
+                "text": "It goes back to the patron who just returned it, since they had it first",
+                "correct": false,
+                "probe": "A hold gives this copy to someone. To whom?"
+              }
+            ]
+          }
+        },
+        {
+          "time": "8:58",
+          "label": "Last drop item scanned",
+          "detail": "All twelve items are checked in as of Saturday."
+        },
+        {
+          "time": "8:59",
+          "label": "Check-in date set back to today",
+          "detail": "Scans carry today's date again.",
+          "pause": {
+            "prompt": "The desk opens in one minute. What has to happen first?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Set the check-in date back to today",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "Nothing. The date can stay on Saturday until the next drop",
+                "correct": false,
+                "probe": "A patron hands a book over the desk at 9:05. Which date will its check-in carry?"
+              },
+              {
+                "id": "c",
+                "text": "Scan the drop items again with today's date",
+                "correct": false,
+                "probe": "Why were they dated Saturday in the first place?"
+              }
+            ]
+          }
+        },
+        {
+          "time": "9:00",
+          "label": "Desk opens",
+          "detail": "The first patron returns a book in person, and it checks in on today's date."
+        }
+      ],
+      "answer": "Each call follows the book drop routine. The date goes back to the last open day before any drop item is scanned, so nobody is fined for a closed day. A held item goes to the hold shelf for the waiting patron. The date goes back to today before the desk opens, or every return at the desk is dated Saturday and real late days disappear.",
+      "evidence": [
+        "sources/desk-handbook.md:44-46",
+        "sources/desk-handbook.md:52-60"
+      ],
+      "probes": [
+        "Which step of the book drop routine is the replay at right now?",
+        "What goes wrong for a patron if this step is skipped?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can run the book drop after a closed day without fining anyone for it or hiding a late return."
     }
   ],
   "finals": [
@@ -522,7 +698,9 @@
       },
       "answer": "Only the DVD can be renewed. It is one open day late, because the closed weekend does not count, so it owes $1.00, and a renewal gives it 7 more days from today with the $1.00 kept on the account. The quick pick cannot be renewed and is due today. The book has used both renewals and is due tomorrow.",
       "evidence": [
-        "Desk handbook, sections 1.2, 2.4 and 3.2"
+        "sources/desk-handbook.md:28-38",
+        "sources/desk-handbook.md:66-76",
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": []
     }
@@ -532,7 +710,7 @@
       "id": "d2-c01",
       "title": "When a renewal is refused",
       "kind": "rule",
-      "source": "Desk handbook, section 2.4",
+      "source": "sources/desk-handbook.md:66-76",
       "body": "No renewal when\n  another patron has a hold\n  the item has been renewed twice\n  the item is a quick pick\n\nA renewal\n  counts a full loan from today\n  stops further fines\n  keeps fines already owed",
       "note": "Being overdue is not on the refusal list. A late item can be renewed, but the fine it already built up stays.",
       "ideas": [
@@ -543,7 +721,7 @@
       "id": "d2-c02",
       "title": "Book drop mornings",
       "kind": "routine",
-      "source": "Desk handbook, section 2.2",
+      "source": "sources/desk-handbook.md:50-60",
       "body": "1. Set the check-in date to the last open day\n2. Scan every book drop item\n3. Route held items to the hold shelf\n4. Set the date back to today\n5. Open the desk",
       "note": "Forgetting step 4 checks in every desk return on the wrong day, which hides real late days.",
       "ideas": [
@@ -557,7 +735,7 @@
       "question": "Who decides whether damage is beyond normal wear when the branch manager is away for a week?",
       "why": "Damaged items pile up in the repair bin and patrons wait to hear whether they owe anything.",
       "urgency": 2,
-      "source": "Desk handbook, section 2.3"
+      "source": "sources/desk-handbook.md:62-64"
     }
   ]
 }

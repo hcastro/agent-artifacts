@@ -1,5 +1,6 @@
-/* Course engine: the stop map, strict leveling, question selection and grading.
-   Pure logic with no DOM, so it runs in the browser (window.Course) and in Node for tests.
+/* Course engine: the stop map, strict leveling, question selection, the save block and progress files.
+   Pure logic with no DOM, so it runs in the browser (window.Course) and in Node for tests. Grading lives
+   with each question format in components.js.
    Everything that names the subject comes from content.course, which the build folds in from course.json. */
 (function (root) {
   'use strict';
@@ -26,7 +27,7 @@
     return {
       v: 1, created: Date.now(), updated: Date.now(),
       target: course && course.target_level === 5 ? 5 : 4, bias: 0, sound: true, voice: false,
-      placed: {}, mechanics: false, resumeQ: [], resumeLine: null,
+      placed: {}, mechanics: false, offer: null, resumeQ: [], resumeLine: null,
       stops: {}, q: {}, ideas: {},
       counter: 0, lastReview: 0, retest: [],
       xp: 0, streak: 0, best: 0, days: {},
@@ -36,12 +37,13 @@
     };
   }
 
-  function Engine(content, state, offer) {
+  function Engine(content, state) {
     const course = content.course || {};
     this.c = content;
     this.course = course;
     this.s = state || newState(course);
-    this.offer = offer !== undefined ? offer : (C.Store && C.Store.offer) || null;
+    // Components know which formats are answered in writing. Without them (in Node), only `text` is.
+    this.isWritten = C.components ? q => C.components.written(q) : q => q.format === 'text';
     this.standings = (course.standings && course.standings.length ? course.standings : [[0, 'New']]).slice().sort((a, b) => a[0] - b[0]);
     this.byId = {};
     this.byStop = {};
@@ -158,15 +160,16 @@
     });
     this.s.placed[lid] = true;
     this.s.line = lid;
+    if (this.s.offer && this.offerLine() && this.offerLine().id === lid) this.s.offer = null;
     this.s.focus = this.suggestFocus(lid);
     this._touch();
     return t.stops.map(k => ({ stop: k, level: this.level(k) }));
   };
 
-  // A resume offer is a set of starting levels kept in one viewer's private record, so only that
-  // viewer sees it. Everyone else starts the line with the placement.
+  // A resume offer is a set of starting levels from earlier tutoring. It arrives only in a progress file
+  // or save block the learner loads, so it lives in that learner's own state and never in the page.
   E.offerLine = function () {
-    const o = this.offer;
+    const o = this.s.offer;
     if (!o || !o.levels) return null;
     if (o.line && this.lineById(o.line)) return this.lineById(o.line);
     const k = Object.keys(o.levels).find(x => this.stops[x]);
@@ -178,18 +181,19 @@
   };
   E.applyResume = function () {
     const s = this.s, t = this.offerLine();
-    const lv = this.offer.levels;
+    const offer = s.offer, lv = offer.levels;
     Object.keys(lv).forEach(k => { const st = s.stops[k]; if (st) { st.base = clamp(parseInt(lv[k], 10) || 0, 0, 3); st.since = s.counter; } });
     s.placed[t.id] = true; s.line = t.id; s.resumeLine = t.id;
     const tagged = [];
     t.stops.forEach(k => (this.byStop[k] || []).forEach(q => { if (q.resume) tagged.push(q); }));
     const left = tagged.find(q => q.resume === 'open');
     // focus where the earlier session stopped: the offer says so, or the question it left open does
-    s.focus = this.offer.focus && t.stops.indexOf(this.offer.focus) >= 0 ? this.offer.focus : left ? left.stop : this.suggestFocus(t.id);
+    s.focus = offer.focus && t.stops.indexOf(offer.focus) >= 0 ? offer.focus : left ? left.stop : this.suggestFocus(t.id);
     // the question left open at the focus stop comes first, then earlier misconceptions, asked cold
     const first = tagged.filter(q => q.resume === 'open' && q.stop === s.focus);
     const rest = tagged.filter(q => first.indexOf(q) < 0).sort((x, y) => (x.resume === y.resume ? 0 : x.resume === 'misconception' ? -1 : 1));
     s.resumeQ = first.concat(rest).map((q, i) => ({ q: q.id, due: s.counter + i * 3 }));
+    s.offer = null;
     this._touch();
     return t.stops.map(k => ({ stop: k, level: this.level(k) }));
   };
@@ -397,7 +401,7 @@
     const t = this.lineById(lid);
     const list = [];
     t.stops.forEach(k => {
-      let pool = this._pool(k, { gap: 1 }).filter(q => q.difficulty >= 3 && q.format !== 'text');
+      let pool = this._pool(k, { gap: 1 }).filter(q => q.difficulty >= 3 && !this.isWritten(q));
       pool = pool.length ? pool : this._pool(k, { gap: 1 });
       const fresh = pool.filter(q => !this.s.q[q.id]);
       const pick = this._rank(fresh.length ? fresh : pool, 4)[0];
@@ -468,14 +472,29 @@
     return out.join('\n');
   };
 
-  E.saveBlock = function () {
+  // What a tutor needs to pick up from here: levels, the ideas the learner needed the answer for,
+  // and the latest misses. The page, the progress file and the tutor all share this one summary.
+  E.summary = function () {
     const s = this.s;
-    const levels = Object.keys(this.stops).map(k => k + '=' + this.level(k)).join(' ');
-    const mis = Object.keys(s.ideas).filter(i => (s.ideas[i].misses || 0) > 0)
+    const levels = {};
+    Object.keys(this.stops).forEach(k => { levels[k] = this.level(k); });
+    const needed = Object.keys(s.ideas).filter(i => (s.ideas[i].misses || 0) > 0)
       .sort((x, y) => s.ideas[y].misses - s.ideas[x].misses).slice(0, 12)
-      .map(i => (this.ideaOf[i] ? this.ideaOf[i].name : i) + ' (' + i + ', given away ' + s.ideas[i].misses + 'x)');
+      .map(i => ({ idea: i, name: this.ideaOf[i] ? this.ideaOf[i].name : i, times: s.ideas[i].misses }));
+    const misses = s.log.filter(l => l.out !== 'clean' && this.byId[l.q]).slice(-8).reverse()
+      .map(l => ({ q: l.q, title: this.byId[l.q].title || '', stop: this.byId[l.q].stop, out: l.out }));
     const outs = { clean: 0, helped: 0, told: 0 };
     s.log.forEach(l => { outs[l.out] = (outs[l.out] || 0) + 1; });
+    return { levels: levels, focus: s.focus || null, target: s.target, bias: s.bias, answered: s.counter, outcomes: outs,
+      needed_answer: needed, recent_misses: misses, placed: Object.assign({}, s.placed), mechanics: !!s.mechanics };
+  };
+
+  // The save block is plain text so it can be pasted into a chat with any agent. The format is
+  // documented in references/tutor-rules.md. The page reads the first line, `levels`, `current focus`
+  // and `blob`, and ignores the rest.
+  E.saveBlock = function () {
+    const s = this.s, m = this.summary();
+    const OUT = { helped: 'with a nudge', told: 'given away' };
     let blob = '';
     try {
       const json = JSON.stringify(s);
@@ -484,63 +503,70 @@
     return [
       'course state v1: ' + (this.course.storage_key || this.course.title || ''),
       'topic: ' + (this.course.topic || '') + ' (Socratic tutor)',
-      'target level: ' + s.target + '/5   difficulty bias: ' + s.bias,
-      'levels: ' + levels,
-      'current focus: ' + (s.focus || 'none') + (s.focus && this.stops[s.focus] ? ' (' + this.stops[s.focus].name + ')' : ''),
-      'covered: ' + s.counter + ' questions (' + outs.clean + ' first try, ' + outs.helped + ' with a nudge, ' + outs.told + ' given away)',
-      'misconceptions: ' + (mis.length ? mis.join('; ') : 'none recorded yet'),
+      'target level: ' + m.target + '/5   difficulty bias: ' + m.bias,
+      'levels: ' + Object.keys(m.levels).map(k => k + '=' + m.levels[k]).join(' '),
+      'current focus: ' + (m.focus || 'none') + (m.focus && this.stops[m.focus] ? ' (' + this.stops[m.focus].name + ')' : ''),
+      'covered: ' + m.answered + ' questions (' + m.outcomes.clean + ' first try, ' + m.outcomes.helped + ' with a nudge, ' + m.outcomes.told + ' given away)',
+      'needed the answer for: ' + (m.needed_answer.length ? m.needed_answer.map(x => x.name + ' (' + x.idea + ', ' + x.times + 'x)').join('; ') : 'nothing yet'),
+      'recent misses: ' + (m.recent_misses.length ? m.recent_misses.map(x => x.q + ' ' + x.title + ' (' + OUT[x.out] + ')').join('; ') : 'none'),
       'placement done: ' + this.lines.map(t => t.short.toLowerCase() + ' ' + (s.placed[t.id] ? 'yes' : 'no')).join(', '),
       'mechanics questions: ' + (s.mechanics ? 'included' : 'hidden'),
       'blob: ' + blob,
     ].join('\n');
   };
 
-  Engine.parseBlock = function (text) {
-    const m = /blob:\s*([A-Za-z0-9+/=]+)/.exec(text || '');
-    if (!m) return null;
-    try {
-      const json = typeof atob === 'function' ? decodeURIComponent(escape(atob(m[1]))) : Buffer.from(m[1], 'base64').toString('utf8');
-      const s = JSON.parse(json);
-      return s && s.v === 1 && s.stops ? s : null;
-    } catch (e) { return null; }
+  // The progress file holds the same summary and block, plus the full state.
+  E.progressFile = function () {
+    return {
+      format: 'course-progress', version: 1,
+      course: this.course.storage_key || '', title: this.course.title || '',
+      saved: new Date().toISOString(),
+      summary: this.summary(), block: this.saveBlock(), state: this.s,
+    };
   };
 
-  // ── grading the closed formats ────────────────────────────────────────────
-  const Grade = {
-    choice: function (q, picked) {
-      const opt = (q.options || []).find(o => o.id === picked);
-      const ok = !!(opt && opt.correct);
-      return { ok: ok, probe: ok ? null : (opt && opt.probe) || null };
-    },
-    multi: function (q, picked) {
-      const set = {};
-      (picked || []).forEach(id => { set[id] = true; });
-      let probe = null, ok = true;
-      (q.options || []).forEach(o => {
-        const chosen = !!set[o.id];
-        if (chosen !== !!o.correct) { ok = false; if (!probe && chosen && o.probe) probe = o.probe; }
-      });
-      if (!ok && !probe) {
-        const missed = (q.options || []).find(o => o.correct && !set[o.id] && o.probe);
-        probe = missed ? missed.probe : null;
-      }
-      return { ok: ok, probe: probe };
-    },
-    order: function (q, seq) {
-      const items = q.items || [];
-      let right = 0;
-      items.forEach((it, i) => { if (seq[i] === i) right += 1; });
-      return { ok: right === items.length, probe: null, hint: null };
-    },
-    bucket: function (q, placed) {
-      const items = q.items || [];
-      let right = 0;
-      items.forEach((it, i) => { if (placed[i] === it.bucket) right += 1; });
-      return { ok: right === items.length, probe: null, hint: right + ' of ' + items.length + ' are in the right place.' };
-    },
+  function validState(s) { return !!(s && s.v === 1 && s.stops); }
+  function validOffer(o) { return !!(o && o.levels && typeof o.levels === 'object' && Object.keys(o.levels).length); }
+
+  // Reads a progress file or a save block. Returns { state } to restore everything, { offer } for starting
+  // levels from earlier tutoring, or { error } with a sentence for the learner. `key` is this course's
+  // storage key, so progress from another course is refused instead of mixed in.
+  Engine.parseProgress = function (text, key) {
+    const raw = String(text || '').trim();
+    if (!raw) return { error: 'There is nothing to load.' };
+    let obj = null;
+    if (raw[0] === '{') {
+      try { obj = JSON.parse(raw); } catch (e) { return { error: 'That file is not valid JSON.' }; }
+    }
+    if (obj) {
+      if (obj.course && key && obj.course !== key) return { error: 'That progress belongs to another course (' + obj.course + ').' };
+      if (validState(obj.state)) return { state: obj.state };
+      if (validState(obj)) return { state: obj };
+      if (validOffer(obj.resume)) return { offer: obj.resume };
+      return { error: 'That file holds no progress this page can read.' };
+    }
+    const first = /course state v1:\s*(\S+)/.exec(raw);
+    if (first && key && first[1] !== key) return { error: 'That block belongs to another course (' + first[1] + ').' };
+    // a blob carries the full state. A block a tutor wrote by hand has none, and its levels become an offer.
+    const m = /blob:\s*([A-Za-z0-9+/=]{16,})/.exec(raw);
+    if (m) {
+      try {
+        const json = typeof atob === 'function' ? decodeURIComponent(escape(atob(m[1]))) : Buffer.from(m[1], 'base64').toString('utf8');
+        const st = JSON.parse(json);
+        if (validState(st)) return { state: st };
+      } catch (e) { /* fall through to the levels line */ }
+    }
+    const lv = /^levels:\s*(.+)$/m.exec(raw);
+    if (lv) {
+      const levels = {};
+      lv[1].split(/[\s,]+/).forEach(pair => { const p = /^([^=\s]+)=(\d)$/.exec(pair); if (p) levels[p[1]] = parseInt(p[2], 10); });
+      const focus = /^current focus:\s*([^\s(]+)/m.exec(raw);
+      if (Object.keys(levels).length) return { offer: { levels: levels, focus: focus && focus[1] !== 'none' ? focus[1] : null } };
+    }
+    return { error: 'That block could not be read.' };
   };
 
   C.LEVELS = LEVELS; C.BAR = BAR;
-  C.Engine = Engine; C.Grade = Grade; C.newState = newState;
+  C.Engine = Engine; C.newState = newState;
   if (typeof module !== 'undefined' && module.exports) module.exports = C;
 })(typeof window !== 'undefined' ? window : globalThis);

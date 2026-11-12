@@ -48,7 +48,7 @@
       ],
       "answer": "The fine is $1.00. Books cost 25 cents for each open day late, and 4 days at 25 cents is $1.00. The $5.00 cap is far off.",
       "evidence": [
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "What is the daily rate for a book?",
@@ -92,7 +92,7 @@
       ],
       "answer": "B's hold expires and the book moves to C, who gets a pickup notice of their own. Nobody is charged for letting a hold expire.",
       "evidence": [
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "How long is the pickup window?",
@@ -136,8 +136,8 @@
       ],
       "answer": "The account shows $10.00. A DVD builds up $1.00 for each open day, but it stops at the $10.00 cap, which it reached on day 10. It is not lost yet, since that happens at 30 days.",
       "evidence": [
-        "Desk handbook, section 3.2",
-        "Desk handbook, section 3.3"
+        "sources/desk-handbook.md:88-98",
+        "sources/desk-handbook.md:100-104"
       ],
       "probes": [
         "Work out the fine without the cap. Then apply the cap.",
@@ -193,7 +193,7 @@
       ],
       "answer": "A book reaches its $5.00 cap after 20 open days and a DVD reaches its $10.00 cap after 10. Quick picks follow the book rate. Anything short of those day counts is still growing.",
       "evidence": [
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "How many days does each kind of item take to reach its cap?",
@@ -218,7 +218,7 @@
       ],
       "answer": "Nothing happens to the hold until the book is checked in, and the scan is what routes it to the hold shelf. The notice follows, and with it the 7-day window. When the window ends unused, the hold expires and the book moves to the next patron in the queue.",
       "evidence": [
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "What has to happen before anyone can be notified?",
@@ -249,7 +249,7 @@
       },
       "answer": "They owe 25 cents. Fines count only days the library is open, so the three closed days add nothing. The book came back on the first open day after its due date, which makes it one open day late.",
       "evidence": [
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "List the days between the due date and the return. Which of them was the library open?",
@@ -300,8 +300,8 @@
       ],
       "answer": "Each DVD stopped at the $10.00 cap, so the patron owes $20.00. That is over the $10.00 block line, so they cannot borrow until they pay it down below $10.00. Returning the items stops new fines but does not remove the ones already owed, and 12 days is far short of the 30 that make an item lost.",
       "evidence": [
-        "Desk handbook, section 3.2",
-        "Desk handbook, section 1.1"
+        "sources/desk-handbook.md:88-98",
+        "sources/desk-handbook.md:7-26"
       ],
       "probes": [
         "Work out the fines first. Then ask what that balance does at checkout.",
@@ -333,7 +333,7 @@
       },
       "answer": "The new hold is refused, because a patron can have 15 active holds. To place it, they have to free a slot first, by canceling a hold they no longer want or by waiting for one to be collected or to expire.",
       "evidence": [
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "What is the limit on active holds?",
@@ -377,8 +377,8 @@
       ],
       "answer": "The account owes $10.00. A lost item returned within 6 months has its replacement charge removed, but the overdue fine stays, and for a DVD that fine stopped at the $10.00 cap.",
       "evidence": [
-        "Desk handbook, section 3.3",
-        "Desk handbook, section 3.2"
+        "sources/desk-handbook.md:100-104",
+        "sources/desk-handbook.md:88-98"
       ],
       "probes": [
         "Treat the two charges one at a time. Which rule covers each?",
@@ -416,7 +416,7 @@
       },
       "answer": "The staff member is right that B's hold expired, but the book is not free. It moves to C, the next patron in the queue, and C gets a pickup notice with a fresh 7-day window. The patron at the desk can place a hold and wait behind C.",
       "evidence": [
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "Read the whole record. Who comes after B?",
@@ -444,7 +444,9 @@
       },
       "answer": "A trustworthy explanation covers the queue and the money. Holds are first come, first served, up to 15 per patron. A returned held item goes to the hold shelf with a 7-day pickup window, then on down the queue. Fines count open days: 25 cents a day for books up to $5.00, $1.00 a day for DVDs up to $10.00. At 30 days an item is lost and billed, and a return within 6 months removes the bill but not the fine.",
       "evidence": [
-        "Desk handbook, sections 3.1, 3.2 and 3.3"
+        "sources/desk-handbook.md:80-86",
+        "sources/desk-handbook.md:88-98",
+        "sources/desk-handbook.md:100-104"
       ],
       "probes": [
         "Follow one held book from return to pickup. What happens at each step?",
@@ -487,7 +489,7 @@
       ],
       "answer": "15. The checkout limit of 25 items and the DVD limit of 5 are separate rules about items out, not holds.",
       "evidence": [
-        "Desk handbook, section 3.1"
+        "sources/desk-handbook.md:80-86"
       ],
       "probes": [
         "Find the number in the holds rule.",
@@ -495,6 +497,38 @@
       ],
       "diagnostic": false,
       "rel": "mechanics"
+    },
+    {
+      "id": "d3-q13",
+      "idea": "d3.fines",
+      "type": "apply",
+      "difficulty": 3,
+      "format": "estimate",
+      "title": "Two DVDs and two books, all late",
+      "prompt": "A patron returns 2 DVDs and 2 books together. Each item is 15 open days late. Before you look at the account, how much do you expect they owe in fines for these four items?",
+      "unit": "dollars",
+      "value": 27.5,
+      "range": [
+        27.5,
+        27.5
+      ],
+      "decimals": 2,
+      "scale": [
+        0,
+        40
+      ],
+      "probe_high": "A DVD builds up $1.00 a day. Does it keep building for all 15 days?",
+      "probe_low": "Work out one book and one DVD on their own, then double each. Did you count all four items?",
+      "answer": "They owe $27.50. Each DVD stopped at its $10.00 cap on day 10, so the two DVDs come to $20.00. Each book is 15 days at 25 cents, which is $3.75, so the two books come to $7.50.",
+      "evidence": [
+        "sources/desk-handbook.md:90-96"
+      ],
+      "probes": [
+        "Work out one DVD first. When does its fine stop growing?",
+        "Now one book. Is 15 days past the point where a book's fine stops?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can tell a patron what a late stack will cost before the desk screen does."
     }
   ],
   "finals": [
@@ -520,7 +554,10 @@
       },
       "answer": "Tomorrow the book is 19 open days late, so its fine is $4.75. Added to the earlier $4.00, the balance is $8.75, under the $10.00 block, so the checkout goes ahead. The hold is inside its window, so they take it home. Even at the book's $5.00 cap the balance would be $9.00, but the book has to come back before 30 days or it is marked lost.",
       "evidence": [
-        "Desk handbook, sections 1.1, 3.1, 3.2 and 3.3"
+        "sources/desk-handbook.md:7-26",
+        "sources/desk-handbook.md:80-86",
+        "sources/desk-handbook.md:88-98",
+        "sources/desk-handbook.md:100-104"
       ],
       "probes": []
     }
@@ -530,7 +567,7 @@
       "id": "d3-c01",
       "title": "Fine rates and caps",
       "kind": "table",
-      "source": "Desk handbook, section 3.2",
+      "source": "sources/desk-handbook.md:88-98",
       "body": "Item         Per open day   Cap      Cap reached\nBook         $0.25          $5.00    day 20\nQuick pick   $0.25          $5.00    day 20\nDVD          $1.00          $10.00   day 10\n\nLost at 30 days overdue",
       "note": "Closed days never count. A single DVD at its cap is enough to block checkout, since the block starts at $10.00.",
       "ideas": [
@@ -541,7 +578,7 @@
       "id": "d3-c02",
       "title": "The holds queue",
       "kind": "rule",
-      "source": "Desk handbook, section 3.1",
+      "source": "sources/desk-handbook.md:80-86",
       "body": "Order       first placed, first filled\nLimit       15 active holds per patron\nOn return   hold shelf, pickup notice\nWindow      7 days, then the next patron",
       "note": "An item on the hold shelf can go out only to the patron it is held for. An expired hold passes the item down the queue, not back to the shelf, while anyone is still waiting.",
       "ideas": [
@@ -555,7 +592,7 @@
       "question": "Does a patron who never received a pickup notice keep their place when their hold expires?",
       "why": "Notices sometimes bounce, and without a rule the desk cannot tell that patron whether they lost their turn.",
       "urgency": 1,
-      "source": "Desk handbook, section 3.1"
+      "source": "sources/desk-handbook.md:80-86"
     }
   ]
 }

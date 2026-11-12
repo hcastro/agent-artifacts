@@ -36,6 +36,24 @@ def fields_of(item, kind):
         for k in ("prompt", "why"):
             if isinstance(ch.get(k), str):
                 f[f"challenge/{k}"] = ch[k]
+        # replay steps, their pauses, spot line notes and estimate probes are prose a learner reads
+        for i, st in enumerate(item.get("steps") or []):
+            for k in ("label", "detail"):
+                if isinstance(st.get(k), str):
+                    f[f"steps/{i}/{k}"] = st[k]
+            pause = st.get("pause") or {}
+            if isinstance(pause.get("prompt"), str):
+                f[f"steps/{i}/pause/prompt"] = pause["prompt"]
+            for o in pause.get("options") or []:
+                f[f"steps/{i}/pause/options/{o['id']}/text"] = o.get("text")
+                if o.get("probe"):
+                    f[f"steps/{i}/pause/options/{o['id']}/probe"] = o["probe"]
+        for key in ("line_notes", "line_probes"):
+            for n, t in (item.get(key) or {}).items():
+                f[f"{key}/{n}"] = t
+        for k in ("probe_low", "probe_high"):
+            if isinstance(item.get(k), str):
+                f[k] = item[k]
     elif kind == "card":
         f["note"] = item.get("note")
     elif kind == "open_question":
@@ -54,6 +72,10 @@ def blocks(d):
             ctx = {"format": q.get("format", "text"), "difficulty": q.get("difficulty"), "title": q.get("title")}
             if q.get("options"):
                 ctx["correct_options"] = [o["id"] for o in q["options"] if o.get("correct")]
+            if q.get("format") == "spot":
+                ctx["answer_lines_not_editable"] = q.get("lines")
+            if q.get("format") == "replay":
+                ctx["correct_calls"] = {i: [o["id"] for o in st["pause"]["options"] if o.get("correct")] for i, st in enumerate(q.get("steps") or []) if st.get("pause")}
             if q.get("context"):
                 body = q["context"].get("body")
                 body = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)

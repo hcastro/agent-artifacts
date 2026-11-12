@@ -1,9 +1,11 @@
-/* Course question loop. One question at a time. A miss gets a narrower question, and the answer
-   shows only after three misses or when the learner asks. Levels move only on the engine's evidence rules. */
+/* Course question loop. One question at a time. A miss gets a narrower question, and the answer shows only
+   after three misses or when the learner asks. Levels move only on the engine's evidence rules.
+   Each question's input comes from its component (components.js). Everything else lives here, so probes,
+   attempts, confidence, re-tests, challenges and the teach-back work the same for every format. */
 (function () {
   'use strict';
   const C = (window.Course = window.Course || {});
-  const h = C.h, icon = C.icon, md = C.md;
+  const h = C.h, md = C.md, K = C.components;
   const TYPE = { predict: 'predict the outcome', explain: 'explain why', flaw: 'find the flaw', apply: 'apply it', connect: 'connect two ideas', teach: 'teach it back' };
   const SMALL = 'muted small-note';
 
@@ -13,7 +15,6 @@
     for (let i = 1; i <= 5; i++) s.appendChild(h('i', { class: i <= d ? 'on' : '' }));
     return h('span', { class: 'diff', title: 'Difficulty ' + d + ' of 5', 'aria-label': 'Difficulty ' + d + ' of 5' }, h('span', null, 'Difficulty'), s);
   }
-  function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = r[i]; r[i] = r[j]; r[j] = t; } return r; }
   function solo() { return h('div', { class: 'learn solo' }, ...arguments); }
 
   const Learn = {
@@ -35,13 +36,13 @@
       const others = eng.lines.filter(t => t.id !== lid).map(t => h('button', { class: 'btn quiet', onclick: () => { eng.s.line = t.id; app.save(); this.render(root); } }, 'Start with ' + t.name.toLowerCase() + ' instead'));
       const start = () => this.diag(lid, set, 0, []);
       if (eng.canResume(lid)) {
-        const lv = eng.offer.levels;
+        const lv = eng.s.offer.levels;
         root.appendChild(solo(h('div', { class: 'card qcard build' },
           h('span', { class: 'eyebrow' }, line.name),
           h('h1', { class: 'page-title', style: { marginTop: '8px' } }, 'Pick up where your last session stopped.'),
-          h('p', { class: 'page-sub' }, 'An earlier session placed you on this line: ' + Object.keys(lv).filter(k => eng.stops[k]).map(k => eng.stops[k].tag + ' ' + lv[k]).join(', ') + '. Each level was reached with help, so the question you left open comes first and the earlier misconceptions come back cold.'),
+          h('p', { class: 'page-sub' }, 'The progress you loaded sets starting levels on this line: ' + Object.keys(lv).filter(k => eng.stops[k]).map(k => eng.stops[k].tag + ' ' + Math.min(3, lv[k])).join(', ') + '. They come from an earlier session, which is why the map shows levels before you have answered anything here. Each one was reached with help, so the question you left open comes first and earlier mistakes come back without warning.'),
           h('div', { class: 'row' },
-            h('button', { class: 'btn primary', onclick: () => { const map = eng.applyResume(); app.save(); this.placed(lid, map); } }, 'Resume from that session'),
+            h('button', { class: 'btn', onclick: () => { const map = eng.applyResume(); app.save(); this.placed(lid, map); } }, 'Resume from that session'),
             h('button', { class: 'btn', onclick: start }, 'Take the ' + set.length + '-question placement instead')),
           others.length ? h('div', { class: 'row', style: { marginTop: '10px' } }, others) : null)));
         return;
@@ -63,8 +64,8 @@
       const q = set[i];
       this.cur = { q: q, mode: 'placement', attempts: 0, diag: true };
       this.paint({ q: q, mode: 'placement', label: 'Placement ' + (i + 1) + ' of ' + set.length }, (answer, conf) => {
-        const g = C.Grade.choice(q, answer);
-        results.push({ q: q.id, ok: g.ok, conf: conf });
+        const g = K.get(q).grade(q, answer);
+        results.push({ q: q.id, ok: !!g.ok, conf: conf });
         C.Sound.tick();
         this.diag(lid, set, i + 1, results);
       });
@@ -105,99 +106,47 @@
       this.paint({ q: nx.q, mode: nx.mode, label: label, primer: nx.primer }, (answer, conf) => this.submit(answer, conf));
     },
 
+    // Asks one question by id, outside the engine's choice. The learner test uses it to reach every
+    // format, and an author can run Course.Learn.askById('<id>') in the console to look at one question.
+    askById(id) {
+      const app = C.app, q = app.engine.byId[id];
+      if (!q || !this.root) return false;
+      app.final = null;
+      this.cur = { q: q, mode: 'focus', cold: false, attempts: 0, firstTry: null };
+      this.paint({ q: q, mode: 'focus', label: null }, (answer, conf) => this.submit(answer, conf));
+      return true;
+    },
+
+    // Answers the current question through its component's autoAnswer hook. Used by the learner test.
+    async autoAnswer(right) {
+      const comp = this.ui && this.ui.comp;
+      if (!comp) return 'no question on screen';
+      if (typeof comp.autoAnswer !== 'function') return 'component ' + comp.name + ' has no autoAnswer hook';
+      await comp.autoAnswer(this.cur.q, this.ui.answerUi, !!right);
+      return 'ok';
+    },
+
+    // What every component gets: the element to draw in, the ready callback and a few helpers.
+    api(q, el, mode, onReady) {
+      return { el: el, q: q, mode: mode, ready: a => onReady(a === undefined ? null : a), h: h, md: md, inline: C.inline, icon: C.icon, block: K.block, options: K.options, tick: () => C.Sound.tick() };
+    },
+
     paint(o, onSubmit) {
       const app = C.app, eng = app.engine, root = this.root, q = o.q, sk = eng.stops[q.stop];
       root.innerHTML = '';
+      const comp = K.get(q);
       const notes = h('div', { 'aria-live': 'polite' });
-      const answerUi = h('div');
+      const answerUi = h('div', { class: 'answer-ui fmt-' + comp.name });
       const submitRow = h('div', { class: 'submit' });
-      let getAnswer = () => null, lock = () => {};
-      this.ui = { notes: notes, answerUi: answerUi, submitRow: submitRow };
-      const shaker = el => () => { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); };
-
-      if (q.format === 'choice' || q.format === 'multi') {
-        const picked = {};
-        const box = h('div', { class: 'opts', role: q.format === 'choice' ? 'radiogroup' : 'group', 'aria-label': 'Answer options' });
-        // shuffled so the correct option has no favored position
-        shuffle(q.options).forEach((op, i) => {
-          const b = h('button', { class: 'opt', role: q.format === 'choice' ? 'radio' : 'checkbox', 'aria-checked': 'false', data: { id: op.id }, onclick: () => {
-            if (q.format === 'choice') { Object.keys(picked).forEach(k => delete picked[k]); Array.from(box.children).forEach(c => c.setAttribute('aria-checked', 'false')); }
-            picked[op.id] = !picked[op.id];
-            b.setAttribute('aria-checked', String(!!picked[op.id]));
-            C.Sound.tick();
-          } }, h('span', { class: 'key' }, String.fromCharCode(65 + i)), h('span', { html: C.inline(op.text) }));
-          box.appendChild(b);
-        });
-        answerUi.appendChild(box);
-        if (q.format === 'multi') answerUi.appendChild(h('div', { class: 'under' }, 'Select every option that applies.'));
-        getAnswer = () => { const ids = Object.keys(picked).filter(k => picked[k]); return q.format === 'choice' ? (ids[0] || null) : (ids.length ? ids : null); };
-        lock = reveal => Array.from(box.children).forEach(c => {
-          c.disabled = true;
-          if (reveal) { const op = q.options.find(x => x.id === c.dataset.id); if (op.correct) c.classList.add('right'); else if (c.getAttribute('aria-checked') === 'true') c.classList.add('wrong'); else c.classList.add('dim'); }
-        });
-        this.ui.markWrong = shaker(box);
-      } else if (q.format === 'order') {
-        let seq = shuffle(q.items.map((_, i) => i));
-        if (seq.every((v, i) => v === i)) seq.reverse();
-        const box = h('div', { class: 'order', role: 'list' });
-        const swap = (a, b) => { const t = seq[a]; seq[a] = seq[b]; seq[b] = t; C.Sound.tick(); draw(); };
-        const draw = () => {
-          box.innerHTML = '';
-          seq.forEach((idx, pos) => box.appendChild(h('div', { class: 'order-item', role: 'listitem' }, h('span', { class: 'n' }, String(pos + 1)), h('span', { html: C.inline(q.items[idx]) }),
-            h('span', { class: 'mv' },
-              h('button', { 'aria-label': 'Move up', disabled: pos === 0, onclick: () => swap(pos - 1, pos) }, icon('up')),
-              h('button', { 'aria-label': 'Move down', disabled: pos === seq.length - 1, onclick: () => swap(pos, pos + 1) }, icon('down'))))));
-        };
-        draw();
-        answerUi.appendChild(box);
-        answerUi.appendChild(h('div', { class: 'under' }, 'Use the arrows to put these in order, first at the top.'));
-        getAnswer = () => seq.slice();
-        lock = reveal => { if (reveal) { seq = q.items.map((_, i) => i); draw(); } box.querySelectorAll('button').forEach(b => { b.disabled = true; }); };
-        this.ui.markWrong = shaker(box);
-      } else if (q.format === 'bucket') {
-        const placed = q.items.map(() => null);
-        const box = h('div', { class: 'buckets' });
-        shuffle(q.items.map((_, i) => i)).forEach(i => {
-          const it = q.items[i];
-          const pick = h('div', { class: 'pick', role: 'group', 'aria-label': 'Category' });
-          q.buckets.forEach(b => pick.appendChild(h('button', { 'aria-pressed': 'false', data: { bucket: b.id }, onclick: ev => { placed[i] = b.id; Array.from(pick.children).forEach(c => c.setAttribute('aria-pressed', 'false')); ev.currentTarget.setAttribute('aria-pressed', 'true'); C.Sound.tick(); } }, b.label)));
-          box.appendChild(h('div', { class: 'b-item', data: { i: String(i) } }, h('div', { class: 'txt', html: C.inline(it.text) }), pick));
-        });
-        answerUi.appendChild(box);
-        getAnswer = () => (placed.every(p => p !== null) ? placed.slice() : null);
-        lock = reveal => Array.from(box.children).forEach(c => {
-          c.querySelectorAll('button').forEach(b => { b.disabled = true; });
-          if (reveal) {
-            const i = +c.dataset.i, it = q.items[i];
-            c.classList.add(placed[i] === it.bucket ? 'right' : 'wrong');
-            const lab = (q.buckets.find(b => b.id === it.bucket) || {}).label;
-            c.appendChild(h('div', { class: 'why', html: '<strong>' + C.esc(lab) + '.</strong> ' + C.inline(it.why || '') }));
-          }
-        });
-        this.ui.markWrong = shaker(box);
-      } else {
-        const area = h('textarea', { class: 'answer-box', id: 'answer-' + q.id, placeholder: q.type === 'teach' ? 'Explain it the way you would to someone new, in 150 words or fewer.' : 'Answer in your own words. A few sentences is enough.', 'aria-label': 'Your answer' });
-        const count = h('span', { class: 'num' }, '0 words');
-        area.addEventListener('input', () => { const n = area.value.trim() ? area.value.trim().split(/\s+/).length : 0; count.textContent = n + ' word' + (n === 1 ? '' : 's'); });
-        const under = h('div', { class: 'under' }, count);
-        if (C.Tutor.dict) {
-          const mic = h('button', { class: 'icon-btn mic', 'aria-label': 'Dictate your answer', 'aria-pressed': 'false', title: 'Dictate', onclick: () => C.Tutor.dictate(area, mic) }, icon('mic'));
-          under.insertBefore(mic, count);
-        }
-        under.appendChild(h('span', null, C.Tutor.canGrade() ? 'Claude grades this against a hidden rubric.' : 'Claude grading is not available here, so you will check your answer against the key points.'));
-        answerUi.append(area, under);
-        getAnswer = () => (area.value.trim().length >= 12 ? area.value.trim() : null);
-        lock = () => { area.readOnly = true; };
-        this.ui.area = area;
-        this.ui.markWrong = shaker(area);
-      }
-      this.ui.lock = lock;
+      let current = null;
+      this.ui = { comp: comp, notes: notes, answerUi: answerUi, submitRow: submitRow, answers: [], frozen: [] };
+      comp.render(q, this.api(q, answerUi, o.mode, a => { current = a; }));
+      this.ui.markWrong = () => { answerUi.classList.remove('shake'); void answerUi.offsetWidth; answerUi.classList.add('shake'); };
 
       // the confidence call rides on the submit, so calibration costs no extra tap
       const go = conf => {
-        const a = getAnswer();
-        if (a === null) { C.toast(q.format === 'text' ? 'Write an answer first.' : q.format === 'bucket' ? 'Place every item first.' : 'Pick an answer first.'); return; }
-        onSubmit(a, conf);
+        if (current === null) { C.toast(comp.empty || 'Pick an answer first.'); return; }
+        onSubmit(current, conf);
       };
       submitRow.append(h('span', { class: 'how' }, 'Submit, and say how sure you are:'),
         h('button', { class: 'conf', data: { conf: 'sure' }, onclick: () => go('sure') }, 'Sure'),
@@ -214,7 +163,10 @@
 
       const card = h('div', { class: 'card qcard build' });
       if (o.primer) card.appendChild(h('div', { class: 'note primer' }, h('span', { class: 'eyebrow' }, 'New material: ' + o.primer.name), h('div', { html: md(o.primer.primer) })));
-      card.append(h('h2', null, q.title || ''), h('div', { class: 'prompt', html: md(q.prompt) }), answerUi, notes, submitRow);
+      // a component that cannot use this question's data hands it to the written answer
+      const fallback = comp.name !== q.format ? h('p', { class: 'cmp-note' }, 'This question could not show its usual controls, so answer it in your own words.') : null;
+      // native append writes null as text, so leave the missing note out
+      card.append(...[h('h2', null, q.title || ''), h('div', { class: 'prompt', html: md(q.prompt) }), fallback, answerUi, notes, submitRow].filter(Boolean));
       if (inLoop) {
         card.appendChild(h('div', { class: 'cmds' },
           h('button', { class: 'btn quiet small', onclick: () => app.go('progress') }, 'Show progress'),
@@ -223,20 +175,25 @@
           h('button', { class: 'btn quiet small', onclick: () => this.tell(true) }, 'Just tell me')));
       }
 
-      const side = q.context ? h('div', { class: 'side' }, this.contextCard(q.context)) : null;
+      const side = q.context ? h('div', { class: 'side' }, K.block(q.context)) : null;
       root.appendChild(h('div', { class: 'learn' + (side ? '' : ' solo') }, h('div', null, head, card), side));
       if (o.primer) C.Tutor.speak(o.primer.primer);
       window.scrollTo({ top: 0, behavior: C.reduced() ? 'auto' : 'smooth' });
     },
 
-    contextCard(c) {
-      const card = h('div', { class: 'card ctx' }, h('div', { class: 'ctx-head' }, h('span', { class: 'chip' }, c.kind), h('span', null, c.label || '')));
-      if (c.kind === 'chat' && Array.isArray(c.body)) {
-        const box = h('div', { class: 'chatctx' });
-        c.body.forEach(m => box.appendChild(h('div', { class: m.role === 'user' ? 'user' : 'assistant' }, m.text)));
-        card.appendChild(box);
-      } else card.appendChild(h('pre', { tabindex: '0' }, typeof c.body === 'string' ? c.body : JSON.stringify(c.body, null, 2)));
-      return card;
+    // Stops input while a written answer is checked or once the question settles. unfreeze() undoes
+    // it for a retry, and re-enables only what freeze() disabled.
+    freeze() {
+      const el = this.ui.answerUi;
+      el.classList.add('frozen');
+      const live = Array.from(el.querySelectorAll('button, input, textarea, select')).filter(x => !x.disabled);
+      live.forEach(x => { x.disabled = true; });
+      this.ui.frozen = this.ui.frozen.concat(live);
+    },
+    unfreeze() {
+      this.ui.answerUi.classList.remove('frozen');
+      this.ui.frozen.forEach(x => { x.disabled = false; });
+      this.ui.frozen = [];
     },
 
     note(kind, eyebrow, html, extra) {
@@ -245,94 +202,110 @@
       return n;
     },
 
-    async submit(answer, conf) {
-      const c = this.cur, q = c.q;
-      if (c.busy || c.resolved) return;
+    submit(answer, conf) {
+      const c = this.cur, q = c.q, comp = this.ui.comp;
+      if (c.resolved || c.checking) return;
       c.conf = c.conf || conf;
-      c.attempts += 1;
-      let res;
-      if (q.format === 'text') {
-        if (!C.Tutor.canGrade()) return this.selfGrade();
-        c.busy = true;
-        const wait = this.note('push', 'Reading your answer', '<p>Claude is checking it against the rubric.</p>');
-        const g = await C.Tutor.grade(q, answer, c.attempts);
-        wait.remove(); c.busy = false;
-        if (g.error) {
-          c.attempts -= 1;
-          if (!C.Tutor.canGrade()) return this.selfGrade();
-          C.toast(g.error === 'rate_limited' ? 'Claude is busy. Give it a moment and submit again.' : 'The grader did not answer. Submit again.');
-          return;
-        }
-        res = { ok: g.ok, probe: g.probe, note: g.note, got: g.got, need: g.need, trust: g.trust };
-        if (q.type === 'teach') res.ok = g.ok && g.trust;
-      } else {
-        res = C.Grade[q.format](q, answer);
+      this.ui.answers.push(answer);
+      const res = comp.grade(q, answer) || { ok: false };
+      if (res.written) { c.attempts += 1; return this.checkWritten(answer); }
+      if (res.next) {
+        // a right call inside a multi-step question: no attempt is used, and the question stays open
+        Array.from(this.ui.notes.querySelectorAll('.note.probe')).forEach(n => n.remove());
+        C.Sound.ok();
+        if (comp.update) comp.update(q, this.ui.answerUi, res);
+        return;
       }
+      c.attempts += 1;
       if (c.firstTry === null) c.firstTry = !!res.ok;
       if (res.ok) return this.correct(res);
-      // a miss gets a narrower question, never the answer
+      this.miss(res);
+    },
+
+    // a miss gets a narrower question, never the answer
+    miss(res) {
+      const c = this.cur, q = c.q;
       C.Sound.miss();
-      if (this.ui.markWrong) this.ui.markWrong();
+      this.ui.markWrong();
       if (c.attempts >= 3) return this.tell(false);
-      const probe = res.probe || (q.probes || [])[c.attempts - 1] || (q.probes || [])[0] || 'Read the question again slowly. Which single step are you least sure of?';
+      const generic = (q.probes || [])[c.attempts - 1] || (q.probes || [])[0] || 'Read the question again slowly. Which single step are you least sure of?';
+      const probe = res.probe || generic;
       const bits = [];
-      if (res.note) bits.push('<p class="' + SMALL + '">' + C.esc(res.note) + '</p>');
+      if (res.agent) bits.push('<p class="' + SMALL + '">Answer the narrower question your agent asked, then revise your answer and submit again. If it did not ask one, use the question above.</p>');
       if (res.hint) bits.push('<p class="' + SMALL + '">' + C.esc(res.hint) + '</p>');
-      if (q.format === 'text' && res.need) bits.push('<p class="' + SMALL + '">' + res.got + ' of ' + res.need + ' key points so far.</p>');
       Array.from(this.ui.notes.querySelectorAll('.note.probe')).forEach(n => n.classList.add('dim'));
       const n = this.note('probe', 'Not yet. Attempt ' + c.attempts + ' of 3, a narrower question', '<p>' + C.inline(probe) + '</p>' + bits.join(''));
-      if (C.Tutor.canGrade()) n.appendChild(this.talkBox(q, probe));
+      if (this.ui.comp.update) this.ui.comp.update(q, this.ui.answerUi, res);
       C.Tutor.speak(probe);
       n.scrollIntoView({ block: 'nearest', behavior: C.reduced() ? 'auto' : 'smooth' });
     },
 
-    talkBox(q, probe) {
-      const thread = [];
-      const box = h('div', { class: 'talk' });
-      const input = h('input', { type: 'text', placeholder: 'Think out loud here, or revise your answer above.', 'aria-label': 'Reply to the narrower question', id: 'talk-' + q.id + '-' + this.cur.attempts });
-      let busy = false;
-      const send = async () => {
-        const text = input.value.trim();
-        if (!text || busy) return;
-        busy = true; input.value = '';
-        thread.push({ who: 'me', text: text });
-        box.insertBefore(h('div', { class: 'msg me' }, text), row);
-        const r = await C.Tutor.talk(q, probe, thread);
-        busy = false;
-        if (r.error) { box.insertBefore(h('div', { class: 'msg tutor' }, 'The tutor did not answer. Revise your answer above and submit.'), row); return; }
-        thread.push({ who: 'tutor', text: r.text });
-        box.insertBefore(h('div', { class: 'msg tutor' }, r.text), row);
-        C.Tutor.speak(r.text);
-        if (thread.length >= 8) row.remove();
-      };
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-      const row = h('div', { class: 'talk-row' }, input, h('button', { class: 'btn small', onclick: send }, 'Reply'));
-      box.appendChild(row);
-      return box;
-    },
-
-    // The learner ticks the key points their answer made. Used when Claude grading is unavailable.
+    // The learner ticks the key points their answer made.
     checklist(must, onDone) {
       const ticks = must.map(() => false);
-      const list = h('div', { class: 'opts', style: { marginTop: '10px' } });
+      const list = h('div', { class: 'opts checklist', style: { marginTop: '10px' } });
       must.forEach((m, i) => {
-        const b = h('button', { class: 'opt', role: 'checkbox', 'aria-checked': 'false', onclick: () => { ticks[i] = !ticks[i]; b.setAttribute('aria-checked', String(ticks[i])); } }, h('span', { class: 'key' }, icon('check')), h('span', { html: C.inline(m) }));
+        const b = h('button', { class: 'opt', role: 'checkbox', 'aria-checked': 'false', onclick: () => { ticks[i] = !ticks[i]; b.setAttribute('aria-checked', String(ticks[i])); } }, h('span', { class: 'key' }, C.icon('check')), h('span', { html: C.inline(m) }));
         list.appendChild(b);
       });
       return h('div', null, list, h('button', { class: 'btn primary small', onclick: () => onDone(ticks.filter(Boolean).length) }, 'Done checking'));
     },
 
-    selfGrade() {
-      const c = this.cur, q = c.q, r = q.rubric || { must: [] };
-      const need = r.pass || r.must.length;
-      this.ui.lock(false);
+    // A written answer is checked by the learner against the key points, or by their own coding agent
+    // from a prompt the page copies. `done` gets { via: 'self' or 'agent', ok }.
+    writtenCheck(q, answer, attempt, done) {
+      const r = K.rubric(q), need = r.pass || r.must.length;
+      const body = h('div');
+      const n = this.note('push check-written', 'Check your answer', '', body);
+      const self = () => {
+        body.innerHTML = '';
+        body.append(h('p', null, 'Tick each key point your answer clearly made. A vague mention does not count.'),
+          this.checklist(r.must, got => done({ via: 'self', ok: got >= need })),
+          h('p', { class: 'alt' }, h('span', { class: 'muted' }, 'Or have your coding agent check it. '), h('button', { class: 'btn quiet small', onclick: agent }, 'Check with my agent')));
+      };
+      const agent = () => {
+        const prompt = C.Tutor.agentPrompt(q, answer, attempt);
+        body.innerHTML = '';
+        const status = h('p', null, 'Copying the prompt.');
+        const ta = h('textarea', { class: 'block agent-prompt', readonly: true, 'aria-label': 'Prompt for your coding agent' });
+        ta.value = prompt;
+        const det = h('details', { class: 'agent-details' }, h('summary', null, 'Show the prompt'), ta);
+        C.copyText(prompt).then(ok => {
+          status.textContent = ok ? 'The prompt is on your clipboard. Paste it into a chat with your coding agent, then come back and say what it told you.'
+            : 'Copying was blocked, so copy the prompt below yourself. Paste it into a chat with your coding agent, then come back and say what it told you.';
+          if (!ok) det.open = true;
+        });
+        body.append(status, det,
+          h('p', { class: SMALL }, 'The prompt lists the key points, so skip reading it if you want a clean check.'),
+          h('p', { class: 'ask-agent' }, h('strong', null, 'What did your agent say?')),
+          h('div', { class: 'row' },
+            h('button', { class: 'btn small', onclick: () => done({ via: 'agent', ok: true }) }, 'Got it'),
+            h('button', { class: 'btn small', onclick: () => done({ via: 'agent', ok: false }) }, 'Not yet')),
+          h('p', { class: 'alt' }, h('button', { class: 'btn quiet small', onclick: self }, 'Check it myself instead')));
+      };
+      self();
+      return n;
+    },
+
+    checkWritten(answer) {
+      const c = this.cur, q = c.q;
+      c.checking = true;
+      this.freeze();
       this.ui.submitRow.hidden = true;
-      const n = this.note('push', 'Check yourself', '<p>Tick each key point your answer clearly made. A vague mention does not count.</p>', this.checklist(r.must, got => {
+      const n = this.writtenCheck(q, answer, c.attempts, v => {
         n.remove();
-        c.selfGraded = true;
-        if (c.firstTry === null) c.firstTry = got >= need;
-        if (got >= need) this.correct({ ok: true, self: true }); else this.tell(false);
-      }));
+        c.checking = false;
+        if (c.firstTry === null) c.firstTry = v.ok;
+        if (v.via === 'self') {
+          c.selfGraded = true;
+          return v.ok ? this.correct({ ok: true, self: true }) : this.tell(false);
+        }
+        // the agent's verdict: a pass on the first attempt counts as a first-try pass
+        if (v.ok) return this.correct({ ok: true, agent: true });
+        this.unfreeze();
+        this.ui.submitRow.hidden = false;
+        this.miss({ agent: true });
+      });
     },
 
     correct(res) {
@@ -341,7 +314,7 @@
       if (q.challenge && c.attempts === 1 && !c.challenged && !res.self) {
         c.challenged = true;
         this.ui.submitRow.hidden = true;
-        this.ui.lock(false);
+        this.freeze();
         const settle = stood => {
           n.remove();
           const held = q.challenge.hold !== false;
@@ -355,7 +328,7 @@
         C.Tutor.speak(q.challenge.prompt);
         return;
       }
-      this.resolve(c.attempts === 1 && !res.self ? 'clean' : 'helped', res.note ? '<p class="muted">' + C.esc(res.note) + '</p>' : '');
+      this.resolve(c.attempts === 1 && !res.self ? 'clean' : 'helped', '');
     },
 
     tell(asked) {
@@ -363,16 +336,19 @@
       if (c.resolved || c.diag) return;
       if (c.firstTry === null) c.firstTry = false;
       c.asked = asked;
+      const open = this.ui.notes.querySelector('.check-written');
+      if (open) open.remove();
       this.resolve('told', '');
     },
 
     async resolve(out, extraHtml) {
-      const app = C.app, eng = app.engine, c = this.cur, q = c.q;
+      const app = C.app, eng = app.engine, c = this.cur, q = c.q, comp = this.ui.comp;
       if (c.resolved) return;
       c.resolved = true;
-      this.ui.lock(true);
+      this.freeze();
       this.ui.submitRow.hidden = true;
-      Array.from(this.ui.notes.querySelectorAll('.talk-row')).forEach(r => r.remove());
+      const answers = this.ui.answers;
+      if (comp.reveal) comp.reveal(q, this.ui.answerUi, { out: out, answer: answers[answers.length - 1], answers: answers.slice() });
       const r = eng.record(q.id, { out: out, attempts: Math.max(1, c.attempts), conf: c.conf, firstTry: !!c.firstTry, mode: c.mode, cold: c.cold, teachPass: q.type === 'teach' && out !== 'told' });
       app.save();
       const ev = (q.evidence || []).length ? h('div', { class: 'evidence' }, q.evidence.map(e => h('code', null, e))) : null;
@@ -439,18 +415,16 @@
       const q = f.list[f.i];
       this.cur = { q: q, mode: 'final', attempts: 0 };
       const record = ok => { f.results.push({ q: q.id, ok: !!ok }); f.i += 1; C.Sound.tick(); this.finalStep(); };
-      this.paint({ q: q, mode: 'final', label: 'Final ' + (f.i + 1) + ' of ' + f.list.length + (q.isFinal ? ', integrative' : '') }, async answer => {
-        if (q.format !== 'text') return record(C.Grade[q.format](q, answer).ok);
-        if (C.Tutor.canGrade()) {
-          C.toast('Checking your answer.');
-          const g = await C.Tutor.grade(q, answer, 1);
-          if (g.error) { C.toast('The grader did not answer. Submit again.'); return; }
-          return record(g.ok);
-        }
-        const r = q.rubric || { must: [] };
+      this.paint({ q: q, mode: 'final', label: 'Final ' + (f.i + 1) + ' of ' + f.list.length + (q.isFinal ? ', integrative' : '') }, answer => {
+        const comp = this.ui.comp;
+        this.ui.answers.push(answer);
+        const g = comp.grade(q, answer) || {};
+        if (g.next) { if (comp.update) comp.update(q, this.ui.answerUi, g); return; }
+        if (!g.written) return record(g.ok);
+        // no hints in a final, so a written answer gets one check
+        this.freeze();
         this.ui.submitRow.hidden = true;
-        this.ui.lock(false);
-        this.note('push', 'Check yourself', '<p>Tick each criterion your answer clearly met.</p>', this.checklist(r.must, got => record(got >= (r.pass || r.must.length))));
+        this.writtenCheck(q, answer, 1, v => record(v.ok));
       });
     },
   };

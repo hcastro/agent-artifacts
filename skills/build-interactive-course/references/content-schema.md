@@ -14,7 +14,7 @@ The starter kit reads a course as data. `course.json` names the course, its line
 8. [Probes](#probes)
 9. [Levels and the difficulty mix](#levels-and-the-difficulty-mix)
 10. [Finals, cards and open questions](#finals-cards-and-open-questions)
-11. [Progress and resume offers](#progress-and-resume-offers)
+11. [Progress and starting levels](#progress-and-starting-levels)
 12. [Writing rules](#writing-rules)
 
 ## How the page teaches
@@ -33,11 +33,15 @@ Content has to serve those rules. Every idea needs two or more questions so the 
 ```
 course.json
 content/<stop-id>.json     one per stop, named by the stop id
-build/head.html            title, fonts, stylesheet ({{title}} is filled in)
-js/*.js                    the engine and views
+build/head.html            title and stylesheet ({{title}} is filled in)
+js/*.js                    the engine, the loop and the views
+js/components/*.js         one file per question format, built in or invented
+sources/                   in the sample only: the made-up handbook its evidence points at
 ```
 
-Build with `python3 scripts/build_course.py <course_dir> --out <dir>`. It validates everything below, prints every problem, and writes `index.html`, `preview.html` (a full document for local testing), `js/` and `data/content.json`, which is `course.json` plus every stop folded together. Errors exit 1: a broken `course.json`, invalid JSON, a repeated id, or a question the page cannot show (unknown format, wrong option count, bucket ids that do not match, a text question without a rubric). Warnings leave the page working, but say what is weaker, such as a level nobody can earn.
+Build with `python3 scripts/build_course.py <course_dir> --out <dir>`. It validates everything below, prints every problem, and writes one file, `course.html`, with the styles, the scripts and `course.json` plus every stop folded in. Errors exit 1 and write nothing: a broken `course.json`, invalid JSON, a repeated id, or a question the page cannot show (unknown format, wrong option count, bucket ids that do not match, a written answer without a rubric, spot lines outside the block). Warnings leave the page working, but say what is weaker, such as a level nobody can earn.
+
+Every file in `js/components/` is built into the page, and its file name becomes a valid `format`. That is how a course adds a component. See [components.md](components.md).
 
 ## course.json
 
@@ -45,7 +49,7 @@ Build with `python3 scripts/build_course.py <course_dir> --out <dir>`. It valida
 {
   "title": "Course name",
   "home_title": "The course map",
-  "topic": "one line used in the plain-text map, the save block and the grader prompt",
+  "topic": "one line used in the plain-text map, the save block and the agent prompt",
   "target_level": 4,
   "lines": [
     { "id": "o", "name": "Line name", "short": "Short", "about": "One sentence.",
@@ -60,10 +64,10 @@ Build with `python3 scripts/build_course.py <course_dir> --out <dir>`. It valida
 - `title` heads the page and the browser tab. `home_title` is the big headline on the map.
 - `target_level` is 4 (can do independently) or 5 (can teach it). The learner can change it.
 - `lines`: 1 to 4. Each line gets its color from its position, `line-1` to `line-4` in the stylesheet, so the order in this file is the color order.
-- `stops`: 3 to 10 per line. Stop ids are unique across the course and name the content file. `tag` is the short label on chips and buttons. `about` shows under the stop on the map.
+- `stops`: 1 to 10 per line. A lesson is one line with one stop, a module is one line of three to seven, and a course has several lines. Stop ids are unique across the course and name the content file. `tag` is the short label on chips and buttons. `about` shows under the stop on the map.
 - `placement`: the stops the placement samples, one question each. Leave it out to sample every stop. Five is a good size for a long line.
 - `standings`: `[percent, name]` pairs, starting at 0 and rising. The name shown is the last one at or below overall mastery.
-- `storage_key`: the `localStorage` key and the save-block label. Change it when a new version of the course should not read old progress.
+- `storage_key`: the local storage key, the first line of the save block and the `course` field of a progress file. Some browsers share one storage area across every file opened from disk, so make it unique. Change it when a new version of the course should not read old progress.
 
 A line with any stop that has no questions yet stays off the map, so a course can ship one finished line while others are written.
 
@@ -99,7 +103,7 @@ The primer shows once, before the first question on that idea, and only to a lea
   "context": { "kind": "table", "label": "Where it comes from", "body": "25 lines at most" },
   "answer": "Two to five sentences, shown after the learner succeeds or is told.",
   "owner": "So you can ... (one line on why this matters to the learner)",
-  "evidence": ["Source, section 2.1"],
+  "evidence": ["src/limits.py:12-30"],
   "probes": ["After the first miss.", "After the second miss, narrower still."],
   "challenge": { "prompt": "Are you sure? ...", "hold": true, "why": "Shown after the learner decides." },
   "rel": "owner", "resume": "open", "diagnostic": false
@@ -109,34 +113,42 @@ The primer shows once, before the first question on that idea, and only to a lea
 - `id`: unique across the course. `<stop>-q<two digits>` keeps files tidy.
 - `type`: `predict`, `explain`, `flaw`, `apply`, `connect` or `teach`. Shown as a chip.
 - `difficulty`: 1 recall with understanding, 2 one step of reasoning, 3 two rules interacting, 4 failure paths and consequences that are not obvious, 5 edge cases and plausible wrong claims.
+- `format`: which component asks the question. See [Formats](#formats).
 - `title`: names the situation without giving away the answer.
 - `context` (optional): something to read beside the question. `kind` is `code`, `config`, `log`, `json`, `table` or `chat`. For `chat`, `body` is a list of `{ "role": "user" | "assistant", "text": "..." }`. Otherwise `body` is a string. Never include secrets or personal data.
-- `answer`: the reference explanation. Claude also grades against it, and never shows it to the learner while grading.
+- `answer`: the reference explanation, shown once the question settles. The prompt for a coding agent holds the rubric and leaves this out.
 - `owner` (optional): one line, shown under the answer, on what the learner can now do. Keep one opening across the course, such as "So you can".
-- `evidence` (optional): short source references, rendered as code chips under the answer.
+- `evidence` (optional): short source references, rendered as code chips under the answer. Write them as `path:line` or `path:start-end`, relative to the source root, so `scripts/check_evidence.py` can find the ones that went stale. Add a note after the reference when a document exists only on an unmerged branch.
 - `challenge` (optional, about one question in five, difficulty 3 or higher): a devil's-advocate push after a clean first answer. `hold: true` means the learner was right and should stand by it. `hold: false` means the push names a real exception they should concede.
 - `rel` (optional): `owner` (the default), `useful` or `mechanics`. Mechanics questions test details a learner could look up, such as an exact name or the order of statements. They are hidden until the learner turns them on in Progress. When questions are equally close to the target difficulty, owner questions come first, then useful, then mechanics.
-- `resume` (optional): `open` marks the question an earlier session left open, and `misconception` marks one that tests a mistake the learner made before. Both are used only after a resume offer (below), asked cold. Tagged questions stay out of the placement.
+- `resume` (optional): `open` marks the question an earlier session left open, and `misconception` marks one that tests a mistake the learner made before. Both are used only after the learner accepts starting levels (below), asked cold. Tagged questions stay out of the placement.
 - `diagnostic`: `true` on one `choice` question per stop, difficulty 2 or 3, answerable in under a minute. The placement uses it. Without one, it takes the first `choice` question at difficulty 2 or 3.
 
 ## Formats
 
-**`choice`**: 3 to 6 options, exactly one correct. Four is the norm. Each wrong option carries its own `probe`.
+Nine components ship with the kit. [components.md](components.md) has each one's fields with an example, its grading, and its keyboard and phone behavior. In short:
+
+| Format | Fields it adds | Graded on |
+|---|---|---|
+| `choice` | `options`: 3 to 6, one `correct`, a `probe` on each wrong one | The picked option |
+| `multi` | `options`: 4 to 6, two or more `correct`, a `probe` on each | The exact set, all or nothing |
+| `order` | `items`: 3 to 7 strings in the correct order | Every item in place |
+| `bucket` | `buckets`: 2 to 6 `{ id, label }`, `items`: 4 to 8 `{ text, bucket, why }` | Every item in its bucket |
+| `text` | `rubric`: `must` (2 to 5 points), `pass`, `misconceptions` | The written-answer check |
+| `reveal` | `block`: `shown`, `hidden`, `hidden_label`, then `options` or `rubric` | Like `choice`, or the written-answer check |
+| `replay` | `steps`: 2 to 20 `{ label, detail, time }`, some with `pause`: `{ prompt, options }` | Each call at a pause |
+| `spot` | `block.body`: 2 to 40 lines, `lines`, optional `line_probes` and `line_notes` | The exact set of line numbers |
+| `estimate` | `value`, `range`, `unit`, optional `scale`, `decimals`, `probe_low`, `probe_high` | The number inside `range` |
+
+For `choice`, `multi`, `reveal` and replay pauses, an option looks like this:
 
 ```json
-"options": [
-  { "id": "a", "text": "25 words at most", "correct": true },
-  { "id": "b", "text": "A mistake a smart learner would make", "correct": false, "probe": "Narrower question about this mistake." }
-]
+{ "id": "b", "text": "A mistake a smart learner would make", "correct": false, "probe": "Narrower question about this mistake." }
 ```
 
-**`multi`**: 4 to 6 options, 2 or more correct, graded all or nothing. Give every option a `probe`. It shows when the learner picks a wrong option or leaves out a right one.
+Only use `order` when the order is forced, meaning each step depends on the one before.
 
-**`order`**: `items`, 3 to 7 strings, listed in the correct order. The page shuffles them and the learner moves them with arrows. Only use it when the order is forced, meaning each step depends on the one before.
-
-**`bucket`**: `buckets`, 2 to 6 `{ "id", "label" }`, and `items`, 4 to 8 `{ "text", "bucket", "why" }`. `why` shows under each item after grading. A miss reports how many are in the right place.
-
-**`text`**: free text graded by Claude through the page's `sample` capability.
+The written-answer check, for `text` and for `reveal` without options, has two paths. By default the learner ticks each `must` point their answer clearly made, so write points a learner can judge honestly. Or the learner presses "Check with my agent": the page copies a prompt with the question, the answer, the rubric and grading rules, and the learner pastes it into any coding agent and reports "Got it" or "Not yet". `pass` is how many points are needed, and defaults to all.
 
 ```json
 "rubric": {
@@ -146,9 +158,9 @@ The primer shows once, before the first question on that idea, and only to a lea
 }
 ```
 
-`must` holds 2 to 5 points, each plain enough that a grader can tell whether the learner said it. `pass` is how many are needed, and defaults to all. When Claude grading is unavailable, the learner ticks the points their answer made, so write points a learner can judge honestly.
+**`teach`** (a type, not a format): one per stop, `format: "text"`, difficulty 5. The prompt asks the learner to explain the stop's central idea to someone new in 150 words or fewer. The agent prompt tells the agent to pass it only when it would trust the explanation unchanged. It is asked once a stop reaches level 4 with two clean answers at difficulty 5.
 
-**`teach`** (a type, not a format): one per stop, `format: "text"`, difficulty 5. The prompt asks the learner to explain the stop's central idea to someone new in 150 words or fewer. Claude passes it only when it would trust the explanation unchanged. It is asked once a stop reaches level 4 with two clean answers at difficulty 5.
+A custom format is any file in `js/components/`. Give its questions a `rubric` too, so the text fallback can be checked when the component cannot use the data.
 
 ## Probes
 
@@ -157,18 +169,18 @@ A probe is a narrower question that exposes the gap in the learner's reasoning. 
 - Weak: "Remember that the limit is 25 items."
 - Strong: "Add the items already out to the items in hand. What is the total limit?"
 
-Order of use after a miss: the picked option's `probe` (choice and multi), then Claude's probe (text), then `probes[0]` and `probes[1]`. Give every question exactly two generic `probes`.
+Order of use after a miss: the component's own probe (the picked option's `probe`, the replay call's `probe`, a spot `line_probes` entry, or `probe_low` and `probe_high`), then the agent's narrower question for a written answer, then `probes[0]` and `probes[1]`. Give every question exactly two generic `probes`.
 
 ## Levels and the difficulty mix
 
-Levels run 0 (unaware) to 5 (can teach it). Level N needs two different questions answered right at difficulty N or higher, at least one of them cold. Levels 4 and 5 count only first-try answers. Level 5 also needs the teach-back.
+Levels run 0 (unaware) to 5 (can teach it). Level N needs two different questions answered right at difficulty N or higher, at least one of them cold. Levels 4 and 5 count only first-try answers, and a self-checked written answer counts as "with a nudge", so a written answer earns those levels only through a first-attempt "Got it" from an agent. Level 5 also needs the teach-back.
 
 So, at every stop, once mechanics questions are hidden, there must be at least two questions at each difficulty from 1 to 5, not counting the teach question. Fewer than two at some level and that level cannot be earned. The build warns about every stop where that happens.
 
-A good stop has about 10 to 16 questions:
+A good stop has about 10 to 16 questions, and a one-stop lesson 8 to 12:
 
 - two or more at each difficulty from 1 to 5, plus one `teach`
-- all five formats across the stop, with `choice` the most common
+- formats chosen by the reasoning each idea needs, with closed formats at difficulty 4 and 5 so those levels can be earned without an agent
 - a mix of types, with at least one `flaw` and one `connect`
 - one `diagnostic`, a `context` on a few, a `challenge` on a few
 - any `mechanics` questions on top of that count
@@ -180,35 +192,34 @@ A good stop has about 10 to 16 questions:
 **Cards**: short references the learner collects. Two to eight per stop.
 
 ```json
-{ "id": "o1-c01", "title": "Item limits", "kind": "table", "source": "Where it comes from",
+{ "id": "o1-c01", "title": "Item limits", "kind": "table", "source": "docs/limits.md:4-18",
   "body": "A short excerpt, 25 lines at most", "note": "What it is and the one thing people get wrong.",
   "ideas": ["o1.limits"] }
 ```
 
-A card opens the first time the learner answers a question on one of its `ideas` without being told.
+A card opens the first time the learner answers a question on one of its `ideas` without being told. `check_evidence.py` checks `source` the same way as `evidence`.
 
 **Open questions**: things the sources could not answer, which the learner should ask someone. The Questions page lists them by urgency, with a checkbox and a notes field each.
 
 ```json
 { "id": "o1-o01", "question": "One sentence, as you would ask it.", "why": "What goes wrong if nobody knows.",
-  "urgency": 1, "source": "Where the gap showed up" }
+  "urgency": 1, "source": "docs/limits.md:20" }
 ```
 
 `urgency` is 1 (ask first), 2 (ask soon) or 3 (good to know, the default).
 
-## Progress and resume offers
+## Progress and starting levels
 
-Progress is private to each viewer. With the `db` and `user` capabilities, the page keeps it in `data/users/<user id>/progress` and mirrors it to `localStorage`. Without them, or after a failed write, it uses `localStorage` only. The Progress page says which mode is on.
+Progress lives in the learner's browser, in local storage under `storage_key`. The Progress page can download it as a progress file, load one back, copy the save block, restore from a pasted block, and erase everything. [design-and-state.md](design-and-state.md) covers where progress lives, and [tutor-rules.md](tutor-rules.md) documents both formats.
 
-To reset one learner, write `{ "resetAt": <epoch ms> }` to `data/users/<user id>/control`. Saved progress with an older marker is dropped, in the database and in the browser.
-
-A resume offer gives one learner starting levels from an earlier session. Write it into that learner's own `progress` document, never into the page code:
+Starting levels for one learner, from earlier tutoring, arrive only in a progress file or save block that learner loads:
 
 ```json
-{ "resume": { "levels": { "o1": 2, "o2": 1 }, "line": "o", "focus": "o1" } }
+{ "format": "course-progress", "version": 1, "course": "my-course-v1",
+  "resume": { "levels": { "o1": 2, "o2": 1 }, "line": "o", "focus": "o1" } }
 ```
 
-Levels are capped at 3. `line` and `focus` are optional. That learner sees a choice between the offer and the placement. Questions tagged `resume` on that line then come back cold, the `open` one first.
+Levels are capped at 3. `line` and `focus` are optional. That learner sees a choice between the starting levels and the placement. Questions tagged `resume` on that line then come back cold, the `open` one first. Never write starting levels into `course.json`, a stop file or the built page, where every learner would get them.
 
 ## Writing rules
 

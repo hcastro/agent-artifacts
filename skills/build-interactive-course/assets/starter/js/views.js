@@ -155,8 +155,19 @@
     progress(root) {
       const app = C.app, eng = app.engine, s = eng.s;
       const copy1 = h('button', { class: 'btn small', onclick: () => C.copyText(eng.ascii(), copy1) }, 'Copy map');
-      const copy2 = h('button', { class: 'btn small', onclick: () => C.copyText(eng.saveBlock(), copy2) }, 'Copy state');
-      const resume = h('textarea', { class: 'block', id: 'resume-box', placeholder: 'Paste a saved state block here', 'aria-label': 'Saved state to resume from' });
+      const copy2 = h('button', { class: 'btn small', onclick: () => C.copyText(eng.saveBlock(), copy2).then(ok => { if (!ok) C.toast('Copying was blocked. Select the block and copy it.'); }) }, 'Copy save block');
+      const file = (app.course.storage_key || 'course') + '-progress-' + new Date().toISOString().slice(0, 10) + '.json';
+      const down = h('button', { class: 'btn small', onclick: () => C.download(file, JSON.stringify(eng.progressFile(), null, 1)) }, 'Download progress');
+      const picker = h('input', { type: 'file', id: 'load-file', accept: '.json,.txt,application/json,text/plain', class: 'visually-hidden', 'aria-label': 'Progress file to load' });
+      const after = r => { C.toast(r.message); if (r.ok) app.go('home'); };
+      picker.addEventListener('change', () => {
+        const f = picker.files && picker.files[0];
+        if (!f) return;
+        f.text().then(t => after(app.loadProgress(t)), () => C.toast('That file could not be read.'));
+        picker.value = '';
+      });
+      const load = h('button', { class: 'btn small', onclick: () => picker.click() }, 'Load progress');
+      const resume = h('textarea', { class: 'block', id: 'resume-box', placeholder: 'Paste a save block here', 'aria-label': 'Save block to resume from' });
       const seg = (label, opts) => h('div', { class: 'seg', role: 'group', 'aria-label': label }, opts.map(o => h('button', { 'aria-pressed': String(o[1]), onclick: o[2] }, o[0])));
       const tgt = seg('Target level', [
         ['Target 4: independent', s.target === 4, () => { eng.setTarget(4); app.save(); app.render(); }],
@@ -172,34 +183,36 @@
       let confirmBox = null;
       const reset = h('button', { class: 'btn quiet small', onclick: () => {
         if (confirmBox) return;
-        confirmBox = h('div', { class: 'note told', style: { marginTop: '10px' } }, h('span', { class: 'eyebrow' }, 'Erase all progress?'), h('p', null, 'Levels, history, cards and your notes on the open questions will be deleted.'),
+        confirmBox = h('div', { class: 'note told', style: { marginTop: '10px' } }, h('span', { class: 'eyebrow' }, 'Erase all progress?'), h('p', null, 'Levels, history, cards and your notes on the open questions will be deleted from this browser. Download your progress first if you might want it back.'),
           h('div', { class: 'row', style: { marginTop: '8px' } },
             h('button', { class: 'btn small', onclick: () => { C.Store.clear(); app.engine = new C.Engine(app.content, C.newState(app.course)); app.save(); app.go('home'); } }, 'Yes, erase it'),
             h('button', { class: 'btn quiet small', onclick: () => { confirmBox.remove(); confirmBox = null; } }, 'Keep it')));
         reset.parentNode.appendChild(confirmBox);
       } }, 'Erase progress');
-      const restore = h('button', { class: 'btn small', onclick: () => {
-        const st = C.Engine.parseBlock(resume.value);
-        if (!st) { C.toast('That block could not be read.'); return; }
-        app.engine = new C.Engine(app.content, app.fill(st)); app.save(); C.toast('State restored.'); app.go('home');
-      } }, 'Restore');
-      const voice = C.Tutor.tts ? h('button', { class: 'btn quiet small', 'aria-pressed': String(!!s.voice), onclick: () => { s.voice = !s.voice; app.save(); if (!s.voice) C.Tutor.hush(); app.render(); } }, s.voice ? 'Turn read-aloud off' : 'Turn read-aloud on') : null;
+      const restore = h('button', { class: 'btn small', onclick: () => after(app.loadProgress(resume.value)) }, 'Restore');
+      const voice = C.Tutor.canSpeak() ? h('button', { class: 'btn quiet small', 'aria-pressed': String(!!s.voice), onclick: () => { s.voice = !s.voice; app.save(); if (!s.voice) C.Tutor.hush(); app.render(); } }, s.voice ? 'Turn read-aloud off' : 'Turn read-aloud on') : null;
       const hidden = eng.hiddenCount();
+      const where = C.Store.mode === 'local' ? 'Your progress saves by itself in this browser, and only here.' : 'This browser blocks local storage, so your progress lasts only until you close this tab. Download it before you go.';
 
-      root.append(h('h1', { class: 'page-title' }, 'Progress'),
+      // native append writes null as text, so the optional section is filtered out
+      root.append(...[h('h1', { class: 'page-title' }, 'Progress'),
         h('p', { class: 'page-sub' }, s.counter + ' questions answered: ' + outs.clean + ' on the first try, ' + outs.helped + ' with a nudge, ' + outs.told + ' given away. Standing: ' + eng.rank() + '.'),
         h('section', { class: 'sect' }, h('h2', null, 'Skill map'), h('p', null, 'This is the same map in plain text, so you can paste it into a chat or a doc.'), h('pre', { class: 'block', tabindex: '0' }, eng.ascii()), h('div', { class: 'row', style: { marginTop: '10px' } }, copy1, tgt)),
         hidden ? h('section', { class: 'sect' }, h('h2', null, 'Mechanics questions'), h('p', null, hidden + ' question' + (hidden === 1 ? '' : 's') + ' only test details you could look up, such as an exact name or the order of steps. They are left out unless you turn them on here. Questions about how things fit together stay in, and they come after the questions that bear on a decision.'), mech) : null,
         h('section', { class: 'sect' }, h('h2', null, 'Recent answers'), recent.length ? h('ul', { class: 'plain-list' }, recent) : h('p', null, 'Nothing yet.')),
-        h('section', { class: 'sect' }, h('h2', null, 'Save state'), h('p', null, 'Your progress saves by itself' + (C.Store.mode === 'db' ? ' to your private space on this page.' : ' in this browser.') + ' This block carries it into a chat with Claude: paste it after the words "resume from:" and the tutor picks up where you left off.'), h('pre', { class: 'block', tabindex: '0' }, eng.saveBlock()), h('div', { class: 'row', style: { marginTop: '10px' } }, copy2)),
-        h('section', { class: 'sect' }, h('h2', null, 'Resume from a saved state'), resume, h('div', { class: 'row', style: { marginTop: '10px' } }, restore, reset)),
-        h('section', { class: 'sect' }, h('h2', null, 'What this page can do right now'),
+        h('section', { class: 'sect' }, h('h2', null, 'Save your progress'),
+          h('p', null, where + ' To move it to another browser or device, download it as a file and load it there. To be tutored on it, paste the save block into a chat with your coding agent and ask it to tutor you from it.'),
+          h('pre', { class: 'block', tabindex: '0' }, eng.saveBlock()), h('div', { class: 'row', style: { marginTop: '10px' } }, down, copy2)),
+        h('section', { class: 'sect' }, h('h2', null, 'Load progress'),
+          h('p', null, 'Load a progress file, or paste a save block. A block your agent wrote after a tutoring session sets starting levels, and you choose whether to use them on the Learn page.'),
+          h('div', { class: 'row', style: { marginBottom: '12px' } }, load, picker),
+          resume, h('div', { class: 'row', style: { marginTop: '10px' } }, restore, reset)),
+        h('section', { class: 'sect' }, h('h2', null, 'About this page'),
           h('ul', { class: 'plain-list' },
-            h('li', null, 'Free-text grading by Claude: ', h('strong', null, C.Tutor.canGrade() ? 'on' : 'off'), C.Tutor.canGrade() ? '. Each graded answer uses a little of your Claude usage.' : '. Text answers fall back to checking yourself against the key points.'),
-            h('li', null, 'Progress storage: ', h('strong', null, C.Store.mode === 'db' ? 'your private space on this page' : 'this browser only')),
-            h('li', null, 'Dictation: ', h('strong', null, C.Tutor.dict ? 'available on text answers' : 'not available here')),
-            h('li', null, 'Read-aloud: ', h('strong', null, C.Tutor.tts ? (s.voice ? 'on' : 'available, off') : 'not available here'), voice ? ' ' : null, voice),
-            h('li', null, 'Content built ' + (app.content.built || '') + ': ' + app.stats.questions + ' questions across ' + Object.keys(eng.stops).length + ' stops.'))));
+            h('li', null, 'Written answers: you check them against the key points, or copy a prompt to your own coding agent. The page itself sends nothing anywhere.'),
+            h('li', null, 'Progress storage: ', h('strong', null, C.Store.mode === 'local' ? 'this browser' : 'this tab only')),
+            h('li', null, 'Read-aloud: ', h('strong', null, C.Tutor.canSpeak() ? (s.voice ? 'on' : 'off') : 'not available in this browser'), voice ? ' ' : null, voice),
+            h('li', null, 'Content built ' + (app.content.built || '') + ': ' + app.stats.questions + ' questions across ' + Object.keys(eng.stops).length + ' stops.')))].filter(Boolean));
     },
   };
 
