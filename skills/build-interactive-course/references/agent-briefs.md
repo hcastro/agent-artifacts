@@ -17,24 +17,28 @@ Hand each brief to a subagent when the agent has them. Without subagents, work t
 One agent, or one pass, per area. Give it the area, the source paths and the output path.
 
 ```
-You are researching AREA of SYSTEM for a course that will teach its new owner.
-Read the sources at SOURCE_PATHS. They are read-only copies of the default branch.
+You are researching AREA of SUBJECT for a course that will teach LEARNER to USE.
+Read the sources at SOURCE_PATHS. Repositories are read-only copies of the default
+branch. Web pages are saved snapshots, each with its URL and date.
 
 Write a dossier to DOSSIER_PATH with these sections:
-1. How it works: the mechanism, in the order things happen, each claim followed by
-   its evidence as path:line.
-2. Verbatim excerpts: the 10 to 20 pieces of code, config or log output a learner
-   should see, each with its path and line range.
-3. What nothing enforces: checks that look like they exist and do not, settings
-   that must change together across repositories, failures that raise no alert,
-   steps that depend on one person.
-4. Question seeds: 20 to 30 situations an owner could face, each with the fact
+1. How it works: the mechanism or the idea, in the order it unfolds, each claim
+   followed by its evidence in the forms from SCHEMA_PATH, section Evidence.
+2. Verbatim excerpts: the 10 to 20 passages, code, config, examples or output a
+   learner should see, each with where it came from.
+3. Where people go wrong: for a codebase, checks that look like they exist and do
+   not, settings that must change together, failures that raise no alert, steps
+   that depend on one person. For a technology or a concept, common misuses, ideas
+   it gets confused with, and the cases where the usual rule does not hold.
+4. Question seeds: 20 to 30 situations the learner could face, each with the fact
    that settles it and where that fact lives.
-5. What the sources cannot answer: questions for the person who built it.
+5. What the sources cannot answer: questions for an expert or the person who
+   built it.
 
-Rules: quote, do not paraphrase, when the wording matters. Say when a document
-exists only on a branch that is not merged. Say when two sources disagree and
-which one the running code follows. Do not guess.
+Rules: quote, do not paraphrase, when the wording matters. In a repository, say
+when a document exists only on a branch that is not merged. Say when two sources
+disagree, and which one the running code or the more authoritative source
+follows. Do not guess.
 ```
 
 ## Authoring
@@ -47,10 +51,10 @@ SCHEMA_PATH, then the component catalog: COMPONENTS_PATH. Read the dossiers at
 DOSSIER_PATHS to find things fast. When a dossier
 and a source disagree, the source wins.
 
-The principle: the learner works with coding agents. Do not drill what an agent can
-read off a file: function names, line numbers, parameter values, the order of
-statements. A fact belongs in a question only when knowing it changes what the
-learner decides, approves, refuses or checks.
+The principle: teach what the learner will do with the subject: USE. Do not drill
+what they could look up in a second: names, line numbers, dates, parameter
+values, the order of statements. A fact belongs in a question only when knowing
+it changes what the learner chooses, builds, approves, refuses or checks.
 
 What we know about the learner: LEARNER_NOTES.
 
@@ -66,15 +70,16 @@ Per stop, write CONTENT_PATH/<stop>.json with:
 - 6 reference cards with verbatim excerpts, 4 open questions, 2 finals.
 
 Rules:
-- Every question is a scenario from the learner's seat, with an agent or a teammate
-  in it where that is natural. Test the decision, not the identifier.
+- Every question is a scenario from the learner's seat, with an agent, a teammate
+  or a client in it where that is natural. Test the judgment, not the name.
 - Every question and final has an "owner" field: one sentence starting "So you can"
-  that names a decision. It must not state the answer.
+  that names what the learner can now do. It must not state the answer.
 - A primer says what the idea is and where to look. It does not hand over a fact a
   question asks for. Probes and wrong-option probes point at one thing to look at
   and never state or imply the answer.
-- Every evidence line is a real path:line you opened. Evidence that exists only on
-  an unmerged branch says so.
+- Every evidence line points at a source you opened, in the forms from
+  SCHEMA_PATH, section Evidence. In a repository, evidence that exists only on an
+  unmerged branch says so.
 - If you cannot verify a claim, leave it out and write it as an open question.
 - Voice: VOICE_RULES.
 
@@ -91,8 +96,8 @@ Different agents from the ones that wrote the content, or a fresh session that h
 
 ```
 You are fact-checking course content against its sources. Wrong answers here teach
-a person wrong facts about a production system. The content was written by other
-agents who checked their own work. Assume nothing is verified.
+a person wrong facts they will act on. The content was written by other agents who
+checked their own work. Assume nothing is verified.
 
 Files: CONTENT_FILES. Schema: SCHEMA_PATH. Sources: SOURCE_PATHS.
 
@@ -100,7 +105,9 @@ For every question and final, check:
 1. The marked-correct answer, the order, the bucket for each item, or the rubric's
    required points.
 2. Every detail of the answer text: names, numbers, paths, ordering, defaults.
-3. Each evidence line points at a file that exists and says what the line claims.
+3. Each evidence line points at a source that exists and says what the question
+   claims. For a document with no text copy, find the quoted words at the cited
+   section or page.
 4. Every wrong option is wrong. Reword one that is defensible, keeping its id.
 5. Every multi-select has exactly the right set.
 6. No giveaways: no primer, probe, wrong-option probe or "owner" line states or
@@ -115,7 +122,7 @@ ambiguous or a giveaway. If you cannot verify a claim either way, leave it and
 list it as unverified.
 
 Write one report per stop to REPORT_PATH/<stop>.md: counts, then one entry per
-change with id, field, before, after and the path:line that proves it, then the
+change with id, field, before, after and the reference that proves it, then the
 unverified list.
 
 Final message: per stop, questions changed and other items changed, the three most
@@ -124,16 +131,18 @@ important corrections, and what a person should look at.
 
 ## Relevance tagging
 
-Use it on content that was written before the decision principle, or on any stop that leans on recall.
+Use it on content that was written before the principle in the authoring brief, or on any stop that leans on recall.
 
 ```
 Classify every question in CONTENT_FILES. Write TAGS_PATH as one JSON object keyed
 by question id: {"relevance": "owner" | "useful" | "mechanics", "owner": "So you
 can ...", "why": "at most 15 words"}.
 
-owner: knowing this changes what the learner decides, approves, refuses or checks.
-useful: system shape the learner needs to follow an explanation or read a trace.
-mechanics: recall of detail an agent reads off the file, with no decision attached.
+owner: knowing this changes what the learner chooses, builds, approves, refuses or
+checks.
+useful: background the learner needs to follow an explanation, read a trace or
+place a new case.
+mechanics: recall of detail the learner could look up, with nothing to do with it.
 
 Judge a question by what it makes the learner do, not by its topic. Be strict.
 Read the full answer before you judge.
@@ -148,7 +157,7 @@ End every brief with these:
 ```
 Read-only everywhere except the files this brief tells you to write. Change
 nothing in any repository or working copy. Start no services, run no tests or
-apps, make no network or cloud calls. Do not copy repositories. Never print
-secrets. Write files with your file tools, and keep scratch files in SCRATCH_PATH
+apps, make no network or cloud calls: read web sources from their saved
+snapshots. Do not copy repositories. Never print secrets. Write files with your file tools, and keep scratch files in SCRATCH_PATH
 and delete that folder before you finish.
 ```

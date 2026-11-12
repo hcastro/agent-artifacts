@@ -1,6 +1,6 @@
 ---
 name: build-interactive-course
-description: Builds a Socratic, interactive course as one self-contained HTML file that teaches a person the context behind a repository, system, feature, pull request, document or an agent's output. Proposes the concepts worth learning, researches the sources with evidence, writes scenario questions that make the learner reason, has a separate agent fact-check every answer, and ships a page with levels, a placement, surprise reviews and interactive components such as predict-then-reveal, step-through replays, spot-the-line and estimates, with room to invent new ones. Sized as a lesson, a module or a full course. Also tutors in conversation from the progress file or save block the page exports, and adds questions for weak spots. Use when the user asks to be taught, quizzed or onboarded on a codebase, system, change or process through a course, learning game, quiz or tutor page, wants to understand an agent's work by being questioned on it, or comes back with course progress. Not for a one-off explanation.
+description: Builds a Socratic, interactive course as one self-contained HTML file that teaches a concept, a topic, a technology or a codebase. Proposes the concepts worth learning, researches the sources with evidence, writes scenario questions that make the learner reason, has a separate agent fact-check every answer, and ships a page with levels, a placement, surprise reviews and interactive components such as predict-then-reveal, step-through replays, spot-the-line and estimates, with room to invent new ones. Sized as a lesson, a module or a full course. Also tutors in conversation from the progress file or save block the page exports, and adds questions for weak spots. Use when the user asks to be taught, quizzed or onboarded on a subject, a technology, a system or a codebase through a course, learning game, quiz or tutor page, or comes back with course progress. Not for a one-off explanation.
 ---
 
 # Build interactive course
@@ -9,9 +9,9 @@ The course asks one question at a time and never lectures. A learner earns a lev
 
 Three things separate a course people finish from one they abandon:
 
-- **It teaches decisions.** Coding agents read code. The person decides, approves, refuses and checks. A fact belongs in a question only when knowing it changes one of those.
+- **It teaches what the learner will do with the subject.** For a codebase, that is the calls a person still makes when agents write the code: what to approve, refuse and check. For a technology, it is when to reach for it, how it fails, and how to tell a good result from a plausible one. For a concept, it is applying it and telling it apart from its look-alikes. A fact belongs in a question only when knowing it changes one of those.
 - **It makes the learner reason.** Every question is an interaction that needs a commitment first: a prediction, a call, a marked line, a number. The catalog of components is in [references/components.md](references/components.md).
-- **It is verified before the learner sees it.** A course that teaches one wrong fact about a production system costs more than no course.
+- **It is verified before the learner sees it.** A course that teaches one wrong fact costs more than no course.
 
 **Done when:** `course.html` passes the learner test from disk, every question has been fact-checked by an agent that did not write it, and the learner has taken one placement and reacted to both the look and the writing.
 
@@ -33,10 +33,10 @@ Both can happen in one session: tutor first, then add questions for the weak sto
 
 ```
 - [ ] 1. Concepts and size: propose, let the person cut and add
-- [ ] 2. Intake: the learner, what they decide, the sources
-- [ ] 3. Preflight: tools, read-only copies, a durable folder
+- [ ] 2. Intake: the learner, what they will do with it, the sources
+- [ ] 3. Preflight: tools, fixed copies of the sources, a durable folder
 - [ ] 4. Research dossiers with evidence
-- [ ] 5. Spine: lines and stops, decision line first
+- [ ] 5. Spine: lines and stops, the line on using the subject first
 - [ ] 6. Author content from a brief
 - [ ] 7. Fact-check by a different agent
 - [ ] 8. Build on the starter kit, choose components, design the look
@@ -49,7 +49,7 @@ Both can happen in one session: tutor first, then add questions for the weak sto
 
 ### 1. Concepts and size
 
-Start from whatever the person gives: a repository, a feature, a pull request, a document, an agent's output. Read enough of it to propose five to nine concepts worth learning. For each, write one line on why it matters and one on the decision or check it supports:
+Start from whatever the person gives: a topic, a concept, a technology, a codebase, or the sources for one, such as docs, a spec, papers or a book. Read enough of it to propose five to nine concepts worth learning. For each, write one line on why it matters and one on what it lets the learner do:
 
 ```
 3. Renewal limits. Why: a refused renewal is the top desk complaint.
@@ -58,17 +58,17 @@ Start from whatever the person gives: a repository, a feature, a pull request, a
 
 The person cuts and adds before anything is built. Then offer three sizes:
 
-- **A lesson:** one stop, 8 to 12 questions, for one concept or one change.
+- **A lesson:** one stop, 8 to 12 questions, for one concept.
 - **A module:** one line of three to seven stops.
-- **A course:** several lines. The first is about what the owner decides.
+- **A course:** several lines. The first is about what the learner will do with the subject.
 
 ### 2. Intake
 
 Find out, from the request or by asking:
 
 - **The learner and the moment.** Their role, what they already know, and why now.
-- **What they decide.** Ask "when agents write the code, which calls are still yours?" The answers become the first line of the course.
-- **The sources.** Repositories, docs, runbooks, and whether the system can be run to capture real behavior.
+- **What they will do with it.** For a codebase, ask "when agents write the code, which calls are still yours?" For a technology, ask what they will build with it, choose it over, or have to judge. For a concept, ask where they will apply it. The answers become the first line of the course.
+- **The sources.** Repositories, docs, specs, papers, books and articles the person trusts. For a system, also whether it can be run to capture real behavior. When the person names only a topic, propose a short list of sources and get it approved before research starts.
 - **How long it must stay true.** Leave countdowns, deadlines and people's departures out of the page. They read stale within days.
 - **Earlier tutoring.** A record of levels or misconceptions becomes a progress file that learner loads, never page content.
 
@@ -77,39 +77,39 @@ Find out, from the request or by asking:
 Check each tool before building on it: subagents if you plan to use them, a headless browser, read access to every source. Then:
 
 - **Name the outward actions and get approval once:** live calls to a running system, screenshots of third-party tools.
-- **Work from read-only copies** of the sources, at the default branch, so the course and the checks see the same code.
+- **Fix the sources in place,** so the course and the checks see the same text. Work from read-only copies of repositories at the default branch. Save web pages and other online sources as text snapshots in the working folder, each with its URL and the date it was saved, so research and the fact-check read the same words and need no network.
 - **Keep briefs, scripts, content and reports in a folder that survives a restart.** Temp folders do not.
 - **For long runs, watch usage and free disk.** When work pauses on a limit, say what stopped and what will not resume by itself.
 
 ### 4. Research dossiers
 
-One pass per area of the system, four to six areas. Each writes a dossier with `path:line` evidence, verbatim excerpts, seeds for questions, and a list of things the sources cannot answer. Use the brief in [references/agent-briefs.md](references/agent-briefs.md).
+One pass per area of the subject, four to six areas. Each writes a dossier with evidence for every claim, verbatim excerpts, seeds for questions, and a list of things the sources cannot answer. Evidence takes one of the forms in [references/content-schema.md](references/content-schema.md#evidence). Use the brief in [references/agent-briefs.md](references/agent-briefs.md).
 
-Where the system can run, capture real behavior: real requests, traces, logs, the real interface. These make the best `reveal` and `replay` questions. Label anything reconstructed. A capture taken through a proxy that buffers responses does not measure timing.
+Where the subject is a system that can run, capture real behavior: real requests, traces, logs, the real interface. These make the best `reveal` and `replay` questions. Label anything reconstructed. A capture taken through a proxy that buffers responses does not measure timing.
 
-Note every doc that exists only on an unmerged branch. Evidence that cites it must say so.
+In a repository, note every doc that exists only on an unmerged branch. Evidence that cites it must say so.
 
 ### 5. Spine
 
 Lay the course out as lines with stops, in `course.json`.
 
-- **The first line is about owning the system:** what nothing enforces, which changes must move together, what fails without an alert, which calls need a person, where judgment is needed, and how to check a claim.
-- **Later lines cover the subject matter** in enough depth to follow an agent's explanation.
-- **Tag every question** as `owner`, `useful` or `mechanics`. Mechanics are hidden by default. A question that only tests an identifier or the order of statements is mechanics.
+- **The first line is about using the subject.** For a codebase, that is owning it: what nothing enforces, which changes must move together, what fails without an alert, which calls need a person, and how to check a claim. For a technology, it is choosing it, the ways it fails, and checking a result. For a concept, it is applying it to new cases and separating it from ideas that look the same.
+- **Later lines cover the subject matter** in enough depth to follow an expert's or an agent's explanation.
+- **Tag every question** as `owner`, `useful` or `mechanics`. An `owner` question changes what the learner will do, whatever the subject. Mechanics are hidden by default. A question that only tests a name, a date or the order of statements is mechanics.
 
 ### 6. Author content
 
 One content file per stop, in the shape [references/content-schema.md](references/content-schema.md) defines. Give each author two or three stops and the authoring brief. The brief carries the rules that matter most:
 
-- Every question is a scenario from the learner's seat, with an agent or a teammate in it.
+- Every question is a scenario from the learner's seat. In a codebase course, an agent or a teammate is usually in it.
 - Each stop has at least two questions at every difficulty from 1 to 5 and one teach-back, or its upper levels cannot be earned.
 - Primers, probes and `owner` lines never state or imply an answer.
-- Every fact is checked against a source, and every evidence line is a `path:line` that was opened. What cannot be verified becomes an open question.
+- Every fact is checked against a source, and every evidence line points at a source that was opened. What cannot be verified becomes an open question.
 - The writer's voice rules go in the brief from the start. Rewriting 4,000 fields later costs more than writing them well once.
 
 ### 7. Fact-check
 
-Give the content to an agent that did not write it, with the fact-check brief. A cheaper model is fine here, because each claim is checked against a file. It fixes in place and writes a report with before and after for every change.
+Give the content to an agent that did not write it, with the fact-check brief. A cheaper model is fine here, because each claim is checked against a source. It fixes in place and writes a report with before and after for every change.
 
 Back up the content first. Afterward, diff against the backup and confirm that no marked-correct answer changed without a line in a report. Run `scripts/check_evidence.py` to catch citations that point nowhere. Claims the checker could not confirm go on the open questions page.
 
@@ -166,7 +166,9 @@ When the sources change, start with:
 python3 scripts/check_evidence.py <course_dir> --root <sources_dir> [--root <another>]
 ```
 
-It lists every `path:line` citation whose file is gone or whose line is past the end of the file, and exits 1 when anything is stale. A clean run means the lines exist, not that they still say the same thing, so re-read the cited lines for every changed file. Fix or drop the affected questions, fact-check them again, and rebuild.
+It lists every `path:line` citation whose file is gone or whose line is past the end of the file, and exits 1 when anything is stale. It cannot open a book or a live page, so it lists every other citation for a person or an agent to recheck by hand. A clean run means the cited lines exist, not that they still say the same thing, so re-read the cited lines for every changed file. Fix or drop the affected questions, fact-check them again, and rebuild.
+
+For a web page, save a new snapshot next to the old one and compare the two before trusting the course.
 
 ## Scripts
 
@@ -176,7 +178,7 @@ Run these. Read them only to change them.
 |---|---|
 | `scripts/build_course.py` | Validates a course and writes the single `course.html`. |
 | `scripts/learner_test.mjs` | Takes the course in a headless browser, from `file://` or `http://`, and reports every error. |
-| `scripts/check_evidence.py` | Finds citations that no longer match the sources. |
+| `scripts/check_evidence.py` | Finds file citations that no longer match the sources, and lists the others for a recheck by hand. |
 | `scripts/extract_prose.py`, `scripts/merge_prose.py` | Pull out the text a learner reads for a rewrite, and merge back only safe changes. |
 
 ## Gotchas

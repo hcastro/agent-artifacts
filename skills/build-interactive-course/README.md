@@ -1,6 +1,6 @@
 # build-interactive-course
 
-This skill helps your agent build an interactive course that teaches a person the context behind a project: a codebase, a system, a feature, a pull request, a document, or the output of another agent. The course is one HTML file that asks one question at a time, gives a narrower question after a miss, and raises a level only when the learner gets two different questions right. The agent builds it from the real sources and has a separate agent fact-check every answer before the learner sees it.
+This skill helps your agent build an interactive course that teaches a person a concept, a topic, a technology, or a codebase. The course is one HTML file that asks one question at a time, gives a narrower question after a miss, and raises a level only when the learner gets two different questions right. The agent builds it from the real sources and has a separate agent fact-check every answer before the learner sees it.
 
 The skill works with any coding agent that can read and write files, run shell commands, and read the skill, such as Claude Code or Codex. It follows the open [Agent Skills](https://agentskills.io/) format.
 
@@ -8,7 +8,7 @@ The skill works with any coding agent that can read and write files, run shell c
 
 To use the skill, you need the following:
 
-- Read access to the sources the course teaches, such as repositories and docs.
+- Read access to the sources the course teaches, such as repositories, docs, specs, papers, or books. The agent saves web pages as text snapshots before research, so every later step reads the same words offline.
 - Python 3.8 or later for the build, evidence, and prose scripts. They use only the standard library.
 - Node.js with Playwright and Chromium for the learner test (`npm i -g playwright && npx playwright install chromium`).
 - Any modern browser to open the course. The file needs no server, no network, and no hosting.
@@ -25,17 +25,17 @@ The skill has two modes.
 
 **Build mode** makes a course. The agent starts from whatever you give it, proposes five to nine concepts worth learning with a line on why each one matters, and lets you cut and add before it builds anything. It offers three sizes:
 
-- A lesson: one stop with 8 to 12 questions, for one concept or one change.
+- A lesson: one stop with 8 to 12 questions, for one concept.
 - A module: one line of three to seven stops.
-- A course: several lines, starting with what the owner decides.
+- A course: several lines, starting with what you will do with the subject.
 
 **Tutor mode** picks up from a course you took. Bring the progress file or the save block from the course's Progress page. The agent reads your levels and the ideas you needed the answer for, then tutors you in the conversation on the weakest one, writes new questions for your weak stops and rebuilds the file, or both. It hands starting levels back as a file you load into the page.
 
 The following requests trigger the skill:
 
 - "I just inherited this service. Build me an interactive course so I can learn it."
-- "Make a short lesson on what this pull request changes before I review it."
-- "Quiz me on the migration plan the agent just wrote, with questions that make me reason through it."
+- "Teach me Kubernetes networking well enough to debug it, as a course that makes me reason."
+- "Make a module on database isolation levels for our new engineers."
 - "Here's my save block from the course. Tutor me on the stops I'm weakest at."
 
 For a one-off explanation, ask the question directly.
@@ -53,8 +53,8 @@ Figure source: `assets/figures-source.html`. Open it in a browser. For the dark 
 
 The steps are as follows:
 
-1. **Concepts, intake, and preflight.** The agent proposes the concepts and a size, asks who the learner is and which decisions are theirs, and checks its tools and access.
-1. **Research.** One pass per area of the system writes a dossier with `path:line` evidence for every claim.
+1. **Concepts, intake, and preflight.** The agent proposes the concepts and a size, asks who the learner is and what they will do with the subject, and checks its tools and access. It fixes the sources in place: read-only copies of repositories, text snapshots of web pages.
+1. **Research.** One pass per area of the subject writes a dossier with evidence for every claim: a file and line, a saved snapshot and line, or a section and a quote.
 1. **Authoring.** Scenario questions for each stop, with hints that never give the answer away.
 1. **Fact-check.** An agent that didn't write the content checks every answer against the sources and reports each change.
 1. **Build and design.** The agent builds `course.html` from the starter kit, chooses a component for each idea, and designs the look for the subject.
@@ -104,11 +104,11 @@ Replace the following:
 - `OUT_DIR`: the folder to write `course.html` into.
 - `PLAYWRIGHT_DIR`: a folder whose `node_modules` contains Playwright.
 - `SHOTS_DIR`: where the test saves its screenshots. Without it, they go to `learner-shots/` in the current folder.
-- `SOURCES_DIR`: the folder that evidence paths are relative to. Repeat `--root` for more than one. For the sample course, use `assets/starter`.
+- `SOURCES_DIR`: the folder that evidence paths are relative to, including saved web snapshots. Repeat `--root` for more than one. For the sample course, use `assets/starter`. Leave it out only when no evidence cites a file.
 - `CONTENT_DIR`: the folder that holds the per-stop content files.
 - `EXTRACT_DIR` and `REWRITE_DIR`: where the extracted text goes and where the rewritten text comes back from.
 
-The learner test also accepts `--url` with a `file://` or `http://` address, and `--questions 160 --expect-final` for a longer pass that has to reach a final. The evidence check exits with status 1 when a cited file is gone or a cited line is past the end of its file, so it fits in a scheduled job that tells you when a course needs a refresh.
+The learner test also accepts `--url` with a `file://` or `http://` address, and `--questions 160 --expect-final` for a longer pass that has to reach a final. The evidence check exits with status 1 when a cited file is gone or a cited line is past the end of its file, so it fits in a scheduled job that tells you when a course needs a refresh. It can't open a book or a live page, so it lists those citations for a recheck by hand.
 
 ## Contents
 
@@ -123,6 +123,6 @@ The skill folder holds the following files:
 - `assets/starter/`: the page code, one file per component, a default stylesheet, and a small sample course with the made-up handbook its evidence points at.
 - `scripts/build_course.py`: validates the content and builds `course.html`.
 - `scripts/learner_test.mjs`: a scripted learner that takes the course in a browser.
-- `scripts/check_evidence.py`: finds citations that no longer match the sources.
+- `scripts/check_evidence.py`: finds file citations that no longer match the sources, and lists the others for a recheck by hand.
 - `scripts/extract_prose.py` and `scripts/merge_prose.py`: pull out the text a learner reads, and put a rewrite back only where it kept every code name and number.
 - `assets/01-course-line.webp`, `assets/01-course-line-dark.webp`, and `assets/figures-source.html`: the figure in this README, in light and dark, and its source.

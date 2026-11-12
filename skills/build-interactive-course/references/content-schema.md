@@ -10,12 +10,13 @@ The starter kit reads a course as data. `course.json` names the course, its line
 4. [The stop file](#the-stop-file)
 5. [Ideas and primers](#ideas-and-primers)
 6. [Question fields](#question-fields)
-7. [Formats](#formats)
-8. [Probes](#probes)
-9. [Levels and the difficulty mix](#levels-and-the-difficulty-mix)
-10. [Finals, cards and open questions](#finals-cards-and-open-questions)
-11. [Progress and starting levels](#progress-and-starting-levels)
-12. [Writing rules](#writing-rules)
+7. [Evidence](#evidence)
+8. [Formats](#formats)
+9. [Probes](#probes)
+10. [Levels and the difficulty mix](#levels-and-the-difficulty-mix)
+11. [Finals, cards and open questions](#finals-cards-and-open-questions)
+12. [Progress and starting levels](#progress-and-starting-levels)
+13. [Writing rules](#writing-rules)
 
 ## How the page teaches
 
@@ -118,11 +119,23 @@ The primer shows once, before the first question on that idea, and only to a lea
 - `context` (optional): something to read beside the question. `kind` is `code`, `config`, `log`, `json`, `table` or `chat`. For `chat`, `body` is a list of `{ "role": "user" | "assistant", "text": "..." }`. Otherwise `body` is a string. Never include secrets or personal data.
 - `answer`: the reference explanation, shown once the question settles. The prompt for a coding agent holds the rubric and leaves this out.
 - `owner` (optional): one line, shown under the answer, on what the learner can now do. Keep one opening across the course, such as "So you can".
-- `evidence` (optional): short source references, rendered as code chips under the answer. Write them as `path:line` or `path:start-end`, relative to the source root, so `scripts/check_evidence.py` can find the ones that went stale. Add a note after the reference when a document exists only on an unmerged branch.
+- `evidence` (optional): short source references, rendered as code chips under the answer. Use the forms in [Evidence](#evidence).
 - `challenge` (optional, about one question in five, difficulty 3 or higher): a devil's-advocate push after a clean first answer. `hold: true` means the learner was right and should stand by it. `hold: false` means the push names a real exception they should concede.
 - `rel` (optional): `owner` (the default), `useful` or `mechanics`. Mechanics questions test details a learner could look up, such as an exact name or the order of statements. They are hidden until the learner turns them on in Progress. When questions are equally close to the target difficulty, owner questions come first, then useful, then mechanics.
 - `resume` (optional): `open` marks the question an earlier session left open, and `misconception` marks one that tests a mistake the learner made before. Both are used only after the learner accepts starting levels (below), asked cold. Tagged questions stay out of the placement.
 - `diagnostic`: `true` on one `choice` question per stop, difficulty 2 or 3, answerable in under a minute. The placement uses it. Without one, it takes the first `choice` question at difficulty 2 or 3.
+
+## Evidence
+
+Every `evidence` line and every card `source` names where a fact can be checked. Use the most checkable form the source allows:
+
+| Source | Form | Example |
+|---|---|---|
+| A file in a repository or folder | `path:line` or `path:start-end`, relative to a source root | `src/limits.py:12-30` |
+| A web page | the saved snapshot's `path:line`, then the URL in parentheses | `sources/web/asyncio-tasks.md:40-52 (https://docs.python.org/3/library/asyncio-task.html)` |
+| A document, paper or book with no text copy | title, then section or page, then a short quote | `Lending Policy Manual, section 4.2, p. 17: "a third renewal needs a librarian"` (a made-up example) |
+
+`scripts/check_evidence.py` verifies the first two forms against the files. It lists the third for a person or an agent to recheck, so prefer a saved text copy whenever one can be made. In a repository, add a note after the reference when a document exists only on an unmerged branch.
 
 ## Formats
 
@@ -197,7 +210,7 @@ A good stop has about 10 to 16 questions, and a one-stop lesson 8 to 12:
   "ideas": ["o1.limits"] }
 ```
 
-A card opens the first time the learner answers a question on one of its `ideas` without being told. `check_evidence.py` checks `source` the same way as `evidence`.
+A card opens the first time the learner answers a question on one of its `ideas` without being told. `source` takes the forms in [Evidence](#evidence), and `check_evidence.py` checks it the same way.
 
 **Open questions**: things the sources could not answer, which the learner should ask someone. The Questions page lists them by urgency, with a checkbox and a notes field each.
 
