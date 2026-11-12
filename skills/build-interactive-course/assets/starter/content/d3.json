@@ -1,0 +1,561 @@
+{
+  "stop": "d3",
+  "ideas": [
+    {
+      "id": "d3.holds",
+      "name": "The holds queue",
+      "primer": "Holds line up in the order patrons place them. When a held item is checked in, it goes to the hold shelf and the patron gets a pickup notice, which starts a pickup window. A patron can only have so many active holds at once."
+    },
+    {
+      "id": "d3.fines",
+      "name": "Overdue fines and lost items",
+      "primer": "Fines count only open days and show on the account as they build up. Books cost 25 cents a day, up to $5.00 per item. DVDs cost $1.00 a day, up to $10.00 per item. Quick picks are fined as books. At 30 days overdue an item is marked lost and the patron is billed its replacement cost."
+    }
+  ],
+  "questions": [
+    {
+      "id": "d3-q01",
+      "idea": "d3.fines",
+      "type": "predict",
+      "difficulty": 1,
+      "format": "choice",
+      "title": "Four days late",
+      "prompt": "A regular book comes back **4 open days** after its due date. What is the fine?",
+      "options": [
+        {
+          "id": "a",
+          "text": "$1.00",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "$4.00",
+          "correct": false,
+          "probe": "That is the DVD rate. What does a book cost for each day?"
+        },
+        {
+          "id": "c",
+          "text": "$0.25",
+          "correct": false,
+          "probe": "Is the fine charged once per item, or for each day it is late?"
+        },
+        {
+          "id": "d",
+          "text": "$5.00",
+          "correct": false,
+          "probe": "The $5.00 figure is a cap. How many days does it take a book to reach it?"
+        }
+      ],
+      "answer": "The fine is $1.00. Books cost 25 cents for each open day late, and 4 days at 25 cents is $1.00. The $5.00 cap is far off.",
+      "evidence": [
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "What is the daily rate for a book?",
+        "Multiply the rate by the days late."
+      ],
+      "diagnostic": false,
+      "owner": "So you can quote a fine at the desk without opening the account."
+    },
+    {
+      "id": "d3-q02",
+      "idea": "d3.holds",
+      "type": "predict",
+      "difficulty": 1,
+      "format": "choice",
+      "title": "A hold nobody collects",
+      "prompt": "A book has been on the hold shelf for Patron B for 7 days, and Patron B has not come in. Patron C is next in the queue. What happens now?",
+      "options": [
+        {
+          "id": "a",
+          "text": "B's hold expires and the book goes to C.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "The book stays on the shelf for B until they collect it.",
+          "correct": false,
+          "probe": "How long does the pickup window last?"
+        },
+        {
+          "id": "c",
+          "text": "B is charged a fee for not collecting it.",
+          "correct": false,
+          "probe": "Is there any rule in the handbook that charges for an uncollected hold?"
+        },
+        {
+          "id": "d",
+          "text": "B's hold is extended by another 7 days.",
+          "correct": false,
+          "probe": "What does the rule say happens when the pickup window ends?"
+        }
+      ],
+      "answer": "B's hold expires and the book moves to C, who gets a pickup notice of their own. Nobody is charged for letting a hold expire.",
+      "evidence": [
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "How long is the pickup window?",
+        "Who is next once the window ends?"
+      ],
+      "diagnostic": false,
+      "rel": "useful"
+    },
+    {
+      "id": "d3-q03",
+      "idea": "d3.fines",
+      "type": "explain",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "Two weeks late on a DVD",
+      "prompt": "A DVD is **14 open days** overdue and has not come back yet. What does the account show for it?",
+      "options": [
+        {
+          "id": "a",
+          "text": "$10.00, the DVD cap",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "$14.00",
+          "correct": false,
+          "probe": "Is there a most that a single DVD can cost in fines?"
+        },
+        {
+          "id": "c",
+          "text": "$3.50",
+          "correct": false,
+          "probe": "Which rate did you use, the book one or the DVD one?"
+        },
+        {
+          "id": "d",
+          "text": "Its replacement cost, since it is now lost",
+          "correct": false,
+          "probe": "How many days overdue does an item have to be before it is marked lost?"
+        }
+      ],
+      "answer": "The account shows $10.00. A DVD builds up $1.00 for each open day, but it stops at the $10.00 cap, which it reached on day 10. It is not lost yet, since that happens at 30 days.",
+      "evidence": [
+        "Desk handbook, section 3.2",
+        "Desk handbook, section 3.3"
+      ],
+      "probes": [
+        "Work out the fine without the cap. Then apply the cap.",
+        "At what point does an overdue item become lost?"
+      ],
+      "diagnostic": true,
+      "owner": "So you can tell a patron the most a late DVD can cost before they decide when to bring it back."
+    },
+    {
+      "id": "d3-q04",
+      "idea": "d3.fines",
+      "type": "apply",
+      "difficulty": 2,
+      "format": "bucket",
+      "title": "Which fines have stopped growing",
+      "prompt": "Each item below is still out. Sort them by whether the fine has reached its cap.",
+      "buckets": [
+        {
+          "id": "cap",
+          "label": "At the cap"
+        },
+        {
+          "id": "growing",
+          "label": "Still growing"
+        }
+      ],
+      "items": [
+        {
+          "text": "A book 12 open days overdue",
+          "bucket": "growing",
+          "why": "12 days at 25 cents is $3.00, under the $5.00 cap."
+        },
+        {
+          "text": "A book 25 open days overdue",
+          "bucket": "cap",
+          "why": "A book reaches $5.00 after 20 days."
+        },
+        {
+          "text": "A DVD 10 open days overdue",
+          "bucket": "cap",
+          "why": "10 days at $1.00 is exactly the $10.00 cap."
+        },
+        {
+          "text": "A DVD 6 open days overdue",
+          "bucket": "growing",
+          "why": "6 days at $1.00 is $6.00, under the $10.00 cap."
+        },
+        {
+          "text": "A quick pick 20 open days overdue",
+          "bucket": "cap",
+          "why": "Quick picks are fined as books, and 20 days reaches $5.00."
+        }
+      ],
+      "answer": "A book reaches its $5.00 cap after 20 open days and a DVD reaches its $10.00 cap after 10. Quick picks follow the book rate. Anything short of those day counts is still growing.",
+      "evidence": [
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "How many days does each kind of item take to reach its cap?",
+        "Which rate does a quick pick use?"
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d3-q05",
+      "idea": "d3.holds",
+      "type": "explain",
+      "difficulty": 3,
+      "format": "order",
+      "title": "From hold to pickup",
+      "prompt": "Patron B places a hold on a book that Patron A has out. Patron C places a hold after B. Put what happens next in order, first at the top.",
+      "items": [
+        "Patron A returns the book",
+        "The desk scans it and the screen routes it to the hold shelf for B",
+        "Patron B gets a pickup notice",
+        "B's 7-day pickup window ends without a visit",
+        "The book goes to C, who gets a pickup notice"
+      ],
+      "answer": "Nothing happens to the hold until the book is checked in, and the scan is what routes it to the hold shelf. The notice follows, and with it the 7-day window. When the window ends unused, the hold expires and the book moves to the next patron in the queue.",
+      "evidence": [
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "What has to happen before anyone can be notified?",
+        "What starts the 7-day window?"
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d3-q06",
+      "idea": "d3.fines",
+      "type": "explain",
+      "difficulty": 3,
+      "format": "text",
+      "title": "Late over a holiday weekend",
+      "prompt": "A book was due on the last open day before a three-day holiday weekend, when the library was closed. The patron returned it at the desk on the first open day after the weekend. How much do they owe, and why?",
+      "rubric": {
+        "must": [
+          "Only open days count, so the three closed days add nothing.",
+          "The book is one open day late, so the fine is 25 cents."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says the fine is $1.00 for four days.",
+            "probe": "Which of those four days was the library open?"
+          }
+        ]
+      },
+      "answer": "They owe 25 cents. Fines count only days the library is open, so the three closed days add nothing. The book came back on the first open day after its due date, which makes it one open day late.",
+      "evidence": [
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "List the days between the due date and the return. Which of them was the library open?",
+        "What does a book cost for one open day?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can explain a small fine to a patron who expected a large one."
+    },
+    {
+      "id": "d3-q07",
+      "idea": "d3.fines",
+      "type": "connect",
+      "difficulty": 4,
+      "format": "multi",
+      "title": "Two late DVDs come back",
+      "prompt": "A patron returns two DVDs today. Each was **12 open days** overdue. They had no other fines. Which statements are true?",
+      "options": [
+        {
+          "id": "a",
+          "text": "They owe $20.00 in fines.",
+          "correct": true,
+          "probe": "Work out one DVD's fine with the cap, then double it."
+        },
+        {
+          "id": "b",
+          "text": "They owe $24.00 in fines.",
+          "correct": false,
+          "probe": "What is the most one DVD can cost?"
+        },
+        {
+          "id": "c",
+          "text": "They cannot borrow anything today until the balance is under $10.00.",
+          "correct": true,
+          "probe": "Compare the balance with the block line from checkout."
+        },
+        {
+          "id": "d",
+          "text": "Returning both DVDs clears the block.",
+          "correct": false,
+          "probe": "Does returning an item remove the fine it already built up?"
+        },
+        {
+          "id": "e",
+          "text": "The DVDs were marked lost before they came back.",
+          "correct": false,
+          "probe": "How many days overdue makes an item lost?"
+        }
+      ],
+      "answer": "Each DVD stopped at the $10.00 cap, so the patron owes $20.00. That is over the $10.00 block line, so they cannot borrow until they pay it down below $10.00. Returning the items stops new fines but does not remove the ones already owed, and 12 days is far short of the 30 that make an item lost.",
+      "evidence": [
+        "Desk handbook, section 3.2",
+        "Desk handbook, section 1.1"
+      ],
+      "probes": [
+        "Work out the fines first. Then ask what that balance does at checkout.",
+        "Which rule decides whether a patron can borrow?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can warn a patron before they try to borrow on a blocked account."
+    },
+    {
+      "id": "d3-q08",
+      "idea": "d3.holds",
+      "type": "predict",
+      "difficulty": 4,
+      "format": "text",
+      "title": "The sixteenth hold",
+      "prompt": "A patron has 15 active holds. They ask you to place one more, on a book that just arrived. What happens, and what can they do about it?",
+      "rubric": {
+        "must": [
+          "The 15-hold limit stops the new hold.",
+          "They can cancel one of their holds, or wait until one is collected or expires, and then place the new one."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says the desk can place it anyway because the book just arrived.",
+            "probe": "Does the limit depend on the book, or on how many holds the patron already has?"
+          }
+        ]
+      },
+      "answer": "The new hold is refused, because a patron can have 15 active holds. To place it, they have to free a slot first, by canceling a hold they no longer want or by waiting for one to be collected or to expire.",
+      "evidence": [
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "What is the limit on active holds?",
+        "What makes an active hold stop counting?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can give a patron with a long list of holds a real choice instead of a flat no."
+    },
+    {
+      "id": "d3-q09",
+      "idea": "d3.fines",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "choice",
+      "title": "A lost DVD comes home",
+      "prompt": "A DVD was marked lost at 30 days overdue, and the patron was billed $25.00 to replace it. Two months later they bring it back. A coworker says: \"Their account is clear now.\" What does the account owe for this DVD?",
+      "options": [
+        {
+          "id": "a",
+          "text": "$10.00. The replacement charge is removed, but the capped fine stays.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nothing. The coworker is right.",
+          "correct": false,
+          "probe": "When the replacement charge comes off, what happens to the fine that built up before the item was marked lost?"
+        },
+        {
+          "id": "c",
+          "text": "$35.00. Both charges stay.",
+          "correct": false,
+          "probe": "What does the rule say about a lost item that comes back within 6 months?"
+        },
+        {
+          "id": "d",
+          "text": "$30.00, for 30 days at $1.00.",
+          "correct": false,
+          "probe": "What is the most one DVD can cost in fines?"
+        }
+      ],
+      "answer": "The account owes $10.00. A lost item returned within 6 months has its replacement charge removed, but the overdue fine stays, and for a DVD that fine stopped at the $10.00 cap.",
+      "evidence": [
+        "Desk handbook, section 3.3",
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "Treat the two charges one at a time. Which rule covers each?",
+        "What was the fine on the day the DVD was marked lost?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can correct a coworker before a patron leaves with the wrong idea about what they owe."
+    },
+    {
+      "id": "d3-q10",
+      "idea": "d3.holds",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "text",
+      "title": "The window just closed",
+      "prompt": "A patron at the desk asks for the book shown beside this question. A staff member says: \"B's window is over, so it's free, and you can take it home.\" What is wrong with that, and what should happen to the book?",
+      "context": {
+        "kind": "table",
+        "label": "Hold shelf record",
+        "body": "Item              The Lighthouse Year (book)\nOn hold for       Patron B\nPickup window     ended yesterday\nQueue after B     Patron C"
+      },
+      "rubric": {
+        "must": [
+          "B's hold has expired, but the book goes to C, the next patron in the queue.",
+          "The asking patron cannot take it while C is waiting. They can place a hold and join the queue after C.",
+          "C gets a pickup notice and a new 7-day window."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says the book goes back to the regular shelf.",
+            "probe": "Read the record again. Is anyone still waiting after B?"
+          }
+        ]
+      },
+      "answer": "The staff member is right that B's hold expired, but the book is not free. It moves to C, the next patron in the queue, and C gets a pickup notice with a fresh 7-day window. The patron at the desk can place a hold and wait behind C.",
+      "evidence": [
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "Read the whole record. Who comes after B?",
+        "When an expired hold leaves the shelf, where does the item go if someone is still waiting?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can keep the queue fair when a patron at the desk asks for a book someone else is waiting on."
+    },
+    {
+      "id": "d3-q11",
+      "idea": "d3.holds",
+      "type": "teach",
+      "difficulty": 5,
+      "format": "text",
+      "title": "Explain holds and fines",
+      "prompt": "In 150 words or fewer, explain to a new desk volunteer how holds work and how overdue fines and lost items are charged.",
+      "rubric": {
+        "must": [
+          "Holds are filled in the order they are placed, and a patron can have at most 15.",
+          "A held item that is checked in goes to the hold shelf, the patron is notified and has 7 days before it passes to the next patron.",
+          "Fines count open days only: books 25 cents a day up to $5.00, DVDs $1.00 a day up to $10.00.",
+          "At 30 days overdue an item is marked lost and billed. If it comes back within 6 months the charge is removed, but the capped fine stays."
+        ],
+        "pass": 3
+      },
+      "answer": "A trustworthy explanation covers the queue and the money. Holds are first come, first served, up to 15 per patron. A returned held item goes to the hold shelf with a 7-day pickup window, then on down the queue. Fines count open days: 25 cents a day for books up to $5.00, $1.00 a day for DVDs up to $10.00. At 30 days an item is lost and billed, and a return within 6 months removes the bill but not the fine.",
+      "evidence": [
+        "Desk handbook, sections 3.1, 3.2 and 3.3"
+      ],
+      "probes": [
+        "Follow one held book from return to pickup. What happens at each step?",
+        "Which numbers does a volunteer need for fines?"
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d3-q12",
+      "idea": "d3.holds",
+      "type": "predict",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "The hold limit",
+      "prompt": "How many active holds can one patron have at a time?",
+      "options": [
+        {
+          "id": "a",
+          "text": "15",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "25",
+          "correct": false,
+          "probe": "That number is a limit on something else. What does it count?"
+        },
+        {
+          "id": "c",
+          "text": "5",
+          "correct": false,
+          "probe": "That number limits one kind of item at checkout. Which kind?"
+        },
+        {
+          "id": "d",
+          "text": "There is no limit",
+          "correct": false,
+          "probe": "Does the holds rule give a number?"
+        }
+      ],
+      "answer": "15. The checkout limit of 25 items and the DVD limit of 5 are separate rules about items out, not holds.",
+      "evidence": [
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "Find the number in the holds rule.",
+        "Which other limits use numbers, and what do they count?"
+      ],
+      "diagnostic": false,
+      "rel": "mechanics"
+    }
+  ],
+  "finals": [
+    {
+      "id": "d3-f01",
+      "idea": "d3.holds",
+      "type": "apply",
+      "integrative": true,
+      "spans": [
+        "d1",
+        "d3"
+      ],
+      "title": "Collecting a hold with a late book",
+      "prompt": "A patron's account shows $4.00 from earlier returns. They also have a regular book at home that is 18 open days overdue, and a hold waiting for them with 2 days left in its pickup window. Tomorrow, an open day, they come in without the overdue book to collect the hold. Walk through what happens.",
+      "rubric": {
+        "must": [
+          "The overdue book's fine will be $4.75 tomorrow, short of the $5.00 cap.",
+          "With the earlier $4.00 the balance is $8.75, under the $10.00 block, so they can collect the hold.",
+          "The hold is still inside its 7-day window, so it is theirs to take.",
+          "The book has to come back before 30 days overdue, or it is marked lost and billed."
+        ],
+        "pass": 3
+      },
+      "answer": "Tomorrow the book is 19 open days late, so its fine is $4.75. Added to the earlier $4.00, the balance is $8.75, under the $10.00 block, so the checkout goes ahead. The hold is inside its window, so they take it home. Even at the book's $5.00 cap the balance would be $9.00, but the book has to come back before 30 days or it is marked lost.",
+      "evidence": [
+        "Desk handbook, sections 1.1, 3.1, 3.2 and 3.3"
+      ],
+      "probes": []
+    }
+  ],
+  "cards": [
+    {
+      "id": "d3-c01",
+      "title": "Fine rates and caps",
+      "kind": "table",
+      "source": "Desk handbook, section 3.2",
+      "body": "Item         Per open day   Cap      Cap reached\nBook         $0.25          $5.00    day 20\nQuick pick   $0.25          $5.00    day 20\nDVD          $1.00          $10.00   day 10\n\nLost at 30 days overdue",
+      "note": "Closed days never count. A single DVD at its cap is enough to block checkout, since the block starts at $10.00.",
+      "ideas": [
+        "d3.fines"
+      ]
+    },
+    {
+      "id": "d3-c02",
+      "title": "The holds queue",
+      "kind": "rule",
+      "source": "Desk handbook, section 3.1",
+      "body": "Order       first placed, first filled\nLimit       15 active holds per patron\nOn return   hold shelf, pickup notice\nWindow      7 days, then the next patron",
+      "note": "An item on the hold shelf can go out only to the patron it is held for. An expired hold passes the item down the queue, not back to the shelf, while anyone is still waiting.",
+      "ideas": [
+        "d3.holds"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "d3-o01",
+      "question": "Does a patron who never received a pickup notice keep their place when their hold expires?",
+      "why": "Notices sometimes bounce, and without a rule the desk cannot tell that patron whether they lost their turn.",
+      "urgency": 1,
+      "source": "Desk handbook, section 3.1"
+    }
+  ]
+}

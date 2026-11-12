@@ -1,0 +1,563 @@
+{
+  "stop": "d2",
+  "ideas": [
+    {
+      "id": "d2.checkin",
+      "name": "Checking items in",
+      "primer": "Scanning an item at check-in ends the loan, and the screen tells you where the item goes next. Items left in the book drop while the library is closed are checked in as of the last open day. Every item gets a quick look for damage before it goes on a cart."
+    },
+    {
+      "id": "d2.renew",
+      "name": "Renewals",
+      "primer": "A renewal gives an item a full new loan period, counted from the day of the renewal. An item can be renewed twice. It cannot be renewed while another patron has a hold on it, and quick picks cannot be renewed at all. Patrons can renew at the desk, by phone or online."
+    }
+  ],
+  "questions": [
+    {
+      "id": "d2-q01",
+      "idea": "d2.checkin",
+      "type": "predict",
+      "difficulty": 1,
+      "format": "choice",
+      "title": "The screen says hold shelf",
+      "prompt": "You scan a returned book and the screen says **Route to hold shelf**. Where does the book go?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Onto the hold shelf, with a slip naming the patron who placed the hold",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Onto the shelving cart, so it goes back to its usual shelf",
+          "correct": false,
+          "probe": "Someone is waiting for this book. How would they find it on a regular shelf?"
+        },
+        {
+          "id": "c",
+          "text": "Back to the patron who returned it, if they want it again",
+          "correct": false,
+          "probe": "Who has the claim on this copy now, the patron returning it or the one who placed the hold?"
+        },
+        {
+          "id": "d",
+          "text": "Under the desk until the waiting patron phones",
+          "correct": false,
+          "probe": "Which shelf does the screen name, and why would the library keep one?"
+        }
+      ],
+      "answer": "It goes onto the hold shelf with a slip for the patron who placed the hold. That patron then gets a pickup notice. The hold shelf keeps the item set aside so nobody else borrows it first.",
+      "evidence": [
+        "Desk handbook, section 2.1"
+      ],
+      "probes": [
+        "What does the message on the screen tell you to do?",
+        "Who is the book being kept for?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can follow the screen without guessing where a returned item belongs."
+    },
+    {
+      "id": "d2-q02",
+      "idea": "d2.renew",
+      "type": "apply",
+      "difficulty": 1,
+      "format": "bucket",
+      "title": "Which of these can be renewed",
+      "prompt": "A patron asks to renew each of these items. Sort them.",
+      "buckets": [
+        {
+          "id": "yes",
+          "label": "Can be renewed"
+        },
+        {
+          "id": "no",
+          "label": "Cannot be renewed"
+        }
+      ],
+      "items": [
+        {
+          "text": "A book renewed once already, with no holds",
+          "bucket": "yes",
+          "why": "One renewal is used, and the limit is two."
+        },
+        {
+          "text": "A quick pick with no holds",
+          "bucket": "no",
+          "why": "Quick picks cannot be renewed at all."
+        },
+        {
+          "text": "A DVD that another patron has on hold",
+          "bucket": "no",
+          "why": "A hold by another patron stops a renewal."
+        },
+        {
+          "text": "A book renewed twice already",
+          "bucket": "no",
+          "why": "Both renewals are used."
+        },
+        {
+          "text": "A DVD two days overdue, never renewed, with no holds",
+          "bucket": "yes",
+          "why": "Being overdue does not stop a renewal."
+        }
+      ],
+      "answer": "Three things stop a renewal: a hold by another patron, both renewals already used, and the item being a quick pick. An overdue item can still be renewed when none of those apply.",
+      "evidence": [
+        "Desk handbook, section 2.4"
+      ],
+      "probes": [
+        "List the things that stop a renewal. Check each item against the list.",
+        "Is being overdue on that list?"
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d2-q03",
+      "idea": "d2.renew",
+      "type": "explain",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "Renewing a week early",
+      "prompt": "A regular book is due on the 10th. The patron renews it on the 4th, and the library is open every day that month. When is it due now?",
+      "options": [
+        {
+          "id": "a",
+          "text": "21 days after the 4th, on the 25th",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "21 days after the 10th, on the 31st",
+          "correct": false,
+          "probe": "From which day does the rule count a renewal?"
+        },
+        {
+          "id": "c",
+          "text": "7 days after the 10th, on the 17th",
+          "correct": false,
+          "probe": "Which kind of item gets 7 days? Is this one of them?"
+        },
+        {
+          "id": "d",
+          "text": "14 days after the 4th, on the 18th, since renewals are shorter",
+          "correct": false,
+          "probe": "Does the rule shorten the loan period for a renewal?"
+        }
+      ],
+      "answer": "It is due on the 25th. A renewal gives a full new loan period counted from the day of the renewal, so 21 days from the 4th. Renewing early does not add the days that were left on the old loan.",
+      "evidence": [
+        "Desk handbook, section 2.4"
+      ],
+      "probes": [
+        "What day does a renewal start counting from?",
+        "How long is the loan period for a regular book?"
+      ],
+      "diagnostic": true,
+      "owner": "So you can tell a patron when renewing early gains them less time than they expect."
+    },
+    {
+      "id": "d2-q04",
+      "idea": "d2.checkin",
+      "type": "explain",
+      "difficulty": 2,
+      "format": "order",
+      "title": "Emptying the book drop",
+      "prompt": "The library reopens after a closed day, and the book drop is full. Put the steps in order, first at the top.",
+      "items": [
+        "Set the check-in date to the last open day",
+        "Scan each item from the book drop",
+        "Route items with holds to the hold shelf",
+        "Set the check-in date back to today before serving patrons at the desk"
+      ],
+      "answer": "The date has to be set back before any drop item is scanned, or those items check in late. The screen shows a hold message during the scan, so routing comes after it. The date goes back to today before the desk opens, so a patron returning an item in person is checked in on the real day.",
+      "evidence": [
+        "Desk handbook, section 2.2"
+      ],
+      "probes": [
+        "Which step would go wrong if the date were still today?",
+        "When does the screen tell you an item has a hold?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can clear the book drop without charging anyone for a day the doors were locked."
+    },
+    {
+      "id": "d2-q05",
+      "idea": "d2.renew",
+      "type": "apply",
+      "difficulty": 3,
+      "format": "multi",
+      "title": "Renewing a late DVD",
+      "prompt": "A patron renews a DVD that is **3 open days overdue**. Nobody has a hold on it, and it has never been renewed. Which statements are true?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The renewal is allowed.",
+          "correct": true,
+          "probe": "List the things that stop a renewal. Does any of them apply here?"
+        },
+        {
+          "id": "b",
+          "text": "The $3.00 fine already owed stays on the account.",
+          "correct": true,
+          "probe": "A renewal changes the due date. Does it say anything about fines already charged?"
+        },
+        {
+          "id": "c",
+          "text": "The renewal wipes out the overdue fine.",
+          "correct": false,
+          "probe": "The fine built up before the renewal. Which rule would remove it?"
+        },
+        {
+          "id": "d",
+          "text": "The new due date is 7 days from today.",
+          "correct": true,
+          "probe": "From which day does a renewal count, and how long is a DVD loan?"
+        },
+        {
+          "id": "e",
+          "text": "The new due date is 7 days from the old due date.",
+          "correct": false,
+          "probe": "From which day does the rule count a renewal?"
+        }
+      ],
+      "answer": "The renewal is allowed, since being overdue does not stop one. It gives a new 7-day loan from today and stops any further fines. The $3.00 that built up before the renewal stays on the account.",
+      "evidence": [
+        "Desk handbook, section 2.4",
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "Split this into two questions: what happens to the due date, and what happens to the money?",
+        "What does a DVD cost for each open day it is late?"
+      ],
+      "diagnostic": false,
+      "resume": "misconception",
+      "owner": "So you can tell a patron what renewing a late item will and will not fix."
+    },
+    {
+      "id": "d2-q06",
+      "idea": "d2.checkin",
+      "type": "explain",
+      "difficulty": 3,
+      "format": "text",
+      "title": "Why book drop items are backdated",
+      "prompt": "Why does the desk check in book drop items as of the last open day, instead of the day staff actually scan them?",
+      "rubric": {
+        "must": [
+          "Items dropped while the library was closed would otherwise be checked in later than they came back.",
+          "That would charge fines for days the library was closed, and fines count only open days."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says it is only to save staff time.",
+            "probe": "What would a patron see on their account if the drop items were checked in on the day they were scanned?"
+          }
+        ]
+      },
+      "answer": "Items in the drop came back while the library was closed, so the day they are scanned is later than the day they were returned. Checking them in on the scan date would charge fines for closed days. Setting the date to the last open day keeps fines to open days only.",
+      "evidence": [
+        "Desk handbook, section 2.2",
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "When did a book drop item really come back, and when is it scanned?",
+        "Which days do fines count?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can answer a patron who asks why their late return was not charged for the weekend."
+    },
+    {
+      "id": "d2-q07",
+      "idea": "d2.renew",
+      "type": "predict",
+      "difficulty": 4,
+      "format": "choice",
+      "title": "A hold placed after a renewal",
+      "prompt": "A patron renews a book online in the evening. Five minutes later another patron places a hold on the same book. What happens to the renewal?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The renewal stands. The hold waits for the book to come back.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "The renewal is canceled because of the new hold.",
+          "correct": false,
+          "probe": "Does the hold rule apply when a renewal is made, or for the whole loan?"
+        },
+        {
+          "id": "c",
+          "text": "The patron now has to return the book within 7 days.",
+          "correct": false,
+          "probe": "Where would a 7-day deadline come from for a book that is not a DVD?"
+        },
+        {
+          "id": "d",
+          "text": "The hold is refused until the loan ends.",
+          "correct": false,
+          "probe": "Is there any rule that stops someone placing a hold on a book that is out?"
+        }
+      ],
+      "answer": "The renewal stands. The hold rule is checked when a renewal is made, and at that moment there was no hold. The new hold waits in the queue, and the patron will not be able to renew the book again while it is there.",
+      "evidence": [
+        "Desk handbook, section 2.4",
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "At the moment of the renewal, was there a hold on the book?",
+        "What will the hold change the next time the patron tries to renew?"
+      ],
+      "challenge": {
+        "prompt": "Are you sure? Holds come first at this library, so a hold placed afterward should still win.",
+        "hold": true,
+        "why": "The hold is checked at the moment of renewal. A hold placed afterward joins the queue, and the patron cannot renew a second time while it is there."
+      },
+      "diagnostic": false
+    },
+    {
+      "id": "d2-q08",
+      "idea": "d2.checkin",
+      "type": "connect",
+      "difficulty": 4,
+      "format": "text",
+      "title": "Returned, then asked for again",
+      "prompt": "A patron returns a book at the desk. The screen says another patron has it on hold. The returning patron asks to borrow it again right away because they did not finish it. What do you tell them, and what happens to the book?",
+      "rubric": {
+        "must": [
+          "The book goes to the hold shelf for the patron who placed the hold.",
+          "The returning patron cannot take it now. They can place a hold and join the queue."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says the desk can renew it for them instead.",
+            "probe": "The book has already been checked in. And what does a hold by another patron do to a renewal?"
+          }
+        ]
+      },
+      "answer": "The book goes to the hold shelf for the waiting patron. The returning patron cannot take it again now, since the hold gives that copy to someone else. They can place their own hold and get it when their turn comes.",
+      "evidence": [
+        "Desk handbook, section 2.1",
+        "Desk handbook, section 3.1"
+      ],
+      "probes": [
+        "Who has the claim on this copy once it is checked in?",
+        "What can the returning patron do to get it back later?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can say no to a patron and still give them a way to get the book."
+    },
+    {
+      "id": "d2-q09",
+      "idea": "d2.renew",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "choice",
+      "title": "A renewal resets everything",
+      "prompt": "A coworker says: \"Renewing is always better than returning late, because a renewal resets everything.\" Which case shows the claim is wrong?",
+      "options": [
+        {
+          "id": "a",
+          "text": "An overdue DVD. Renewing stops new fines, but the fine already owed stays.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "A book with no holds, renewed once. It gets 21 more days.",
+          "correct": false,
+          "probe": "Does this case show anything the renewal fails to reset?"
+        },
+        {
+          "id": "c",
+          "text": "A book returned on its due date.",
+          "correct": false,
+          "probe": "Is there a renewal in this case at all?"
+        },
+        {
+          "id": "d",
+          "text": "A DVD renewed for the first time, with no holds and on time.",
+          "correct": false,
+          "probe": "Is anything left over after this renewal that it did not reset?"
+        }
+      ],
+      "answer": "The overdue DVD shows the claim is wrong. A renewal changes the due date and stops further fines, but the fine that built up before it stays on the account. Renewing helps, but it does not reset the money already owed.",
+      "evidence": [
+        "Desk handbook, section 2.4",
+        "Desk handbook, section 3.2"
+      ],
+      "probes": [
+        "What does a renewal change, and what does it leave alone?",
+        "Which case has something left over after the renewal?"
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d2-q10",
+      "idea": "d2.checkin",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "text",
+      "title": "A torn cover and a charge",
+      "prompt": "A staff member checks in a cookbook with a torn cover and charges the patron's account $15.00 on the spot for the damage. What went wrong under the desk rules, and what should have happened?",
+      "rubric": {
+        "must": [
+          "The desk notes the damage on the item record and puts the item in the repair bin.",
+          "The branch manager decides whether the damage is beyond normal wear and whether to charge, not the desk."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          {
+            "claim": "Says the only problem is the amount.",
+            "probe": "Set the amount aside. Who is allowed to decide that a patron pays for damage at all?"
+          }
+        ]
+      },
+      "answer": "The desk does not charge for damage. It notes the damage on the item record and puts the item in the repair bin. The branch manager decides whether the damage goes beyond normal wear and whether the patron pays anything.",
+      "evidence": [
+        "Desk handbook, section 2.3"
+      ],
+      "probes": [
+        "What are the two things the desk itself does with a damaged item?",
+        "Who decides whether a patron is charged?"
+      ],
+      "diagnostic": false,
+      "owner": "So you can handle a damaged return without promising or charging anything you cannot back up."
+    },
+    {
+      "id": "d2-q11",
+      "idea": "d2.renew",
+      "type": "teach",
+      "difficulty": 5,
+      "format": "text",
+      "title": "Explain returns and renewals",
+      "prompt": "In 150 words or fewer, explain to a new desk volunteer what happens when an item comes back, and when and how an item can be renewed.",
+      "rubric": {
+        "must": [
+          "Scanning ends the loan, and the screen routes held items to the hold shelf.",
+          "Book drop items are checked in as of the last open day, so closed days cost nothing.",
+          "A renewal gives a full new loan from the day of the renewal, at most twice.",
+          "There is no renewal while another patron has a hold, and none for quick picks.",
+          "Fines already owed stay after a renewal."
+        ],
+        "pass": 4
+      },
+      "answer": "A trustworthy explanation covers both halves. On return, the scan ends the loan, held items go to the hold shelf and book drop items are dated to the last open day. On renewal, the item gets a full new loan from today, up to twice, never for quick picks and never while someone else has a hold. Fines already owed stay.",
+      "evidence": [
+        "Desk handbook, sections 2.1, 2.2 and 2.4"
+      ],
+      "probes": [
+        "Walk one item from the book drop to the shelf. What happens at each step?",
+        "List what stops a renewal."
+      ],
+      "diagnostic": false
+    },
+    {
+      "id": "d2-q12",
+      "idea": "d2.renew",
+      "type": "predict",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "How many renewals",
+      "prompt": "How many times can a regular book be renewed, if nobody places a hold on it?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Twice",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Once",
+          "correct": false,
+          "probe": "Check the renewal rule. What number does it give?"
+        },
+        {
+          "id": "c",
+          "text": "Three times",
+          "correct": false,
+          "probe": "Check the renewal rule. What number does it give?"
+        },
+        {
+          "id": "d",
+          "text": "As many times as the patron likes",
+          "correct": false,
+          "probe": "Does the renewal rule set a number at all?"
+        }
+      ],
+      "answer": "Twice. After two renewals the book has to come back, even if nobody is waiting for it.",
+      "evidence": [
+        "Desk handbook, section 2.4"
+      ],
+      "probes": [
+        "Find the number in the renewal rule.",
+        "What happens after the last renewal is used?"
+      ],
+      "diagnostic": false,
+      "rel": "mechanics"
+    }
+  ],
+  "finals": [
+    {
+      "id": "d2-f01",
+      "idea": "d2.renew",
+      "type": "apply",
+      "integrative": true,
+      "spans": [
+        "d1",
+        "d2",
+        "d3"
+      ],
+      "title": "A phone call after a long weekend",
+      "prompt": "On the first open day after a three-day closed weekend, a patron phones. They have a DVD renewed once and due on the last open day before the weekend, a quick pick due today and a book renewed twice and due tomorrow. Nobody has a hold on any of them. They want to keep everything another week. What can you do for each item, and what will they owe?",
+      "rubric": {
+        "must": [
+          "The DVD is one open day late, since the closed days do not count, so $1.00 is owed.",
+          "The DVD can be renewed once more, which gives 7 days from today, and the $1.00 stays.",
+          "The quick pick cannot be renewed, so it has to come back today to avoid a fine.",
+          "The book has used both renewals, so it is still due tomorrow."
+        ],
+        "pass": 3
+      },
+      "answer": "Only the DVD can be renewed. It is one open day late, because the closed weekend does not count, so it owes $1.00, and a renewal gives it 7 more days from today with the $1.00 kept on the account. The quick pick cannot be renewed and is due today. The book has used both renewals and is due tomorrow.",
+      "evidence": [
+        "Desk handbook, sections 1.2, 2.4 and 3.2"
+      ],
+      "probes": []
+    }
+  ],
+  "cards": [
+    {
+      "id": "d2-c01",
+      "title": "When a renewal is refused",
+      "kind": "rule",
+      "source": "Desk handbook, section 2.4",
+      "body": "No renewal when\n  another patron has a hold\n  the item has been renewed twice\n  the item is a quick pick\n\nA renewal\n  counts a full loan from today\n  stops further fines\n  keeps fines already owed",
+      "note": "Being overdue is not on the refusal list. A late item can be renewed, but the fine it already built up stays.",
+      "ideas": [
+        "d2.renew"
+      ]
+    },
+    {
+      "id": "d2-c02",
+      "title": "Book drop mornings",
+      "kind": "routine",
+      "source": "Desk handbook, section 2.2",
+      "body": "1. Set the check-in date to the last open day\n2. Scan every book drop item\n3. Route held items to the hold shelf\n4. Set the date back to today\n5. Open the desk",
+      "note": "Forgetting step 4 checks in every desk return on the wrong day, which hides real late days.",
+      "ideas": [
+        "d2.checkin"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "d2-o01",
+      "question": "Who decides whether damage is beyond normal wear when the branch manager is away for a week?",
+      "why": "Damaged items pile up in the repair bin and patrons wait to hear whether they owe anything.",
+      "urgency": 2,
+      "source": "Desk handbook, section 2.3"
+    }
+  ]
+}

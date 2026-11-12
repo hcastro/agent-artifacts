@@ -1,0 +1,344 @@
+{
+  "stop": "d1",
+  "ideas": [
+    {
+      "id": "d1.card",
+      "name": "Whether a patron can borrow",
+      "primer": "Every checkout starts with the patron's account. A card is valid for three years and is renewed at the desk with proof of a current address. Three things block a checkout: an expired card, fines of $10.00 or more, and any item marked lost that has not been settled. A patron without their card is looked up by photo ID."
+    },
+    {
+      "id": "d1.loans",
+      "name": "Loan periods and limits",
+      "primer": "Loan periods depend on the item. Regular books go out for 21 days, quick picks for 14 and DVDs for 7. When a due date lands on a day the library is closed, it moves to the next open day. A patron may have 25 items out at once, and no more than 5 of them DVDs."
+    }
+  ],
+  "questions": [
+    {
+      "id": "d1-q01",
+      "idea": "d1.card",
+      "type": "predict",
+      "difficulty": 1,
+      "format": "choice",
+      "title": "A small balance at checkout",
+      "prompt": "A patron's card is valid, they have no lost items and they owe **$6.50** in fines. They want to take a book home today. What happens?",
+      "options": [
+        { "id": "a", "text": "The checkout goes ahead. Fines under $10.00 do not block it.", "correct": true },
+        { "id": "b", "text": "The checkout is blocked until the $6.50 is paid.", "correct": false, "probe": "Find the dollar amount in the rule about blocks. Is $6.50 above it or below it?" },
+        { "id": "c", "text": "The patron can borrow, but only one item until the fine is paid.", "correct": false, "probe": "Which rule sets how many items a patron may have, and does it mention fines at all?" },
+        { "id": "d", "text": "The checkout is blocked because any balance at all stops it.", "correct": false, "probe": "The rule names an amount. What would be the point of an amount if any balance blocked?" }
+      ],
+      "answer": "The checkout goes ahead. Fines block only at $10.00 or more, so $6.50 does not stop it. The patron can pay the balance if they like, but the desk does not require it.",
+      "evidence": ["Desk handbook, section 1.1"],
+      "probes": ["List the three things that block a checkout. Which of them applies here?", "Compare $6.50 with the block line. Which side of it is the patron on?"],
+      "diagnostic": false,
+      "owner": "So you can tell a patron with a small balance that they can still borrow, without sending them to pay first."
+    },
+    {
+      "id": "d1-q02",
+      "idea": "d1.loans",
+      "type": "apply",
+      "difficulty": 1,
+      "format": "bucket",
+      "title": "How long each item goes out",
+      "prompt": "Sort each item by the loan period it gets at checkout.",
+      "buckets": [
+        { "id": "d7", "label": "7 days" },
+        { "id": "d14", "label": "14 days" },
+        { "id": "d21", "label": "21 days" }
+      ],
+      "items": [
+        { "text": "A nature documentary on DVD", "bucket": "d7", "why": "Every DVD goes out for 7 days." },
+        { "text": "A new novel from the quick picks shelf", "bucket": "d14", "why": "Quick picks go out for 14 days." },
+        { "text": "A cookbook from the regular shelves", "bucket": "d21", "why": "Regular books go out for 21 days." },
+        { "text": "A full season of a TV show on DVD", "bucket": "d7", "why": "A boxed set is still a DVD, so it gets 7 days." },
+        { "text": "A ten-year-old travel guide", "bucket": "d21", "why": "Age does not change the loan. It is a regular book." }
+      ],
+      "answer": "DVDs get 7 days, quick picks get 14 and regular books get 21. The loan depends only on the kind of item, so a boxed set is a DVD and an old travel guide is a regular book.",
+      "evidence": ["Desk handbook, section 1.2"],
+      "probes": ["Which shelf or kind of item is each one? Sort by that first.", "Is there anything about the age or size of an item in the loan rules?"],
+      "diagnostic": false,
+      "rel": "useful"
+    },
+    {
+      "id": "d1-q03",
+      "idea": "d1.card",
+      "type": "explain",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "One of these stops a checkout",
+      "prompt": "Only one of these patrons is blocked from borrowing today. Which one?",
+      "options": [
+        { "id": "a", "text": "A patron who owes exactly $10.00 in fines", "correct": true },
+        { "id": "b", "text": "A patron whose card expires next week", "correct": false, "probe": "Is the card valid today? Does the rule look at today or at next week?" },
+        { "id": "c", "text": "A patron with 24 items already out who wants one more", "correct": false, "probe": "What is the total limit, and would one more item go past it?" },
+        { "id": "d", "text": "A patron who forgot their card but has a photo ID", "correct": false, "probe": "What does the desk do when a patron has no card with them?" }
+      ],
+      "answer": "The patron who owes exactly $10.00 is blocked, because the block applies at $10.00 or more. A card that expires next week is still valid today, 25 items is the limit so the 25th is allowed, and a photo ID is enough to look up an account.",
+      "evidence": ["Desk handbook, section 1.1", "Desk handbook, section 1.2"],
+      "probes": ["Read the block rule word for word. Does it say over $10.00, or $10.00 or more?", "For each patron, name the rule that would stop them. Which one has a rule that fits?"],
+      "diagnostic": true,
+      "owner": "So you can apply the block line exactly and give every patron the same answer."
+    },
+    {
+      "id": "d1-q04",
+      "idea": "d1.card",
+      "type": "explain",
+      "difficulty": 2,
+      "format": "order",
+      "title": "The checkout routine",
+      "prompt": "Put the steps of a checkout in order, first at the top.",
+      "items": [
+        "Find the account by scanning the card, or by photo ID",
+        "Read any blocks on the account",
+        "Scan each item",
+        "Hand over a receipt with each due date"
+      ],
+      "answer": "The account comes first, because every other step depends on it. Blocks are read before any item is scanned, so staff never scan a stack they cannot lend. The receipt comes last because it lists the due dates the scan produced.",
+      "evidence": ["Desk handbook, section 1.1"],
+      "probes": ["Which step needs the account to already be open?", "Why would you read the blocks before scanning anything?"],
+      "diagnostic": false,
+      "owner": "So you can stop a checkout at the right moment instead of halfway through a pile of books."
+    },
+    {
+      "id": "d1-q05",
+      "idea": "d1.loans",
+      "type": "apply",
+      "difficulty": 3,
+      "format": "multi",
+      "title": "A big stack at the desk",
+      "prompt": "A patron has **20 items** out, 3 of them DVDs. They bring 4 books and 2 DVDs to the desk. Which statements are true?",
+      "options": [
+        { "id": "a", "text": "They can take all six items.", "correct": false, "probe": "Add the items already out to the items in hand. What is the total limit?" },
+        { "id": "b", "text": "Taking all six would put them one item over the total limit.", "correct": true, "probe": "Add 20 and 6. How does that compare with 25?" },
+        { "id": "c", "text": "The two DVDs would put them over the DVD limit.", "correct": false, "probe": "Count the DVDs they would have out after this checkout. What is the DVD limit?" },
+        { "id": "d", "text": "If they leave any one item behind, the other five can go out.", "correct": true, "probe": "With one item left behind, check both limits again. Does either one still fail?" },
+        { "id": "e", "text": "Leaving a DVD behind is the only way to fix it.", "correct": false, "probe": "Which limit is broken here, the DVD one or the total one?" }
+      ],
+      "answer": "Taking all six would mean 26 items out, one over the limit of 25. The DVD count would be 5, which is exactly the DVD limit and allowed. So the patron can leave any one item behind, a book or a DVD, and take the other five.",
+      "evidence": ["Desk handbook, section 1.2"],
+      "probes": ["Work out two numbers after the checkout: total items and total DVDs. Check each against its own limit.", "Which of the two limits is actually broken?"],
+      "diagnostic": false,
+      "owner": "So you can tell a patron exactly what they can take instead of turning the whole stack away."
+    },
+    {
+      "id": "d1-q06",
+      "idea": "d1.card",
+      "type": "explain",
+      "difficulty": 3,
+      "format": "text",
+      "title": "A card that lapsed last month",
+      "prompt": "A patron's card expired last month. They owe nothing and have nothing out. They ask to borrow a book right now. What has to happen first, and why can the desk not simply lend it?",
+      "rubric": {
+        "must": [
+          "An expired card blocks checkout on its own, even with no fines and no items out.",
+          "The card has to be renewed first, at the desk, with proof of a current address."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          { "claim": "Says a clean account means the patron can borrow.", "probe": "List the three things that block a checkout. Does a clean account remove all three?" },
+          { "claim": "Says the patron needs a new card number or a new application.", "probe": "What does the handbook ask for when a card is renewed?" }
+        ]
+      },
+      "answer": "The card has to be renewed first. An expired card blocks checkout by itself, whatever the rest of the account looks like. Renewal happens at the desk with proof of a current address, and then the checkout can go ahead.",
+      "evidence": ["Desk handbook, section 1.1"],
+      "probes": ["Which of the three blocks is on this account?", "What does the patron need to bring to clear that block?"],
+      "diagnostic": false,
+      "resume": "open",
+      "owner": "So you can keep a lapsed patron's visit short by asking for proof of address right away."
+    },
+    {
+      "id": "d1-q07",
+      "idea": "d1.loans",
+      "type": "predict",
+      "difficulty": 4,
+      "format": "choice",
+      "title": "A due date on a holiday",
+      "prompt": "A patron checks out a regular book. Counting 21 days lands on a public holiday, when the library is closed. The day after the holiday is an open day. What due date goes on the receipt?",
+      "options": [
+        { "id": "a", "text": "The day after the holiday, the next open day.", "correct": true },
+        { "id": "b", "text": "The holiday itself, since the book drop is open.", "correct": false, "probe": "What does the loan rule say happens when a due date falls on a closed day?" },
+        { "id": "c", "text": "The day before the holiday, so it lands on an open day.", "correct": false, "probe": "Does the rule move due dates earlier or later?" },
+        { "id": "d", "text": "The holiday, but the patron is not fined for that day.", "correct": false, "probe": "The rule changes the date itself. What date does the receipt show after the change?" }
+      ],
+      "answer": "The receipt shows the day after the holiday. When a due date falls on a closed day it moves to the next open day, so the patron never has a due date they cannot meet at the desk.",
+      "evidence": ["Desk handbook, section 1.2"],
+      "probes": ["Is the library open on the day the count lands on?", "In which direction does the rule move a due date?"],
+      "challenge": {
+        "prompt": "Are you sure? The book drop takes returns on holidays, so a holiday due date costs the patron nothing.",
+        "hold": true,
+        "why": "The book drop takes returns, but the rule still moves the due date to the next open day. The receipt shows the moved date."
+      },
+      "diagnostic": false,
+      "owner": "So you can explain a due date on a receipt that is not exactly 21 days out."
+    },
+    {
+      "id": "d1-q08",
+      "idea": "d1.loans",
+      "type": "connect",
+      "difficulty": 4,
+      "format": "text",
+      "title": "One trip to return everything",
+      "prompt": "A patron borrows 2 DVDs and 3 quick picks on the same day. They want to make one trip back to return everything, and they do not want to pay any fines. When is the last day that trip can happen, and what would you tell them?",
+      "rubric": {
+        "must": [
+          "DVDs are due after 7 days and quick picks after 14.",
+          "One trip with no fines has to happen on or before the DVD due date.",
+          "Bringing the quick picks back a week early costs nothing."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          { "claim": "Says the trip can be on day 14.", "probe": "On day 14, how many days late would the DVDs be?" }
+        ]
+      },
+      "answer": "The trip has to happen by the DVD due date, 7 days after checkout. The quick picks are not due until day 14, but returning them early costs nothing. A single trip on day 7 or before returns everything with no fines.",
+      "evidence": ["Desk handbook, section 1.2"],
+      "probes": ["Write down the due date for each kind of item. Which comes first?", "What does it cost to return an item before its due date?"],
+      "diagnostic": false,
+      "owner": "So you can give a patron a plan they can follow instead of a list of due dates."
+    },
+    {
+      "id": "d1-q09",
+      "idea": "d1.card",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "choice",
+      "title": "Just under the block line",
+      "prompt": "A coworker says: \"A patron who owes $9.75 can take out as much as they like today, since they are under the block line.\" What is wrong with that?",
+      "options": [
+        { "id": "a", "text": "The item limits still apply: 25 items in total and 5 DVDs.", "correct": true },
+        { "id": "b", "text": "Nothing. A patron under the block line has no limits.", "correct": false, "probe": "Which rules apply to every checkout, whatever the patron owes?" },
+        { "id": "c", "text": "$9.75 is over the block line.", "correct": false, "probe": "What exact amount starts the block?" },
+        { "id": "d", "text": "A patron with any balance is limited to 5 items.", "correct": false, "probe": "Where does the number 5 appear in the rules, and what kind of item does it count?" }
+      ],
+      "answer": "Being under the block line only means fines do not stop the checkout. The item limits are separate rules and apply to everyone: 25 items in total and no more than 5 DVDs. The patron can borrow, but not without limit.",
+      "evidence": ["Desk handbook, section 1.1", "Desk handbook, section 1.2"],
+      "probes": ["The block line answers one question. Which question does it answer, and which does it leave open?", "Name every rule that can stop an item from going out."],
+      "diagnostic": false,
+      "owner": "So you can catch a half-true rule of thumb before it reaches a patron."
+    },
+    {
+      "id": "d1-q10",
+      "idea": "d1.card",
+      "type": "flaw",
+      "difficulty": 5,
+      "format": "text",
+      "title": "The fines column says zero",
+      "prompt": "The account shown beside this question belongs to a patron at the desk. A new staff member lends them a book because \"the fines column is zero.\" What did they miss, and what should they have done?",
+      "context": {
+        "kind": "table",
+        "label": "Patron account, desk screen",
+        "body": "Card            valid until next spring\nFines owed      $0.00\nItems out       1\n\nItem                      Status   Charge\nThe Night Garden (book)   lost     $24.00 replacement, billed 2 months ago"
+      },
+      "rubric": {
+        "must": [
+          "An unsettled lost item blocks checkout on its own, whatever the fines column says.",
+          "The lost item has to be settled first, by paying the replacement charge or by returning the item."
+        ],
+        "pass": 2,
+        "misconceptions": [
+          { "claim": "Says the $24.00 counts as a fine and so it is over the $10.00 line.", "probe": "The screen keeps fines and the replacement charge in separate places. Which rule covers each one?" }
+        ]
+      },
+      "answer": "They missed the lost item. A lost item that has not been settled blocks checkout by itself, and the replacement charge is kept apart from fines, so the fines column can read zero while the account is blocked. The patron has to pay the replacement charge or bring the item back before borrowing.",
+      "evidence": ["Desk handbook, section 1.1", "Desk handbook, section 3.3"],
+      "probes": ["Read every line of the account, not only the fines. What else is on it?", "Which of the three blocks is about items rather than money?"],
+      "diagnostic": false,
+      "owner": "So you can read the whole account before you lend, and not only the number at the top."
+    },
+    {
+      "id": "d1-q11",
+      "idea": "d1.card",
+      "type": "teach",
+      "difficulty": 5,
+      "format": "text",
+      "title": "Explain the checkout rules",
+      "prompt": "In 150 words or fewer, explain to a new desk volunteer how to decide whether a patron can take an item home today, how many items they can take and when each one is due.",
+      "rubric": {
+        "must": [
+          "The card has to be valid. An expired card is renewed first, with proof of a current address.",
+          "Fines of $10.00 or more, or any unsettled lost item, block checkout. Smaller fines do not.",
+          "The limits are 25 items in total and 5 DVDs.",
+          "Books are due in 21 days, quick picks in 14 and DVDs in 7, moved to the next open day when the library is closed."
+        ],
+        "pass": 3
+      },
+      "answer": "A trustworthy explanation starts with the account. The card must be valid, fines must be under $10.00 and no lost item can be unsettled. Then the limits: 25 items in total, no more than 5 DVDs. Then the due dates: 21 days for books, 14 for quick picks and 7 for DVDs, moved to the next open day if the library is closed that day.",
+      "evidence": ["Desk handbook, sections 1.1 and 1.2"],
+      "probes": ["Walk through a checkout from the first scan. What do you check at each step?", "Which numbers would a volunteer need to remember?"],
+      "diagnostic": false
+    },
+    {
+      "id": "d1-q12",
+      "idea": "d1.card",
+      "type": "predict",
+      "difficulty": 2,
+      "format": "choice",
+      "title": "No card in hand",
+      "prompt": "A patron wants to borrow a book but left their card at home. What does the desk ask for?",
+      "options": [
+        { "id": "a", "text": "A photo ID, to look up the account", "correct": true },
+        { "id": "b", "text": "Proof of a current address", "correct": false, "probe": "That is asked for when a card is renewed. Is this patron renewing a card?" },
+        { "id": "c", "text": "Nothing. A patron cannot borrow without the card.", "correct": false, "probe": "Is a missing card one of the three blocks?" },
+        { "id": "d", "text": "The card number, from memory", "correct": false, "probe": "What does the handbook use to confirm who the patron is?" }
+      ],
+      "answer": "The desk asks for a photo ID and looks the account up with it. A missing card is not a block, so once the account is found the checkout goes on as usual.",
+      "evidence": ["Desk handbook, section 1.1"],
+      "probes": ["Is a missing card on the list of blocks?", "What does the desk need in order to find the right account?"],
+      "diagnostic": false,
+      "rel": "mechanics"
+    }
+  ],
+  "finals": [
+    {
+      "id": "d1-f01",
+      "idea": "d1.card",
+      "type": "apply",
+      "integrative": true,
+      "spans": ["d1", "d3"],
+      "title": "A lapsed card and a full bag",
+      "prompt": "A patron arrives with an expired card and $8.00 in fines. They have 23 items out, 4 of them DVDs. They want to borrow 2 DVDs and a quick pick. Walk through what happens at the desk, in order, and say what they leave with and when each item is due.",
+      "rubric": {
+        "must": [
+          "The card is renewed first, with proof of a current address, because an expired card blocks checkout.",
+          "The $8.00 in fines is under the $10.00 line, so it does not stop the checkout.",
+          "Only 2 more items fit under the 25-item limit, and only 1 more DVD fits under the 5-DVD limit.",
+          "They can leave with one DVD and the quick pick.",
+          "The DVD is due in 7 days and the quick pick in 14, moved to the next open day if needed."
+        ],
+        "pass": 4
+      },
+      "answer": "Renew the card first, since an expired card blocks everything. The $8.00 balance is under the block line, so it does not matter for today. After that, 23 items out leaves room for 2, and 4 DVDs out leaves room for 1. The patron leaves with one DVD, due in 7 days, and the quick pick, due in 14.",
+      "evidence": ["Desk handbook, sections 1.1 and 1.2"],
+      "probes": []
+    }
+  ],
+  "cards": [
+    {
+      "id": "d1-c01",
+      "title": "What blocks a checkout",
+      "kind": "rule",
+      "source": "Desk handbook, section 1.1",
+      "body": "Blocks a checkout\n  card expired\n  fines owed of $10.00 or more\n  any lost item not yet settled\n\nDoes not block\n  fines under $10.00\n  a forgotten card (look up by photo ID)",
+      "note": "The line is $10.00 or more, so exactly $10.00 blocks. Lost-item charges are kept apart from fines and block on their own, so read the whole account.",
+      "ideas": ["d1.card"]
+    },
+    {
+      "id": "d1-c02",
+      "title": "Loan periods and limits",
+      "kind": "table",
+      "source": "Desk handbook, section 1.2",
+      "body": "Item         Loan     Renewable\nBook         21 days  yes, twice\nQuick pick   14 days  no\nDVD           7 days  yes, twice\n\nLimits: 25 items in total, 5 DVDs",
+      "note": "A due date that falls on a closed day moves to the next open day. The receipt always shows the moved date.",
+      "ideas": ["d1.loans"]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "d1-o01",
+      "question": "Can a parent check out items on a child's card when the child is not at the desk?",
+      "why": "The handbook does not say, so two staff members can give the same family two different answers.",
+      "urgency": 1,
+      "source": "Desk handbook, section 1.1"
+    }
+  ]
+}

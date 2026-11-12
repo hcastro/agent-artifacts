@@ -1,0 +1,29 @@
+{
+  "title": "Lending desk",
+  "home_title": "The lending desk map",
+  "topic": "running the book-lending desk at a small public library",
+  "target_level": 4,
+  "lines": [
+    {
+      "id": "d",
+      "name": "The lending desk",
+      "short": "Desk",
+      "about": "How an item leaves the building, comes back and waits for its next reader, and the rules that decide each step.",
+      "stops": [
+        { "id": "d1", "name": "Checking out", "tag": "checkout", "about": "Who can borrow, how much and for how long" },
+        { "id": "d2", "name": "Returns and renewals", "tag": "returns", "about": "Checking items in and extending loans" },
+        { "id": "d3", "name": "Holds and fines", "tag": "holds and fines", "about": "Waiting lists, late items and what they cost" }
+      ],
+      "placement": ["d1", "d2", "d3"]
+    }
+  ],
+  "standings": [
+    [0, "New at the desk"],
+    [15, "Shadowing a shift"],
+    [35, "Covering lunch breaks"],
+    [55, "Running a shift"],
+    [75, "Desk lead"],
+    [92, "The one who trains new staff"]
+  ],
+  "storage_key": "lending-desk-course-v1"
+}
